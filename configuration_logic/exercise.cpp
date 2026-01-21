@@ -47,13 +47,13 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
     std::string errorLine;
     std::stringstream ss;
 
-    for (size_t i = 0; i < tokenContainer.size(); i++)
+    for (int i = 0; i < tokenContainer.size(); i++)
     {
         if (tokenContainer[i].type == 2)
         {
             if (tokenContainer[i].value == "{")
             {
-                if (tokenContainer[i - 1].value == "server")
+                if ((i - 1) >= 0 && tokenContainer[i - 1].value == "server")
                     inside = true;
                 keepCountOfBrase++;
             }
@@ -66,7 +66,7 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
         }
         else if (tokenContainer[i].type == 1)
         {            
-            if (tokenContainer[i - 1].value != "location" && tokenContainer[i + 1].value != ";")
+            if ((i - 1) >= 0 && tokenContainer[i - 1].value != "location" && tokenContainer[i + 1].value != ";")
             {
                 ss << tokenContainer[i].line;
                 errorLine = "ERROR on line " + ss.str() + ": directives must end with ;";
