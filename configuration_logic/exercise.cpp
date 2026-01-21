@@ -2,6 +2,7 @@
 #include  <fstream>
 #include  <deque>
 #include <cctype>
+#include <sstream>
 
 enum TokenType {
     KEYWORD,
@@ -42,6 +43,9 @@ void identifying_words_and_keywords(std::string& tok, std::deque<Token>& tokenCo
 void is_syntax_valid(std::deque<Token> tokenContainer)
 {
     size_t keepCountOfBrase = 0;
+    bool inside = false;
+    std::string errorLine;
+    std::stringstream ss;
 
     for (size_t i = 0; i < tokenContainer.size(); i++)
     {
@@ -49,18 +53,33 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
         {
             if (tokenContainer[i].value == "{")
             {
+                if (tokenContainer[i - 1].value == "server")
+                    inside = true;
                 keepCountOfBrase++;
             }
             else if (tokenContainer[i].value == "}" && keepCountOfBrase)
             {
                 keepCountOfBrase--;
+                if (keepCountOfBrase == 0)
+                    inside = false;
             }
         }
-        if (tokenContainer[i].type == 1)
-        {
+        else if (tokenContainer[i].type == 1)
+        {            
             if (tokenContainer[i - 1].value != "location" && tokenContainer[i + 1].value != ";")
             {
-                throw std::runtime_error("ERROR: directives must end with ;");
+                ss << tokenContainer[i].line;
+                errorLine = "ERROR on line " + ss.str() + ": directives must end with ;";
+                throw std::runtime_error(errorLine);
+            }
+        }
+        else if (tokenContainer[i].type == 0)
+        {
+            if (tokenContainer[i].value == "location" && !inside)
+            {
+                ss << tokenContainer[i].line;
+                errorLine = "ERROR on line " + ss.str() + ": location block must be inside the server block";
+                throw std::runtime_error(errorLine);
             }
         }
     }
