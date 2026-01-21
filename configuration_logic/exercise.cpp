@@ -39,6 +39,35 @@ void identifying_words_and_keywords(std::string& tok, std::deque<Token>& tokenCo
         }
     }
 
+void is_syntax_valid(std::deque<Token> tokenContainer)
+{
+    size_t keepCountOfBrase = 0;
+
+    for (size_t i = 0; i < tokenContainer.size(); i++)
+    {
+        if (tokenContainer[i].type == 2)
+        {
+            if (tokenContainer[i].value == "{")
+            {
+                keepCountOfBrase++;
+            }
+            else if (tokenContainer[i].value == "}" && keepCountOfBrase)
+            {
+                keepCountOfBrase--;
+            }
+        }
+        if (tokenContainer[i].type == 1)
+        {
+            if (tokenContainer[i - 1].value != "location" && tokenContainer[i + 1].value != ";")
+            {
+                throw std::runtime_error("ERROR: directives must end with ;");
+            }
+        }
+    }
+    if (keepCountOfBrase != 0)
+        throw std::runtime_error("ERROR: check brackets!");
+}
+
 void tokenzation(std::string fileContent)
 {
     std::string tok;
@@ -93,8 +122,9 @@ void tokenzation(std::string fileContent)
             tok.clear();
         }
     }
+    is_syntax_valid(tokenContainer);
     for(size_t i = 0; i < tokenContainer.size(); i++)
-        std::cout << tokenContainer[i].type << "   " << tokenContainer[i].value << std::endl;
+        std::cout << tokenContainer[i].value << std::endl;
 }
 
 int main(int ac, char **av)
@@ -111,5 +141,12 @@ int main(int ac, char **av)
         return 1;
     }
     std::string fileContent((std::istreambuf_iterator<char>(infile)), std::istreambuf_iterator<char>());
-    tokenzation(fileContent);
+    try
+    {
+        tokenzation(fileContent);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
 }
