@@ -8,5 +8,4 @@ server {
         root /var/www;
     }
     lol;
-    
 }
