@@ -21,7 +21,12 @@ struct Token
 
 struct LocationBlock
 {
-
+    std::string path;
+    std::string root;
+    std::deque<std::string> index;
+    std::deque<std::string> allow_methods;
+    bool autoindex;
+    std::map<std::string, std::string> cgi_pass;
 };
 
 struct ServerBlock
@@ -33,7 +38,7 @@ struct ServerBlock
     int client_max_body_size;
     std::deque<std::string> index;
     std::map<int, std::string> error_page;
-    // std::deque<LocationBlock> locations;
+    std::deque<LocationBlock> locations;
 };
 
 void error_line(std::string msg, int Line)
@@ -74,6 +79,7 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
     size_t keepCountOfBrase = 0;
     size_t ServerBlockCount = 0;
     size_t LocationBlockCount = 0;
+    bool LocationBlok = false;
     bool insideServer = false;
 
     for (int i = 0; i < tokenContainer.size(); i++)
@@ -91,6 +97,9 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
                 keepCountOfBrase--;
                 if (keepCountOfBrase == 0)
                 {
+                    if (!LocationBlok)
+                        error_line(": missing Location block", tokenContainer[i].line);
+
                     insideServer = false;
                     ServerBlockCount = 0;
                 }
@@ -111,7 +120,10 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
             if (tokenContainer[i].value == "server")
                 ServerBlockCount++;
             else if (tokenContainer[i].value == "location")
+            {
                 LocationBlockCount++;
+                LocationBlok = true;
+            }
                 
             if ((tokenContainer[i].value == "server" && tokenContainer[i + 1].value != "{") ||
                     (tokenContainer[i].value == "location" && tokenContainer[i + 2].value != "{"))
@@ -136,7 +148,7 @@ void duplicate_check(std::deque<std::string>& keywords, std::string name)
         throw std::runtime_error("ERROR: there must be no duplicates for these keywords (listen client_max_body_size server_name error_page)");
 }
 
-void extracting_server_config(std::deque<Token>& tokenContainer)
+void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& ServerConfigs)
 {
     // bool insideServerBlock = false;
     ServerBlock Serv;
@@ -191,20 +203,96 @@ void extracting_server_config(std::deque<Token>& tokenContainer)
             }
         }
     }
-    if (Serv.server_name.empty())
-        Serv.server_name = "WEBSERV";
-    if (Serv.host.empty())
-        Serv.host = "127.0.0.1";
-    if (Serv.index.empty())
-        Serv.index.push_back("index.html");
-    if (!Serv.listen || Serv.root.empty() || Serv.error_page.empty()|| !Serv.client_max_body_size)
-        throw std::runtime_error("ERROR: missing value!");
+    ServerConfigs.push_back(Serv);
 }
 
-void extracting_location_config(std::deque<Token>& tokenContainer)
+void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock& Serv)
 {
-
+    bool InsideLocationBlock = false;
+    bool SetRoot = false;
+    bool SetAutoindex = false;
+    bool SetIndexfile = false;
+    size_t pos = 0;
+    
+    for (int i = 0; i < tokenContainer.size(); i++)
+    {
+        LocationBlock loc;
+        loc.autoindex = false;
+        if ((i - 2) >= 0 && tokenContainer[i - 2].value == "location" && tokenContainer[i].value == "{")
+        {
+            InsideLocationBlock = true;
+            SetRoot = false;
+            SetAutoindex = false;
+            SetIndexfile = false;
+            if ((pos = tokenContainer[i].value.find_first_of("/")) != 0 && tokenContainer[i + 1].value == "{")
+                error_line(": paths must start with /", tokenContainer[i].line);
+            else if ((i - 1) >= 0 && tokenContainer[i].type == 1 && tokenContainer[i - 1].value == "location")
+                loc.path = tokenContainer[i].value;
+            else if (tokenContainer[i].value == "root")
+            {
+                loc.root = tokenContainer[i + 1].value;
+                SetRoot = true;
+            }
+            else if (tokenContainer[i].value == "index")
+            {
+                i++;
+                while(tokenContainer[i].type == 1)
+                {
+                    if (tokenContainer[i].value == "GET" || tokenContainer[i].value == "POST" || tokenContainer[i].value == "DELETE")
+                        loc.index.push_back(tokenContainer[i].value);
+                    else
+                        error_line("only allowed methods are (GET, POST, DELETE)", tokenContainer[i].line);
+                    i++;
+                }
+                SetIndexfile = true;
+            }else if (tokenContainer[i].value == "allow_methods")
+            {
+                i++;
+                while(tokenContainer[i].type == 1)
+                {
+                    loc.allow_methods.push_back(tokenContainer[i].value);
+                    i++;
+                }
+            }else if (tokenContainer[i].value == "autoindex")
+            {
+                if (tokenContainer[i + 1].value == "off")
+                    loc.autoindex = false;
+                else if (tokenContainer[i + 1].value == "on")
+                    loc.autoindex = true;
+                else
+                    error_line(": auto index works with only on or off options", tokenContainer[i].line);
+                SetAutoindex = true;
+            }else if (tokenContainer[i].value == "cgi_pass")
+                loc.cgi_pass.insert(std::make_pair(tokenContainer[i + 1].value, tokenContainer[i + 2].value));
+        }
+        else if (tokenContainer[i].value == "}")
+        {
+            InsideLocationBlock = false;
+            Serv.locations.push_back(loc);
+        }   
+    }
 }
+
+void checking_for_defaults(ServerBlock& Serv)
+{
+    if (!Serv.listen || Serv.root.empty() || Serv.error_page.empty())
+        throw std::runtime_error("ERROR: missing value (root, listen, error_page)");
+    if (Serv.host.empty()) Serv.host = "127.0.0.1";
+    if (Serv.server_name.empty()) Serv.server_name = "WEBSERV_42";
+    if (Serv.index.empty()) Serv.index.push_back("index.html");
+    if (!Serv.client_max_body_size) Serv.client_max_body_size = 3000000;
+    for (int i = 0; i < Serv.locations.size(); i++)
+    {
+        if (Serv.locations[i].root.empty()) Serv.locations[i].root = Serv.root;
+        if (Serv.locations[i].index.empty()) Serv.locations[i].index = Serv.index;
+        if (Serv.locations[i].allow_methods.empty())
+        {
+            Serv.locations[i].allow_methods.push_back("GET");
+            Serv.locations[i].allow_methods.push_back("POST");
+            Serv.locations[i].allow_methods.push_back("DELETE");
+        }
+    }
+}   
 
 void tokenzation(std::string fileContent)
 {
@@ -212,6 +300,8 @@ void tokenzation(std::string fileContent)
     size_t Line;
     size_t pos;
     std::deque<Token> tokenContainer;
+    std::deque<ServerBlock> serverConfigs;
+    ServerBlock Serv;
 
     Line = 1;
     for(size_t i = 0; i < fileContent.size(); i++)
@@ -248,8 +338,13 @@ void tokenzation(std::string fileContent)
     if (!tok.empty())
         identifying_words_and_keywords(tok, tokenContainer, Line);
     is_syntax_valid(tokenContainer);
-    extracting_server_config(tokenContainer);
-    extracting_location_config(tokenContainer);
+    extracting_server_config(tokenContainer, serverConfigs);
+    for (int i = 0; i < serverConfigs.size(); i++)
+    {
+        extracting_location_config(tokenContainer, serverConfigs[i]);
+        checking_for_defaults(serverConfigs[i]);
+    }
+    // debugging code
     for(size_t i = 0; i < tokenContainer.size(); i++)
         std::cout << tokenContainer[i].value << std::endl;
 }
