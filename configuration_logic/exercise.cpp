@@ -53,7 +53,7 @@ void error_line(std::string msg, int Line)
 
 void identifying_words_and_keywords(std::string& tok, std::deque<Token>& tokenContainer, int Line)
 {
-    if (tok == "server" || tok == "location" || tok == "listen" || tok == "host"
+    if (tok == "server" || tok == "location" || tok == "listen" || tok == "host" || tok == "server_name"
         || tok == "root" || tok == "index" || tok == "allow_methods" || tok == "autoindex"
             || tok == "cgi_pass" || tok == "error_page" || tok == "client_max_body_size")
     {
@@ -79,7 +79,6 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
     size_t keepCountOfBrase = 0;
     size_t ServerBlockCount = 0;
     size_t LocationBlockCount = 0;
-    bool LocationBlok = false;
     bool insideServer = false;
 
     for (int i = 0; i < tokenContainer.size(); i++)
@@ -88,6 +87,8 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
         {
             if (tokenContainer[i].value == "{")
             {
+                if (tokenContainer[i + 1].type != 0)
+                    error_line(": unkown keyword", tokenContainer[i + 1].line);
                 if ((i - 1) >= 0 && tokenContainer[i - 1].value == "server")
                     insideServer = true;
                 keepCountOfBrase++;
@@ -97,15 +98,17 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
                 keepCountOfBrase--;
                 if (keepCountOfBrase == 0)
                 {
-                    if (!LocationBlok)
-                        error_line(": missing Location block", tokenContainer[i].line);
-
                     insideServer = false;
                     ServerBlockCount = 0;
                 }
                 LocationBlockCount = 0;
-            }else if ((i - 1) >= 0 && tokenContainer[i].value == ";" && tokenContainer[i - 2].value == ";" )
-                error_line(": syntax error related to ;", tokenContainer[i].line);
+            }else if (tokenContainer[i].value == ";")
+            {
+                if ((i - 1) >= 0 && tokenContainer[i - 2].value == ";")
+                    error_line(": syntax error related to ;", tokenContainer[i].line);
+                else if (tokenContainer[i + 1].type == 1)
+                    error_line(": unkown keyword", tokenContainer[i + 1].line);
+            }
         }
         else if (tokenContainer[i].type == 1)
         {
@@ -120,10 +123,7 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
             if (tokenContainer[i].value == "server")
                 ServerBlockCount++;
             else if (tokenContainer[i].value == "location")
-            {
                 LocationBlockCount++;
-                LocationBlok = true;
-            }
                 
             if ((tokenContainer[i].value == "server" && tokenContainer[i + 1].value != "{") ||
                     (tokenContainer[i].value == "location" && tokenContainer[i + 2].value != "{"))
@@ -154,6 +154,9 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
     ServerBlock Serv;
     std::deque<std::string> keywords;
 
+    // init
+    Serv.listen = 0;
+    Serv.client_max_body_size = 0;
     // duplicate check rule
     for (int i = 0; i < tokenContainer.size(); i++)
     {
@@ -301,7 +304,6 @@ void tokenzation(std::string fileContent)
     size_t pos;
     std::deque<Token> tokenContainer;
     std::deque<ServerBlock> serverConfigs;
-    ServerBlock Serv;
 
     Line = 1;
     for(size_t i = 0; i < fileContent.size(); i++)
