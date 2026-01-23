@@ -23,3 +23,29 @@ server {
         cgi_path /usr/bin/python3;
     }
 }
+
+server {
+    listen 80;
+    server_name localhost;
+
+    root /var/www/html;
+    client_max_body_size 1000000;
+
+    error_page 404 /errors/404.html;
+
+    location / {
+        allow_methods GET POST;
+        root /var/www/html;
+    }
+
+    location /upload {
+        allow_methods POST;
+        root /ousssa;
+    }
+    index index.html;
+    location /cgi {
+        allow_methods GET POST DELETE;
+        cgi_extension .py;
+        cgi_path /usr/bin/python3;
+    }
+}

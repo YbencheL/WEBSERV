@@ -26,7 +26,7 @@ struct LocationBlock
     std::deque<std::string> index;
     std::deque<std::string> allow_methods;
     bool autoindex;
-    std::deque<std::string> cgi_extention;
+    std::deque<std::string> cgi_extension;
     std::deque<std::string> cgi_path;
 };
 
@@ -232,93 +232,82 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
 void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock& Serv)
 {
     bool InsideLocationBlock = false;
-    bool SetRoot = false;
-    bool SetAutoindex = false;
-    bool SetIndexfile = false;
     size_t pos = 0;
+    int i = 0;
     
-    for (int i = 0; i < tokenContainer.size(); i++)
+    for (i = 0; i < tokenContainer.size(); i++)
     {
-        LocationBlock loc;
-        loc.autoindex = false;
         if (!InsideLocationBlock && (tokenContainer[i].value == "cgi_extension" || tokenContainer[i].value == "cgi_path"))
             error_line(": unkown keyword", tokenContainer[i].line);
-        if ((i - 2) >= 0 && tokenContainer[i - 2].value == "location" && tokenContainer[i].value == "{")
+        if (tokenContainer[i].value == "location")
         {
+            LocationBlock loc;
+            loc.autoindex = false;
             i++;
             InsideLocationBlock = true;
-            SetRoot = false;
-            SetAutoindex = false;
-            SetIndexfile = false;
-            if ((pos = tokenContainer[i].value.find_first_of("/")) != 0 && tokenContainer[i + 1].value == "{")
-                error_line(": paths must start with /", tokenContainer[i].line);
-            else if ((i - 1) >= 0 && tokenContainer[i].type == 1 && tokenContainer[i - 1].value == "location")
-                loc.path = tokenContainer[i].value;
-            else if (tokenContainer[i].value == "root")
+            while (InsideLocationBlock)
             {
-                loc.root = tokenContainer[i + 1].value;
-                SetRoot = true;
-            }
-            else if (tokenContainer[i].value == "index")
-            {
-                i++;
-                while(tokenContainer[i].type == 1)
+                if ((i + 1) < tokenContainer.size() && (pos = tokenContainer[i].value.find_first_of("/")) != 0 && tokenContainer[i + 1].value == "{")
+                    error_line(": paths must start with /", tokenContainer[i].line);
+                else if ((i - 1) >= 0 && tokenContainer[i].type == 1 && tokenContainer[i - 1].value == "location")
+                    loc.path = tokenContainer[i].value;
+                else if (i < tokenContainer.size() && tokenContainer[i].value == "root")
                 {
-                    loc.index.push_back(tokenContainer[i].value);
-                    i++;
+                    loc.root = tokenContainer[i + 1].value;
                 }
-                SetIndexfile = true;
-            }else if (tokenContainer[i].value == "allow_methods")
-            {
-                i++;
-                while(tokenContainer[i].type == 1)
+                else if (i < tokenContainer.size() && tokenContainer[i].value == "index")
                 {
-                    if (tokenContainer[i].value == "GET" || tokenContainer[i].value == "POST" || tokenContainer[i].value == "DELETE")
+                    i++;
+                    while(i < tokenContainer.size() && tokenContainer[i].type == 1)
+                    {
                         loc.index.push_back(tokenContainer[i].value);
+                        i++;
+                    }
+                }else if (i < tokenContainer.size() && tokenContainer[i].value == "allow_methods")
+                {
+                    i++;
+                    while(i < tokenContainer.size() && tokenContainer[i].type == 1)
+                    {
+                        if (tokenContainer[i].value == "GET" || tokenContainer[i].value == "POST" || tokenContainer[i].value == "DELETE")
+                            loc.allow_methods.push_back(tokenContainer[i].value);
+                        else
+                            error_line(": only allowed methods are (GET, POST, DELETE)", tokenContainer[i].line);
+                        i++;
+                    }
+                }else if (i < tokenContainer.size() && tokenContainer[i].value == "autoindex")
+                {
+                    if (i < tokenContainer.size() && tokenContainer[i + 1].value == "off")
+                        loc.autoindex = false;
+                    else if (i < tokenContainer.size() && tokenContainer[i + 1].value == "on")
+                        loc.autoindex = true;
                     else
-                        error_line(": only allowed methods are (GET, POST, DELETE)", tokenContainer[i].line);
-                    i++;
-                }
-            }else if (tokenContainer[i].value == "autoindex")
-            {
-                if (tokenContainer[i + 1].value == "off")
-                    loc.autoindex = false;
-                else if (tokenContainer[i + 1].value == "on")
-                    loc.autoindex = true;
-                else
-                    error_line(": auto index works with only on or off options", tokenContainer[i].line);
-                SetAutoindex = true;
-            }else if(tokenContainer[i].value == "cgi_pass")
-            {
-                i++;
-                while(tokenContainer[i].type == 1)
+                        error_line(": auto index works with only on or off options", tokenContainer[i].line);
+                }else if(i < tokenContainer.size() && tokenContainer[i].value == "cgi_extension")
                 {
-                    loc.allow_methods.push_back(tokenContainer[i].value);
                     i++;
-                }
-            }else if(tokenContainer[i].value == "cgi_extention")
-            {
-                i++;
-                while(tokenContainer[i].type == 1)
+                    while(i < tokenContainer.size() && tokenContainer[i].type == 1)
+                    {
+                        loc.cgi_extension.push_back(tokenContainer[i].value);
+                        i++;
+                    }
+                }else if (i < tokenContainer.size() && tokenContainer[i].value == "cgi_path")
                 {
-                    loc.cgi_extention.push_back(tokenContainer[i].value);
                     i++;
+                    while(i < tokenContainer.size() && tokenContainer[i].type == 1)
+                    {
+                        loc.cgi_path.push_back(tokenContainer[i].value);
+                        i++;
+                    } 
                 }
-            }else if (tokenContainer[i].value == "cgi_pass")
-            {
-                i++;
-                while(tokenContainer[i].type == 1)
+                if (tokenContainer[i].value == "}")
                 {
-                    loc.cgi_path.push_back(tokenContainer[i].value);
+                    Serv.locations.push_back(loc);
+                    InsideLocationBlock = false;
+                    break;
+                }else
                     i++;
-                } 
             }
         }
-        else if (tokenContainer[i].value == "}")
-        {
-            InsideLocationBlock = false;
-            Serv.locations.push_back(loc);
-        }   
     }
 }
 
