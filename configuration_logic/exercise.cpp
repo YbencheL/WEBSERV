@@ -26,7 +26,8 @@ struct LocationBlock
     std::deque<std::string> index;
     std::deque<std::string> allow_methods;
     bool autoindex;
-    std::map<std::string, std::string> cgi_pass;
+    std::deque<std::string> cgi_extention;
+    std::deque<std::string> cgi_path;
 };
 
 struct ServerBlock
@@ -55,7 +56,7 @@ void identifying_words_and_keywords(std::string& tok, std::deque<Token>& tokenCo
 {
     if (tok == "server" || tok == "location" || tok == "listen" || tok == "host" || tok == "server_name"
         || tok == "root" || tok == "index" || tok == "allow_methods" || tok == "autoindex"
-            || tok == "cgi_pass" || tok == "error_page" || tok == "client_max_body_size")
+            || tok == "cgi_extension" || tok == "cgi_path" || tok == "error_page" || tok == "client_max_body_size")
     {
         Token tikken;
         tikken.type = KEYWORD;
@@ -88,7 +89,12 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
             if (tokenContainer[i].value == "{")
             {
                 if (tokenContainer[i + 1].type != 0)
-                    error_line(": unkown keyword", tokenContainer[i + 1].line);
+                {
+                    if (tokenContainer[i + 1].value == "}")
+                        error_line(": sytanx error related to '}'", tokenContainer[i + 1].line);
+                    else
+                        error_line(": unkown keyword", tokenContainer[i + 1].line);
+                }
                 if ((i - 1) >= 0 && tokenContainer[i - 1].value == "server")
                     insideServer = true;
                 keepCountOfBrase++;
@@ -142,10 +148,16 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
 void duplicate_check(std::deque<std::string>& keywords, std::string name)
 {
     int count = 0;
-    
-    count = std::count(keywords.begin(), keywords.end(), name);
-    if (count > 1)
-        throw std::runtime_error("ERROR: there must be no duplicates for these keywords (listen client_max_body_size server_name error_page)");
+
+    for (int i = 0; i < keywords.size(); i++)
+    {
+        if (keywords[i] == name)
+            count++;
+        else if (keywords[i] == "server")
+            count = 0;
+        if (count > 1)
+            throw std::runtime_error("ERROR: there must be no duplicates for these keywords (listen client_max_body_size server_name error_page)");
+    }
 }
 
 void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& ServerConfigs)
@@ -153,6 +165,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
     // bool insideServerBlock = false;
     ServerBlock Serv;
     std::deque<std::string> keywords;
+    size_t keepCountOfBrase = 0;
 
     // init
     Serv.listen = 0;
@@ -204,9 +217,16 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
                     i++;
                 }
             }
+        }else if (tokenContainer[i].value == "{")
+            keepCountOfBrase++;
+        else if (tokenContainer[i].value == "}" && keepCountOfBrase)
+        {
+            keepCountOfBrase--;
+            if (keepCountOfBrase == 0)
+                ServerConfigs.push_back(Serv);
         }
     }
-    ServerConfigs.push_back(Serv);
+
 }
 
 void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock& Serv)
@@ -221,8 +241,11 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
     {
         LocationBlock loc;
         loc.autoindex = false;
+        if (!InsideLocationBlock && (tokenContainer[i].value == "cgi_extension" || tokenContainer[i].value == "cgi_path"))
+            error_line(": unkown keyword", tokenContainer[i].line);
         if ((i - 2) >= 0 && tokenContainer[i - 2].value == "location" && tokenContainer[i].value == "{")
         {
+            i++;
             InsideLocationBlock = true;
             SetRoot = false;
             SetAutoindex = false;
@@ -241,10 +264,7 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
                 i++;
                 while(tokenContainer[i].type == 1)
                 {
-                    if (tokenContainer[i].value == "GET" || tokenContainer[i].value == "POST" || tokenContainer[i].value == "DELETE")
-                        loc.index.push_back(tokenContainer[i].value);
-                    else
-                        error_line("only allowed methods are (GET, POST, DELETE)", tokenContainer[i].line);
+                    loc.index.push_back(tokenContainer[i].value);
                     i++;
                 }
                 SetIndexfile = true;
@@ -253,7 +273,10 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
                 i++;
                 while(tokenContainer[i].type == 1)
                 {
-                    loc.allow_methods.push_back(tokenContainer[i].value);
+                    if (tokenContainer[i].value == "GET" || tokenContainer[i].value == "POST" || tokenContainer[i].value == "DELETE")
+                        loc.index.push_back(tokenContainer[i].value);
+                    else
+                        error_line(": only allowed methods are (GET, POST, DELETE)", tokenContainer[i].line);
                     i++;
                 }
             }else if (tokenContainer[i].value == "autoindex")
@@ -265,8 +288,31 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
                 else
                     error_line(": auto index works with only on or off options", tokenContainer[i].line);
                 SetAutoindex = true;
+            }else if(tokenContainer[i].value == "cgi_pass")
+            {
+                i++;
+                while(tokenContainer[i].type == 1)
+                {
+                    loc.allow_methods.push_back(tokenContainer[i].value);
+                    i++;
+                }
+            }else if(tokenContainer[i].value == "cgi_extention")
+            {
+                i++;
+                while(tokenContainer[i].type == 1)
+                {
+                    loc.cgi_extention.push_back(tokenContainer[i].value);
+                    i++;
+                }
             }else if (tokenContainer[i].value == "cgi_pass")
-                loc.cgi_pass.insert(std::make_pair(tokenContainer[i + 1].value, tokenContainer[i + 2].value));
+            {
+                i++;
+                while(tokenContainer[i].type == 1)
+                {
+                    loc.cgi_path.push_back(tokenContainer[i].value);
+                    i++;
+                } 
+            }
         }
         else if (tokenContainer[i].value == "}")
         {
@@ -278,7 +324,11 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
 
 void checking_for_defaults(ServerBlock& Serv)
 {
-    if (!Serv.listen || Serv.root.empty() || Serv.error_page.empty())
+    if ((Serv.listen < 0 || Serv.listen > 65535))
+        throw std::runtime_error("ERROR: port has incorrect value");
+    else if (Serv.client_max_body_size < 0)
+        throw std::runtime_error("ERROR: client_max_body_size has incorrect value");
+    else if (!Serv.listen || Serv.root.empty() || Serv.error_page.empty())
         throw std::runtime_error("ERROR: missing value (root, listen, error_page)");
     if (Serv.host.empty()) Serv.host = "127.0.0.1";
     if (Serv.server_name.empty()) Serv.server_name = "WEBSERV_42";
@@ -347,8 +397,8 @@ void tokenzation(std::string fileContent)
         checking_for_defaults(serverConfigs[i]);
     }
     // debugging code
-    for(size_t i = 0; i < tokenContainer.size(); i++)
-        std::cout << tokenContainer[i].value << std::endl;
+    // for(size_t i = 0; i < tokenContainer.size(); i++)
+    //     std::cout << tokenContainer[i].value << std::endl;
 }
 
 int main(int ac, char **av)
