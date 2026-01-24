@@ -166,6 +166,8 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
     ServerBlock Serv;
     std::deque<std::string> keywords;
     size_t keepCountOfBrase = 0;
+    bool insideLoc = false;
+    int countARG = 0;
 
     // init
     Serv.listen = 0;
@@ -182,6 +184,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
     duplicate_check(keywords, "listen");
     duplicate_check(keywords, "client_max_body_size");
     duplicate_check(keywords, "server_name");
+    // duplicate_check(keywords, "host");
     // duplicate_check(keywords, "error_page");
     // storing values
     for (int i = 0; i < tokenContainer.size(); i++)
@@ -190,22 +193,85 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
         {
             if (tokenContainer[i].value == "listen")
             {
-                std::stringstream ss(tokenContainer[i + 1].value);
-                ss >> Serv.listen;
+                i++;
+                while(tokenContainer[i].value != ";")
+                {
+                    countARG++;
+                    i++;
+                }
+                i--;
+                if (countARG == 1)
+                {
+                    std::stringstream ss(tokenContainer[i].value);
+                    ss >> Serv.listen;
+                    countARG = 0;
+                }else
+                    error_line(": must only have one argument", tokenContainer[i].line);
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "host")
-                Serv.host = tokenContainer[i + 1].value;
+            {
+                i++;
+                while(tokenContainer[i].value != ";")
+                {
+                    countARG++;
+                    i++;
+                }
+                i--;
+                if (countARG == 1)
+                {
+                    Serv.host = tokenContainer[i].value;
+                    countARG = 0;
+                }else
+                    error_line(": must only have one argument", tokenContainer[i].line);
+            }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "root")
             {
-                if (Serv.root.empty())
-                    Serv.root = tokenContainer[i + 1].value;
+                i++;
+                while(tokenContainer[i].value != ";")
+                {
+                    countARG++;
+                    i++;
+                }
+                i--;
+                if (countARG == 1 && Serv.root.empty())
+                {
+                    Serv.root = tokenContainer[i].value;
+                    countARG = 0;
+                }else if (countARG > 1)
+                    error_line(": must only have one argument", tokenContainer[i].line);
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "server_name")
-                Serv.server_name = tokenContainer[i + 1].value;
+            {
+                i++;
+                while(tokenContainer[i].value != ";")
+                {
+                    countARG++;
+                    i++;
+                }
+                i--;
+                if (countARG == 1)
+                {
+                    Serv.server_name = tokenContainer[i].value;
+                    countARG = 0;
+                }else
+                    error_line(": must only have one argument", tokenContainer[i].line);
+            }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "client_max_body_size")
             {
-                std::stringstream ss(tokenContainer[i + 1].value);
-                ss >> Serv.client_max_body_size;
+                i++;
+                while(tokenContainer[i].value != ";")
+                {
+                    countARG++;
+                    i++;
+                }
+                i--;
+                if (countARG == 1)
+                {
+                    std::stringstream ss(tokenContainer[i].value);
+                    ss >> Serv.client_max_body_size;
+                    countARG = 0;
+                }else
+                    error_line(": must only have one argument", tokenContainer[i].line);
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "error_page")
             {
@@ -217,12 +283,19 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
             else if (i < tokenContainer.size() && tokenContainer[i].value == "index")
             {
                 i++;
-                while(tokenContainer[i].type == 1)
+                if (Serv.index.empty())
                 {
-                    Serv.index.push_back(tokenContainer[i].value);
-                    i++;
+                    while(tokenContainer[i].type == 1)
+                    {
+                        Serv.index.push_back(tokenContainer[i].value);
+                        i++;
+                    }
                 }
-            }
+            }else if (tokenContainer[i].value == "location")
+                insideLoc = true;
+            else if (insideLoc && (tokenContainer[i].value == "listen" || tokenContainer[i].value == "server_name" || tokenContainer[i].value == "error_page" ||
+                    tokenContainer[i].value == "client_max_body_size"))
+                    error_line(": listen, server_name, client_mbs and error_pages must be inside server block not location", tokenContainer[i].line);
         }else if (tokenContainer[i].value == "{")
             keepCountOfBrase++;
         else if (tokenContainer[i].value == "}" && keepCountOfBrase)
@@ -232,7 +305,8 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
             {
                 ServerConfigs.push_back(Serv);
                 Serv = ServerBlock();
-            }
+            }else
+                insideLoc = false;
         }
     }
 
@@ -259,7 +333,7 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
             {
                 if (tokenContainer[i].value == "{")
                     keepCountOfBrase++;
-                if ((i + 1) < tokenContainer.size() && (pos = tokenContainer[i].value.find_first_of("/")) != 0 && tokenContainer[i + 1].value == "{")
+                else if ((i + 1) < tokenContainer.size() && (pos = tokenContainer[i].value.find_first_of("/")) != 0 && tokenContainer[i + 1].value == "{")
                     error_line(": paths must start with /", tokenContainer[i].line);
                 else if ((i - 1) >= 0 && tokenContainer[i].type == 1 && tokenContainer[i - 1].value == "location")
                     loc.path = tokenContainer[i].value;
@@ -311,20 +385,19 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
                         i++;
                     } 
                 }
-                if (tokenContainer[i].value == "}")
+                else if (tokenContainer[i].value == "}")
                 {
                     keepCountOfBrase--;
                     Serv.locations.push_back(loc);
                     InsideLocationBlock = false;
                     break;
-                }else
-                    i++;
+                }else if (tokenContainer[i].value == "listen" || tokenContainer[i].value == "server_name" || tokenContainer[i].value == "error_page" ||
+                    tokenContainer[i].value == "client_max_body_size")
+                    error_line(": listen, server_name, client_mbs and error_pages must be inside server block not location", tokenContainer[i].line);
+                i++;
             }
         }else if (tokenContainer[i].value == "{")
-        {
             keepCountOfBrase++;
-            std::cout << keepCountOfBrase << std::endl;
-        }
         else if (tokenContainer[i].value == "}" && keepCountOfBrase)
         {
             keepCountOfBrase--;
@@ -333,7 +406,7 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
         }
         // if (keepCountOfBrase == 0)
         //     break;
-    }
+    }           
 }
 
 void checking_for_defaults(ServerBlock& Serv)
