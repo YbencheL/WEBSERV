@@ -1,51 +1,62 @@
+# ===== Server 1 =====
 server {
     listen 8080;
-    server_name localhost;
-
-    root /var/www/html;
-    client_max_body_size 1000000;
-
-    error_page 404 /errors/404.html;
-
-    location / {
-        allow_methods GET POST;
-        root /var/www/html;
-    }
-
-    location /upload {
-        allow_methods POST;
-        root /var/www/upload;
-    }
-    index index.html;
-    location /cgi {
-        allow_methods GET POST DELETE;
-        cgi_extension .py;
-        cgi_path /usr/bin/python3;
-    }
-}
-
-server {
-    listen 80;
-    server_name localhost;
-
-    root /var/www/html;
-    client_max_body_size 1000000;
-
-    error_page 404 /errors/404.html;
+    server_name site1.local;
+    host 127.0.0.1;
+    root /var/www/site1;
+    client_max_body_size 5000000;
+    index index.html index.htm;
+    error_page 404 errors/404.html;
+    error_page 500 errors/500.html;
 
     location / {
         allow_methods GET POST;
-        root /var/www/html;
+        autoindex on;
+        index home.html;
     }
 
-    location /upload {
-        allow_methods POST;
-        root /ousssa;
-    }
-    index index.html;
-    location /cgi {
+    location /api {
         allow_methods GET POST DELETE;
-        cgi_extension .py;
+        index api.html;
         cgi_path /usr/bin/python3;
+        cgi_extension .py;
+    }
+
+    location /downloads {
+        root /mnt/files;
+        allow_methods GET;
+        autoindex on;
+        index files.html;
     }
 }
+
+# # ===== Server 2 =====
+# server {
+#     listen 9090;
+#     server_name site2.local;
+#     host 192.168.1.10;
+#     root /var/www/site2;
+#     client_max_body_size 2000000;
+#     index main.html;
+#     error_page 403 errors/403.html;
+
+#     location / {
+#         allow_methods GET;
+#         autoindex off;
+#     }
+
+#     location /admin {
+#         root /var/www/admin;
+#         allow_methods GET POST;
+#         index admin.html;
+#         cgi_path /usr/bin/php;
+#         cgi_extension .php;
+#     }
+
+#     location /scripts {
+#         allow_methods GET POST DELETE;
+#         index run.sh;
+#         cgi_path /bin/bash;
+#         cgi_extension .sh;
+#     }
+# }

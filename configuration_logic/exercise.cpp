@@ -110,7 +110,7 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
                 LocationBlockCount = 0;
             }else if (tokenContainer[i].value == ";")
             {
-                if ((i - 1) >= 0 && tokenContainer[i - 2].value == ";")
+                if ((i - 2) >= 0 && tokenContainer[i - 2].value == ";")
                     error_line(": syntax error related to ;", tokenContainer[i].line);
                 else if (tokenContainer[i + 1].type == 1)
                     error_line(": unkown keyword", tokenContainer[i + 1].line);
@@ -131,7 +131,7 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
             else if (tokenContainer[i].value == "location")
                 LocationBlockCount++;
                 
-            if ((tokenContainer[i].value == "server" && tokenContainer[i + 1].value != "{") ||
+            if (i < tokenContainer.size() && (tokenContainer[i].value == "server" && tokenContainer[i + 1].value != "{") ||
                     (tokenContainer[i].value == "location" && tokenContainer[i + 2].value != "{"))
                 error_line(": server and location block must be followed with braces", tokenContainer[i].line);
             else if (tokenContainer[i].value == "location" && !insideServer)
@@ -170,6 +170,9 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
     // init
     Serv.listen = 0;
     Serv.client_max_body_size = 0;
+    Serv.locations.clear();
+    Serv.error_page.clear();
+    Serv.index.clear();
     // duplicate check rule
     for (int i = 0; i < tokenContainer.size(); i++)
     {
@@ -179,7 +182,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
     duplicate_check(keywords, "listen");
     duplicate_check(keywords, "client_max_body_size");
     duplicate_check(keywords, "server_name");
-    duplicate_check(keywords, "error_page");
+    // duplicate_check(keywords, "error_page");
     // storing values
     for (int i = 0; i < tokenContainer.size(); i++)
     {
@@ -190,25 +193,28 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
                 std::stringstream ss(tokenContainer[i + 1].value);
                 ss >> Serv.listen;
             }
-            else if (tokenContainer[i].value == "host")
+            else if (i < tokenContainer.size() && tokenContainer[i].value == "host")
                 Serv.host = tokenContainer[i + 1].value;
-            else if (tokenContainer[i].value == "root")
-                Serv.root = tokenContainer[i + 1].value;
-            else if (tokenContainer[i].value == "server_name")
+            else if (i < tokenContainer.size() && tokenContainer[i].value == "root")
+            {
+                if (Serv.root.empty())
+                    Serv.root = tokenContainer[i + 1].value;
+            }
+            else if (i < tokenContainer.size() && tokenContainer[i].value == "server_name")
                 Serv.server_name = tokenContainer[i + 1].value;
-            else if (tokenContainer[i].value == "client_max_body_size")
+            else if (i < tokenContainer.size() && tokenContainer[i].value == "client_max_body_size")
             {
                 std::stringstream ss(tokenContainer[i + 1].value);
                 ss >> Serv.client_max_body_size;
             }
-            else if (tokenContainer[i].value == "error_page")
+            else if (i < tokenContainer.size() && tokenContainer[i].value == "error_page")
             {
                 int errornum = 0;
                 std::stringstream ss(tokenContainer[i + 1].value);
                 ss >> errornum;
                 Serv.error_page.insert(std::make_pair(errornum, tokenContainer[i + 2].value));
             }
-            else if (tokenContainer[i].value == "index")
+            else if (i < tokenContainer.size() && tokenContainer[i].value == "index")
             {
                 i++;
                 while(tokenContainer[i].type == 1)
@@ -223,19 +229,23 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
         {
             keepCountOfBrase--;
             if (keepCountOfBrase == 0)
+            {
                 ServerConfigs.push_back(Serv);
+                Serv = ServerBlock();
+            }
         }
     }
 
 }
 
-void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock& Serv)
+void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock& Serv, size_t& i)
 {
     bool InsideLocationBlock = false;
+    size_t keepCountOfBrase = 0;
     size_t pos = 0;
-    int i = 0;
+    // int i = 0;
     
-    for (i = 0; i < tokenContainer.size(); i++)
+    for (; i < tokenContainer.size(); i++)
     {
         if (!InsideLocationBlock && (tokenContainer[i].value == "cgi_extension" || tokenContainer[i].value == "cgi_path"))
             error_line(": unkown keyword", tokenContainer[i].line);
@@ -247,6 +257,8 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
             InsideLocationBlock = true;
             while (InsideLocationBlock)
             {
+                if (tokenContainer[i].value == "{")
+                    keepCountOfBrase++;
                 if ((i + 1) < tokenContainer.size() && (pos = tokenContainer[i].value.find_first_of("/")) != 0 && tokenContainer[i + 1].value == "{")
                     error_line(": paths must start with /", tokenContainer[i].line);
                 else if ((i - 1) >= 0 && tokenContainer[i].type == 1 && tokenContainer[i - 1].value == "location")
@@ -301,13 +313,26 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
                 }
                 if (tokenContainer[i].value == "}")
                 {
+                    keepCountOfBrase--;
                     Serv.locations.push_back(loc);
                     InsideLocationBlock = false;
                     break;
                 }else
                     i++;
             }
+        }else if (tokenContainer[i].value == "{")
+        {
+            keepCountOfBrase++;
+            std::cout << keepCountOfBrase << std::endl;
         }
+        else if (tokenContainer[i].value == "}" && keepCountOfBrase)
+        {
+            keepCountOfBrase--;
+            if (keepCountOfBrase == 0)
+                break;
+        }
+        // if (keepCountOfBrase == 0)
+        //     break;
     }
 }
 
@@ -340,6 +365,7 @@ void tokenzation(std::string fileContent)
 {
     std::string tok;
     size_t Line;
+    size_t indx = 0;
     size_t pos;
     std::deque<Token> tokenContainer;
     std::deque<ServerBlock> serverConfigs;
@@ -382,12 +408,83 @@ void tokenzation(std::string fileContent)
     extracting_server_config(tokenContainer, serverConfigs);
     for (int i = 0; i < serverConfigs.size(); i++)
     {
-        extracting_location_config(tokenContainer, serverConfigs[i]);
+        extracting_location_config(tokenContainer, serverConfigs[i], indx);
         checking_for_defaults(serverConfigs[i]);
     }
     // debugging code
-    // for(size_t i = 0; i < tokenContainer.size(); i++)
-    //     std::cout << tokenContainer[i].value << std::endl;
+    // for(size_t i = 0; i < serverConfigs.size(); i++)
+    // {
+    //     std::cout <<  serverConfigs[i].client_max_body_size << std::endl;
+    //     std::cout <<  serverConfigs[i].root << std::endl;
+    //     std::cout <<  serverConfigs[i].host << std::endl;
+    //     std::cout <<  serverConfigs[i].server_name << std::endl;
+    //     for (std::map<int, std::string>::iterator it = serverConfigs[i].error_page.begin(); it != serverConfigs[i].error_page.end(); ++it)
+    //         std::cout <<  it->first << " " << it->second << std::endl;
+    //     for (std::deque<std::string>::iterator it = serverConfigs[i].index.begin(); it != serverConfigs[i].index.end(); ++it)
+    //         std::cout <<  *it << std::endl;
+    //     for (std::deque<LocationBlock>::iterator it = serverConfigs[i].locations.begin(); it != serverConfigs[i].locations.end(); ++it)
+    //     {
+            
+    //     }
+    // }
+    for (size_t i = 0; i < serverConfigs.size(); i++)
+    {
+        std::cout << "===== ServerBlock #" << i << " =====" << std::endl;
+        std::cout << "listen: " << serverConfigs[i].listen << std::endl;
+        std::cout << "root: " << serverConfigs[i].root << std::endl;
+        std::cout << "host: " << serverConfigs[i].host << std::endl;
+        std::cout << "server_name: " << serverConfigs[i].server_name << std::endl;
+        std::cout << "client_max_body_size: " << serverConfigs[i].client_max_body_size << std::endl;
+
+        std::cout << "--- error_page ---" << std::endl;
+        for (std::map<int, std::string>::iterator it = serverConfigs[i].error_page.begin();
+            it != serverConfigs[i].error_page.end(); ++it)
+        {
+            std::cout << it->first << " -> " << it->second << std::endl;
+        }
+
+        std::cout << "--- index ---" << std::endl;
+        for (std::deque<std::string>::iterator it = serverConfigs[i].index.begin();
+            it != serverConfigs[i].index.end(); ++it)
+        {
+            std::cout << *it << std::endl;
+        }
+
+        std::cout << "--- locations ---" << std::endl;
+        for (size_t j = 0; j < serverConfigs[i].locations.size(); j++)
+        {
+            LocationBlock &loc = serverConfigs[i].locations[j];
+            std::cout << "Location #" << j << ":" << std::endl;
+            std::cout << "  path: " << loc.path << std::endl;
+            std::cout << "  root: " << loc.root << std::endl;
+
+            std::cout << "  index: ";
+            for (size_t k = 0; k < loc.index.size(); k++)
+                std::cout << loc.index[k] << " ";
+            std::cout << std::endl;
+
+            std::cout << "  allow_methods: ";
+            for (size_t k = 0; k < loc.allow_methods.size(); k++)
+                std::cout << loc.allow_methods[k] << " ";
+            std::cout << std::endl;
+
+            std::cout << "  autoindex: " << (loc.autoindex ? "on" : "off") << std::endl;
+
+            std::cout << "  cgi_path: ";
+            for (size_t k = 0; k < loc.cgi_path.size(); k++)
+                std::cout << loc.cgi_path[k] << " ";
+            std::cout << std::endl;
+
+            std::cout << "  cgi_extension: ";
+            for (size_t k = 0; k < loc.cgi_extension.size(); k++)
+                std::cout << loc.cgi_extension[k] << " ";
+            std::cout << std::endl;
+
+            std::cout << "------------------" << std::endl;
+        }
+        std::cout << "==============================" << std::endl << std::endl;
+    }
+
 }
 
 int main(int ac, char **av)
