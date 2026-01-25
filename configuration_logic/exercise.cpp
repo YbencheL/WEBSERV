@@ -434,8 +434,9 @@ void checking_for_defaults(ServerBlock& Serv)
         throw std::runtime_error("ERROR: port has incorrect value");
     else if (Serv.client_max_body_size < 0)
         throw std::runtime_error("ERROR: client_max_body_size has incorrect value");
-    else if (!Serv.listen || Serv.root.empty() || Serv.error_page.empty())
+    else if (!Serv.listen || Serv.root.empty())
         throw std::runtime_error("ERROR: missing value (root, listen, error_page)");
+    if (Serv.error_page.empty()) Serv.error_page.insert(std::make_pair(404, "/default_error_path"));
     if (Serv.host.empty()) Serv.host = "127.0.0.1";
     if (Serv.server_name.empty()) Serv.server_name = "WEBSERV_42";
     if (Serv.index.empty()) Serv.index.push_back("index.html");
