@@ -42,6 +42,11 @@ std::string Request::getHeaders() const
     return headers;
 }
 
+std::string Request::getHttpVersion() const
+{
+    return httpVersion;
+}
+
 void Request::setMethod(std::string str)
 {
     method = str;
@@ -67,7 +72,33 @@ void Request::setHeader(std::string str)
     headers = str;
 }
 
+void Request::setHttpVersion(std::string str)
+{
+    httpVersion = str;
+}
+
 void Request::parseRawRequest()
 {
-    
+    //get Method
+    setMethod(rawRequest.substr(0, rawRequest.find(' ')));
+    rawRequest.erase(0, rawRequest.find(' ') + 1);
+    //get path and query
+    size_t end = rawRequest.find('?');
+    if (end != rawRequest.npos && end < rawRequest.find(' '))
+    {
+        setPath(rawRequest.substr(0, end));
+        setQuery(rawRequest.substr(end, rawRequest.find(' ') - end));
+    }
+    else
+        setPath(rawRequest.substr(0, rawRequest.find(' ')));
+    rawRequest.erase(0, rawRequest.find(' ') + 1);
+    //get hhtp version
+    setHttpVersion(rawRequest.substr(0, rawRequest.find("\r\n")));
+    rawRequest.erase(0, rawRequest.find("\r\n") + 2);
+    //get headers
+    setHeader(rawRequest.substr(0, rawRequest.find("\r\n\r\n")));
+    rawRequest.erase(0, rawRequest.find("\r\n\r\n") + 4);
+    //get body
+    std::cout << rawRequest << std::endl;
+    setBody(rawRequest);
 }

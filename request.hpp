@@ -12,6 +12,7 @@ class Request
     std::string query;
     std::string body;
     std::string headers;
+    std::string httpVersion;
 
   public:
     Request();
@@ -24,12 +25,14 @@ class Request
     std::string getQuery() const;
     std::string getBody() const;
     std::string getHeaders() const;
+    std::string getHttpVersion() const;
 
     void setMethod(std::string str);
     void setPath(std::string str);
     void setQuery(std::string str);
     void setBody(std::string str);
     void setHeader(std::string str);
+    void setHttpVersion(std::string str);
 
     void parseRawRequest();
 };
