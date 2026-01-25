@@ -1,32 +1,30 @@
 # ===== Server 1 =====
 server {
-    listen 8080;
-    server_name site1.local;
+    listen 8002;
+	server_name localhost;
     host 127.0.0.1;
-    root /var/www/site1;
-    client_max_body_size 5000000;
-    index index.html index.htm;
-    error_page 404 errors/404.html;
-    error_page 500 errors/500.html;
+    root docs/fusion_web/;
+    # client_max_body_size 3000000;
+	index index.html;
+    error_page 404 error_pages/404.html;
 
     location / {
+        allow_methods  DELETE POST GET;
+        autoindex off;
+    }
+    
+    location /tours {
+        autoindex on;
+        index tours1.html;
         allow_methods GET POST;
-        autoindex on;
-        index home.html;
     }
 
-    location /api {
+    location /cgi-bin {
+        root ./;
         allow_methods GET POST DELETE;
-        index api.html;
-        cgi_path /usr/bin/python3;
-        cgi_extension .py;
-    }
-
-    location /downloads {
-        root /mnt/files;
-        allow_methods GET;
-        autoindex on;
-        index files.html;
+        index time.py;
+        cgi_path /usr/bin/python3 /bin/bash;
+        cgi_extension .py .sh;
     }
 }
 

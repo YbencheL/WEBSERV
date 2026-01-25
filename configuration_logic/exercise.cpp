@@ -6,6 +6,11 @@
 #include <map>
 #include <algorithm>
 
+//define
+#define PORT_MIN_VAL 1025
+#define PORT_MAX_VAL 65535
+#define CLIENT_MAX_BODY_SIZE 1000000
+
 enum TokenType {
     KEYWORD,
     WORD,
@@ -233,12 +238,13 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
                     i++;
                 }
                 i--;
-                if (countARG == 1 && Serv.root.empty())
+                if (countARG == 1 && Serv.root.empty() && !insideLoc)
                 {
                     Serv.root = tokenContainer[i].value;
                     countARG = 0;
                 }else if (countARG > 1)
                     error_line(": must only have one argument", tokenContainer[i].line);
+                countARG = 0;
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "server_name")
             {
@@ -275,10 +281,23 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "error_page")
             {
-                int errornum = 0;
-                std::stringstream ss(tokenContainer[i + 1].value);
-                ss >> errornum;
-                Serv.error_page.insert(std::make_pair(errornum, tokenContainer[i + 2].value));
+                i++;
+                while(tokenContainer[i].value != ";")
+                {
+                    countARG++;
+                    i++;
+                }
+                i--;
+                if (countARG == 2)
+                {
+                    i--;
+                    int errornum = 0;
+                    std::stringstream ss(tokenContainer[i].value);
+                    ss >> errornum;
+                    Serv.error_page.insert(std::make_pair(errornum, tokenContainer[i + 1].value));
+                    countARG = 0;
+                }else
+                    error_line(": error_page must have two values error num and path", tokenContainer[i].line);
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "index")
             {
@@ -411,7 +430,7 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
 
 void checking_for_defaults(ServerBlock& Serv)
 {
-    if ((Serv.listen < 0 || Serv.listen > 65535))
+    if ((Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL))
         throw std::runtime_error("ERROR: port has incorrect value");
     else if (Serv.client_max_body_size < 0)
         throw std::runtime_error("ERROR: client_max_body_size has incorrect value");
@@ -420,7 +439,7 @@ void checking_for_defaults(ServerBlock& Serv)
     if (Serv.host.empty()) Serv.host = "127.0.0.1";
     if (Serv.server_name.empty()) Serv.server_name = "WEBSERV_42";
     if (Serv.index.empty()) Serv.index.push_back("index.html");
-    if (!Serv.client_max_body_size) Serv.client_max_body_size = 3000000;
+    if (!Serv.client_max_body_size) Serv.client_max_body_size = CLIENT_MAX_BODY_SIZE;
     for (int i = 0; i < Serv.locations.size(); i++)
     {
         if (Serv.locations[i].root.empty()) Serv.locations[i].root = Serv.root;
