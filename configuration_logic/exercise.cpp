@@ -37,7 +37,7 @@ struct LocationBlock
 
 struct ServerBlock
 {
-    std::deque<int> listen;
+    int listen;
     std::string root;
     std::string host;
     std::string server_name;
@@ -161,7 +161,7 @@ void duplicate_check(std::deque<std::string>& keywords, std::string name)
         else if (keywords[i] == "server")
             count = 0;
         if (count > 1)
-            throw std::runtime_error("ERROR: there must be no duplicates for these keywords: listen, client_max_body_size and server_name,\nor a duplicated method inside allow_methods directive");
+            throw std::runtime_error("ERROR: there must be no duplicates for these keywords: listen, client_max_body_size and server_name, or a duplicated method inside allow_methods directive");
     }
 }
 
@@ -172,12 +172,11 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
     size_t keepCountOfBrase = 0;
     bool insideLoc = false;
     int countARG = 0;
-    int num = 0;
 
     // init
+    Serv.listen = 0;
     Serv.client_max_body_size = 0;
     Serv.locations.clear();
-    Serv.listen.clear();
     Serv.error_page.clear();
     Serv.index.clear();
     // duplicate check rule
@@ -186,7 +185,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
         if (tokenContainer[i].type == 0)
             keywords.push_back(tokenContainer[i].value);
     }
-    // duplicate_check(keywords, "listen");
+    duplicate_check(keywords, "listen");
     duplicate_check(keywords, "client_max_body_size");
     duplicate_check(keywords, "server_name");
     // storing values
@@ -206,8 +205,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
                 if (countARG == 1)
                 {
                     std::stringstream ss(tokenContainer[i].value);
-                    ss >> num;
-                    Serv.listen.push_back(num);
+                    ss >> Serv.listen;
                     countARG = 0;
                 }else
                     error_line(": listen must only have one argument", tokenContainer[i].line);
@@ -431,15 +429,11 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
 
 void checking_for_defaults(ServerBlock& Serv)
 {
-    for (std::deque<int>::iterator it = Serv.listen.begin();
-        it != Serv.listen.end(); ++it)
-    {
-        if ((*it < PORT_MIN_VAL || *it > PORT_MAX_VAL))
-            throw std::runtime_error("ERROR: port has incorrect value must be between 1024 and 65535");
-    }
-    if (Serv.client_max_body_size < 0)
+    if ((Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL))
+        throw std::runtime_error("ERROR: port has incorrect value must be between 1024 and 65535");
+    else if (Serv.client_max_body_size < 0)
         throw std::runtime_error("ERROR: client_max_body_size has incorrect value");
-    else if (Serv.listen.empty() || Serv.root.empty())
+    else if (!Serv.listen || Serv.root.empty())
         throw std::runtime_error("ERROR: missing value (root, listen, error_page)");
     if (Serv.error_page.empty()) Serv.error_page.insert(std::make_pair(404, "/default_error_path"));
     if (Serv.host.empty()) Serv.host = "127.0.0.1";
@@ -513,17 +507,11 @@ void tokenzation(std::string fileContent)
     for (size_t i = 0; i < serverConfigs.size(); i++)
     {
         std::cout << "===== ServerBlock #" << i << " =====" << std::endl;
+        std::cout << "listen: " << serverConfigs[i].listen << std::endl;
         std::cout << "root: " << serverConfigs[i].root << std::endl;
         std::cout << "host: " << serverConfigs[i].host << std::endl;
         std::cout << "server_name: " << serverConfigs[i].server_name << std::endl;
         std::cout << "client_max_body_size: " << serverConfigs[i].client_max_body_size << std::endl;
-
-        std::cout << "--- listen ---" << std::endl;
-        for (std::deque<int>::iterator it = serverConfigs[i].listen.begin();
-            it != serverConfigs[i].listen.end(); ++it)
-        {
-            std::cout << *it << std::endl;
-        }
 
         std::cout << "--- error_page ---" << std::endl;
         for (std::map<int, std::string>::iterator it = serverConfigs[i].error_page.begin();
