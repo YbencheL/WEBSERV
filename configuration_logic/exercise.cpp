@@ -37,7 +37,7 @@ struct LocationBlock
 
 struct ServerBlock
 {
-    int listen;
+    std::deque<int> listen;
     std::string root;
     std::string host;
     std::string server_name;
@@ -161,23 +161,23 @@ void duplicate_check(std::deque<std::string>& keywords, std::string name)
         else if (keywords[i] == "server")
             count = 0;
         if (count > 1)
-            throw std::runtime_error("ERROR: there must be no duplicates for these keywords (listen client_max_body_size server_name error_page)");
+            throw std::runtime_error("ERROR: there must be no duplicates for these keywords: listen, client_max_body_size and server_name,\nor a duplicated method inside allow_methods directive");
     }
 }
 
 void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& ServerConfigs)
 {
-    // bool insideServerBlock = false;
     ServerBlock Serv;
     std::deque<std::string> keywords;
     size_t keepCountOfBrase = 0;
     bool insideLoc = false;
     int countARG = 0;
+    int num = 0;
 
     // init
-    Serv.listen = 0;
     Serv.client_max_body_size = 0;
     Serv.locations.clear();
+    Serv.listen.clear();
     Serv.error_page.clear();
     Serv.index.clear();
     // duplicate check rule
@@ -186,11 +186,9 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
         if (tokenContainer[i].type == 0)
             keywords.push_back(tokenContainer[i].value);
     }
-    duplicate_check(keywords, "listen");
+    // duplicate_check(keywords, "listen");
     duplicate_check(keywords, "client_max_body_size");
     duplicate_check(keywords, "server_name");
-    // duplicate_check(keywords, "host");
-    // duplicate_check(keywords, "error_page");
     // storing values
     for (int i = 0; i < tokenContainer.size(); i++)
     {
@@ -208,10 +206,11 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
                 if (countARG == 1)
                 {
                     std::stringstream ss(tokenContainer[i].value);
-                    ss >> Serv.listen;
+                    ss >> num;
+                    Serv.listen.push_back(num);
                     countARG = 0;
                 }else
-                    error_line(": must only have one argument", tokenContainer[i].line);
+                    error_line(": listen must only have one argument", tokenContainer[i].line);
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "host")
             {
@@ -227,7 +226,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
                     Serv.host = tokenContainer[i].value;
                     countARG = 0;
                 }else
-                    error_line(": must only have one argument", tokenContainer[i].line);
+                    error_line(": host must only have one argument", tokenContainer[i].line);
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "root")
             {
@@ -243,7 +242,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
                     Serv.root = tokenContainer[i].value;
                     countARG = 0;
                 }else if (countARG > 1)
-                    error_line(": must only have one argument", tokenContainer[i].line);
+                    error_line(": root must only have one argument", tokenContainer[i].line);
                 countARG = 0;
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "server_name")
@@ -260,7 +259,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
                     Serv.server_name = tokenContainer[i].value;
                     countARG = 0;
                 }else
-                    error_line(": must only have one argument", tokenContainer[i].line);
+                    error_line(": server_name must only have one argument", tokenContainer[i].line);
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "client_max_body_size")
             {
@@ -277,7 +276,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
                     ss >> Serv.client_max_body_size;
                     countARG = 0;
                 }else
-                    error_line(": must only have one argument", tokenContainer[i].line);
+                    error_line(": client_max_body_size must only have one argument", tokenContainer[i].line);
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "error_page")
             {
@@ -336,7 +335,6 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
     bool InsideLocationBlock = false;
     size_t keepCountOfBrase = 0;
     size_t pos = 0;
-    // int i = 0;
     
     for (; i < tokenContainer.size(); i++)
     {
@@ -374,7 +372,12 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
                     while(i < tokenContainer.size() && tokenContainer[i].type == 1)
                     {
                         if (tokenContainer[i].value == "GET" || tokenContainer[i].value == "POST" || tokenContainer[i].value == "DELETE")
+                        {
                             loc.allow_methods.push_back(tokenContainer[i].value);
+                            duplicate_check(loc.allow_methods, "GET");
+                            duplicate_check(loc.allow_methods, "POST");
+                            duplicate_check(loc.allow_methods, "DELETE");
+                        }
                         else
                             error_line(": only allowed methods are (GET, POST, DELETE)", tokenContainer[i].line);
                         i++;
@@ -423,18 +426,20 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
             if (keepCountOfBrase == 0)
                 break;
         }
-        // if (keepCountOfBrase == 0)
-        //     break;
     }           
 }
 
 void checking_for_defaults(ServerBlock& Serv)
 {
-    if ((Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL))
-        throw std::runtime_error("ERROR: port has incorrect value");
-    else if (Serv.client_max_body_size < 0)
+    for (std::deque<int>::iterator it = Serv.listen.begin();
+        it != Serv.listen.end(); ++it)
+    {
+        if ((*it < PORT_MIN_VAL || *it > PORT_MAX_VAL))
+            throw std::runtime_error("ERROR: port has incorrect value must be between 1024 and 65535");
+    }
+    if (Serv.client_max_body_size < 0)
         throw std::runtime_error("ERROR: client_max_body_size has incorrect value");
-    else if (!Serv.listen || Serv.root.empty())
+    else if (Serv.listen.empty() || Serv.root.empty())
         throw std::runtime_error("ERROR: missing value (root, listen, error_page)");
     if (Serv.error_page.empty()) Serv.error_page.insert(std::make_pair(404, "/default_error_path"));
     if (Serv.host.empty()) Serv.host = "127.0.0.1";
@@ -505,29 +510,20 @@ void tokenzation(std::string fileContent)
         checking_for_defaults(serverConfigs[i]);
     }
     // debugging code
-    // for(size_t i = 0; i < serverConfigs.size(); i++)
-    // {
-    //     std::cout <<  serverConfigs[i].client_max_body_size << std::endl;
-    //     std::cout <<  serverConfigs[i].root << std::endl;
-    //     std::cout <<  serverConfigs[i].host << std::endl;
-    //     std::cout <<  serverConfigs[i].server_name << std::endl;
-    //     for (std::map<int, std::string>::iterator it = serverConfigs[i].error_page.begin(); it != serverConfigs[i].error_page.end(); ++it)
-    //         std::cout <<  it->first << " " << it->second << std::endl;
-    //     for (std::deque<std::string>::iterator it = serverConfigs[i].index.begin(); it != serverConfigs[i].index.end(); ++it)
-    //         std::cout <<  *it << std::endl;
-    //     for (std::deque<LocationBlock>::iterator it = serverConfigs[i].locations.begin(); it != serverConfigs[i].locations.end(); ++it)
-    //     {
-            
-    //     }
-    // }
     for (size_t i = 0; i < serverConfigs.size(); i++)
     {
         std::cout << "===== ServerBlock #" << i << " =====" << std::endl;
-        std::cout << "listen: " << serverConfigs[i].listen << std::endl;
         std::cout << "root: " << serverConfigs[i].root << std::endl;
         std::cout << "host: " << serverConfigs[i].host << std::endl;
         std::cout << "server_name: " << serverConfigs[i].server_name << std::endl;
         std::cout << "client_max_body_size: " << serverConfigs[i].client_max_body_size << std::endl;
+
+        std::cout << "--- listen ---" << std::endl;
+        for (std::deque<int>::iterator it = serverConfigs[i].listen.begin();
+            it != serverConfigs[i].listen.end(); ++it)
+        {
+            std::cout << *it << std::endl;
+        }
 
         std::cout << "--- error_page ---" << std::endl;
         for (std::map<int, std::string>::iterator it = serverConfigs[i].error_page.begin();
