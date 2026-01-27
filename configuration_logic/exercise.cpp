@@ -436,23 +436,12 @@ void checking_for_defaults(ServerBlock& Serv)
     }
 }   
 
-void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& serverConfigs)
+void checking_for_virtual_hosts(std::multimap<int, std::string>& seen, std::string& msg)
 {
     size_t key = 0;
     size_t count = 0;
-    size_t indx = 0;
     std::string value;
-    std::multimap<int, std::string> seen;
 
-    extracting_server_blocks(tokenContainer, serverConfigs);
-    for (int i = 0; i < serverConfigs.size(); i++)
-    {
-        extracting_location_blocks(tokenContainer, serverConfigs[i], indx);
-        checking_for_defaults(serverConfigs[i]);
-        seen.insert(std::make_pair(serverConfigs[i].listen, serverConfigs[i].host));
-        if (serverConfigs[i].locations.empty() && serverConfigs[i].root.empty())
-            throw std::runtime_error("ERROR: missing value (root)");
-    }
     for (std::map<int, std::string>::iterator it = seen.begin();
         it != seen.end(); ++it)
     {
@@ -468,8 +457,33 @@ void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std:
                 count++;
         }
         if (count > 1)
-            throw std::runtime_error("ERROR: more then a server block has the same port and host ip");
+            throw std::runtime_error(msg);
     }
+}
+
+void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& serverConfigs)
+{
+    size_t indx = 0;
+    std::string msg;
+    std::multimap<int, std::string> seenPortAndIp;
+    std::multimap<int, std::string> seenPortAndName;
+
+    extracting_server_blocks(tokenContainer, serverConfigs);
+    for (int i = 0; i < serverConfigs.size(); i++)
+    {
+        extracting_location_blocks(tokenContainer, serverConfigs[i], indx);
+        checking_for_defaults(serverConfigs[i]);
+        seenPortAndIp.insert(std::make_pair(serverConfigs[i].listen, serverConfigs[i].host));
+        seenPortAndName.insert(std::make_pair(serverConfigs[i].listen, serverConfigs[i].server_name));
+        if (serverConfigs[i].locations.empty() && serverConfigs[i].root.empty())
+            throw std::runtime_error("ERROR: missing value (root)");
+    }
+    // check for server blocks with same ip and port
+    msg = "ERROR: more then a server block has the same port and ip address";
+    checking_for_virtual_hosts(seenPortAndIp, msg);
+    // check for server block with same port and server name
+    msg = "ERROR: more then a server block has the same port and server name";
+    checking_for_virtual_hosts(seenPortAndName, msg);
 }
 
 void debugging(std::deque<ServerBlock>& serverConfigs)
