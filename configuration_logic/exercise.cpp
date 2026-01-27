@@ -165,7 +165,19 @@ void duplicate_check(std::deque<std::string>& keywords, std::string name)
     }
 }
 
-void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& ServerConfigs)
+int count_to_symbol(std::deque<Token>& tokenContainer, int& index, int count)
+{
+    index++;
+    while(tokenContainer[index].value != ";")
+    {
+        count++;
+        index++;
+    }
+    index--;
+    return count;
+}
+
+void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& ServerConfigs)
 {
     ServerBlock Serv;
     std::deque<std::string> keywords;
@@ -195,13 +207,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
         {
             if (tokenContainer[i].value == "listen")
             {
-                i++;
-                while(tokenContainer[i].value != ";")
-                {
-                    countARG++;
-                    i++;
-                }
-                i--;
+                countARG = count_to_symbol(tokenContainer, i, countARG);
                 if (countARG == 1)
                 {
                     std::stringstream ss(tokenContainer[i].value);
@@ -212,13 +218,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "host")
             {
-                i++;
-                while(tokenContainer[i].value != ";")
-                {
-                    countARG++;
-                    i++;
-                }
-                i--;
+                countARG = count_to_symbol(tokenContainer, i, countARG);
                 if (countARG == 1)
                 {
                     Serv.host = tokenContainer[i].value;
@@ -228,13 +228,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "root")
             {
-                i++;
-                while(tokenContainer[i].value != ";")
-                {
-                    countARG++;
-                    i++;
-                }
-                i--;
+                countARG = count_to_symbol(tokenContainer, i, countARG);
                 if (countARG == 1 && Serv.root.empty() && !insideLoc)
                 {
                     Serv.root = tokenContainer[i].value;
@@ -245,13 +239,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "server_name")
             {
-                i++;
-                while(tokenContainer[i].value != ";")
-                {
-                    countARG++;
-                    i++;
-                }
-                i--;
+                countARG = count_to_symbol(tokenContainer, i, countARG);
                 if (countARG == 1)
                 {
                     Serv.server_name = tokenContainer[i].value;
@@ -261,13 +249,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "client_max_body_size")
             {
-                i++;
-                while(tokenContainer[i].value != ";")
-                {
-                    countARG++;
-                    i++;
-                }
-                i--;
+                countARG = count_to_symbol(tokenContainer, i, countARG);
                 if (countARG == 1)
                 {
                     std::stringstream ss(tokenContainer[i].value);
@@ -278,13 +260,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
             }
             else if (i < tokenContainer.size() && tokenContainer[i].value == "error_page")
             {
-                i++;
-                while(tokenContainer[i].value != ";")
-                {
-                    countARG++;
-                    i++;
-                }
-                i--;
+                countARG = count_to_symbol(tokenContainer, i, countARG);
                 if (countARG == 2)
                 {
                     i--;
@@ -328,7 +304,7 @@ void extracting_server_config(std::deque<Token>& tokenContainer, std::deque<Serv
 
 }
 
-void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock& Serv, size_t& i)
+void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock& Serv, size_t& i)
 {
     bool InsideLocationBlock = false;
     size_t keepCountOfBrase = 0;
@@ -353,9 +329,7 @@ void extracting_location_config(std::deque<Token>& tokenContainer , ServerBlock&
                 else if ((i - 1) >= 0 && tokenContainer[i].type == 1 && tokenContainer[i - 1].value == "location")
                     loc.path = tokenContainer[i].value;
                 else if (i < tokenContainer.size() && tokenContainer[i].value == "root")
-                {
                     loc.root = tokenContainer[i + 1].value;
-                }
                 else if (i < tokenContainer.size() && tokenContainer[i].value == "index")
                 {
                     i++;
@@ -459,58 +433,17 @@ void checking_for_defaults(ServerBlock& Serv)
     }
 }   
 
-void tokenzation(std::string fileContent)
+void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& serverConfigs, std::multimap<int, std::string>& seen)
 {
-    std::string tok;
-    size_t Line;
-    size_t indx = 0;
-    size_t pos;
     size_t key = 0;
     size_t count = 0;
+    size_t indx = 0;
     std::string value;
-    std::deque<Token> tokenContainer;
-    std::deque<ServerBlock> serverConfigs;
-    std::multimap<int, std::string> seen;
 
-    Line = 1;
-    for(size_t i = 0; i < fileContent.size(); i++)
-    {
-        if (fileContent[i] == '#')
-        {
-            while(fileContent[i] != '\n')
-                i++;
-        }
-        if (fileContent[i] == '\n')
-        {
-            if (!tok.empty())
-                identifying_words_and_keywords(tok, tokenContainer, Line);
-            Line++;
-        }
-        else if ((fileContent[i] == ' ' || fileContent[i] == '\t'))
-        {
-            if (!tok.empty())
-                identifying_words_and_keywords(tok, tokenContainer, Line);
-        }else if ((fileContent[i] == ';' || fileContent[i] == '{' || fileContent[i] == '}'))
-        {
-            if (!tok.empty())
-                identifying_words_and_keywords(tok, tokenContainer, Line);
-            Token tikken;
-            tikken.type = SYMBOL;
-            tikken.value.push_back(fileContent[i]);
-            tikken.line = Line;
-            tokenContainer.push_back(tikken);
-            tok.clear();
-        }
-        else
-            tok.push_back(fileContent[i]);
-    }
-    if (!tok.empty())
-        identifying_words_and_keywords(tok, tokenContainer, Line);
-    is_syntax_valid(tokenContainer);
-    extracting_server_config(tokenContainer, serverConfigs);
+    extracting_server_blocks(tokenContainer, serverConfigs);
     for (int i = 0; i < serverConfigs.size(); i++)
     {
-        extracting_location_config(tokenContainer, serverConfigs[i], indx);
+        extracting_location_blocks(tokenContainer, serverConfigs[i], indx);
         checking_for_defaults(serverConfigs[i]);
         std::map<int, std::string>::iterator to = seen.find(key);
         seen.insert(std::make_pair(serverConfigs[i].listen, serverConfigs[i].host));
@@ -534,7 +467,10 @@ void tokenzation(std::string fileContent)
         if (count > 1)
             throw std::runtime_error("ERROR: more then a server block has the same port and host ip");
     }
-    // debugging code
+}
+
+void debugging(std::deque<ServerBlock>& serverConfigs)
+{
     for (size_t i = 0; i < serverConfigs.size(); i++)
     {
         std::cout << "===== ServerBlock #" << i << " =====" << std::endl;
@@ -592,7 +528,55 @@ void tokenzation(std::string fileContent)
         }
         std::cout << "==============================" << std::endl << std::endl;
     }
+}
 
+void tokenzation(std::string fileContent)
+{
+    std::string tok;
+    size_t Line;
+    size_t pos;
+    std::deque<Token> tokenContainer;
+    std::deque<ServerBlock> serverConfigs;
+    std::multimap<int, std::string> seen;
+
+    Line = 1;
+    for(size_t i = 0; i < fileContent.size(); i++)
+    {
+        if (fileContent[i] == '#')
+        {
+            while(fileContent[i] != '\n')
+                i++;
+        }
+        if (fileContent[i] == '\n')
+        {
+            if (!tok.empty())
+                identifying_words_and_keywords(tok, tokenContainer, Line);
+            Line++;
+        }
+        else if ((fileContent[i] == ' ' || fileContent[i] == '\t'))
+        {
+            if (!tok.empty())
+                identifying_words_and_keywords(tok, tokenContainer, Line);
+        }else if ((fileContent[i] == ';' || fileContent[i] == '{' || fileContent[i] == '}'))
+        {
+            if (!tok.empty())
+                identifying_words_and_keywords(tok, tokenContainer, Line);
+            Token tikken;
+            tikken.type = SYMBOL;
+            tikken.value.push_back(fileContent[i]);
+            tikken.line = Line;
+            tokenContainer.push_back(tikken);
+            tok.clear();
+        }
+        else
+            tok.push_back(fileContent[i]);
+    }
+    if (!tok.empty())
+        identifying_words_and_keywords(tok, tokenContainer, Line);
+    is_syntax_valid(tokenContainer);
+    extracting_blocks_plus_final_checks(tokenContainer, serverConfigs, seen);
+    // debugging code
+    debugging(serverConfigs);
 }
 
 int main(int ac, char **av)
