@@ -433,8 +433,8 @@ void checking_for_defaults(ServerBlock& Serv)
         throw std::runtime_error("ERROR: port has incorrect value must be between 1024 and 65535");
     else if (Serv.client_max_body_size < 0)
         throw std::runtime_error("ERROR: client_max_body_size has incorrect value");
-    else if (!Serv.listen || Serv.root.empty())
-        throw std::runtime_error("ERROR: missing value (root, listen, error_page)");
+    else if (!Serv.listen)
+        throw std::runtime_error("ERROR: missing value (listen)");
     if (Serv.error_page.empty()) Serv.error_page.insert(std::make_pair(404, "/default_error_path"));
     if (Serv.host.empty()) Serv.host = "127.0.0.1";
     if (Serv.server_name.empty()) Serv.server_name = "WEBSERV_42";
@@ -442,7 +442,13 @@ void checking_for_defaults(ServerBlock& Serv)
     if (!Serv.client_max_body_size) Serv.client_max_body_size = CLIENT_MAX_BODY_SIZE;
     for (int i = 0; i < Serv.locations.size(); i++)
     {
-        if (Serv.locations[i].root.empty()) Serv.locations[i].root = Serv.root;
+        if (Serv.locations[i].root.empty())
+        {
+            Serv.locations[i].root = Serv.root;
+            if (Serv.locations[i].root.empty())
+                throw std::runtime_error("ERROR: missing value (root)");
+
+        }
         if (Serv.locations[i].index.empty()) Serv.locations[i].index = Serv.index;
         if (Serv.locations[i].allow_methods.empty())
         {
@@ -459,8 +465,12 @@ void tokenzation(std::string fileContent)
     size_t Line;
     size_t indx = 0;
     size_t pos;
+    size_t key = 0;
+    size_t count = 0;
+    std::string value;
     std::deque<Token> tokenContainer;
     std::deque<ServerBlock> serverConfigs;
+    std::multimap<int, std::string> seen;
 
     Line = 1;
     for(size_t i = 0; i < fileContent.size(); i++)
@@ -502,6 +512,27 @@ void tokenzation(std::string fileContent)
     {
         extracting_location_config(tokenContainer, serverConfigs[i], indx);
         checking_for_defaults(serverConfigs[i]);
+        std::map<int, std::string>::iterator to = seen.find(key);
+        seen.insert(std::make_pair(serverConfigs[i].listen, serverConfigs[i].host));
+        if (serverConfigs[i].locations.empty() && serverConfigs[i].root.empty())
+            throw std::runtime_error("ERROR: missing value (root)");
+    }
+    for (std::map<int, std::string>::iterator it = seen.begin();
+        it != seen.end(); ++it)
+    {
+        count = 0;
+        key = it->first;
+        value = it->second;
+        std::multimap<int, std::string>::iterator lower = seen.lower_bound(key);
+        std::multimap<int, std::string>::iterator upper = seen.upper_bound(key);
+        for (std::map<int, std::string>::iterator it = lower;
+            it != upper; ++it)
+        {
+            if (value == it->second)
+                count++;
+        }
+        if (count > 1)
+            throw std::runtime_error("ERROR: more then a server block has the same port and host ip");
     }
     // debugging code
     for (size_t i = 0; i < serverConfigs.size(); i++)
