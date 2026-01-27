@@ -267,7 +267,10 @@ void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<Serv
                     int errornum = 0;
                     std::stringstream ss(tokenContainer[i].value);
                     ss >> errornum;
-                    Serv.error_page.insert(std::make_pair(errornum, tokenContainer[i + 1].value));
+                    std::pair<std::map<int,std::string>::iterator, bool> isdup;
+                    isdup = Serv.error_page.insert(std::make_pair(errornum, tokenContainer[i + 1].value));
+                    if (!isdup.second)
+                        throw std::runtime_error("ERROR: Duplicated error page number in one server block");
                     countARG = 0;
                 }else
                     error_line(": error_page must have two values error num and path", tokenContainer[i].line);
@@ -433,19 +436,19 @@ void checking_for_defaults(ServerBlock& Serv)
     }
 }   
 
-void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& serverConfigs, std::multimap<int, std::string>& seen)
+void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& serverConfigs)
 {
     size_t key = 0;
     size_t count = 0;
     size_t indx = 0;
     std::string value;
+    std::multimap<int, std::string> seen;
 
     extracting_server_blocks(tokenContainer, serverConfigs);
     for (int i = 0; i < serverConfigs.size(); i++)
     {
         extracting_location_blocks(tokenContainer, serverConfigs[i], indx);
         checking_for_defaults(serverConfigs[i]);
-        std::map<int, std::string>::iterator to = seen.find(key);
         seen.insert(std::make_pair(serverConfigs[i].listen, serverConfigs[i].host));
         if (serverConfigs[i].locations.empty() && serverConfigs[i].root.empty())
             throw std::runtime_error("ERROR: missing value (root)");
@@ -537,7 +540,6 @@ void tokenzation(std::string fileContent)
     size_t pos;
     std::deque<Token> tokenContainer;
     std::deque<ServerBlock> serverConfigs;
-    std::multimap<int, std::string> seen;
 
     Line = 1;
     for(size_t i = 0; i < fileContent.size(); i++)
@@ -574,7 +576,7 @@ void tokenzation(std::string fileContent)
     if (!tok.empty())
         identifying_words_and_keywords(tok, tokenContainer, Line);
     is_syntax_valid(tokenContainer);
-    extracting_blocks_plus_final_checks(tokenContainer, serverConfigs, seen);
+    extracting_blocks_plus_final_checks(tokenContainer, serverConfigs);
     // debugging code
     debugging(serverConfigs);
 }
