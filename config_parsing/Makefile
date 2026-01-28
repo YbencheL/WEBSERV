@@ -1,7 +1,7 @@
 CPP = c++
 CFLAGS = -Wall -Wextra -Werror -std=c++98
 
-SRC = config_parsing.cpp content_checks.cpp syntax_validation.cpp
+SRC = main.cpp block_extraction.cpp content_checks.cpp syntax_validation.cpp
 
 HEADERS = ConfigPars.hpp
 
