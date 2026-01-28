@@ -1,0 +1,69 @@
+#ifndef CONFIGFILE_HPP
+#define CONFIGFILE_HPP
+
+#include  <iostream>
+#include  <fstream>
+#include  <deque>
+#include <cctype>
+#include <sstream>
+#include <map>
+#include <algorithm>
+
+//define
+#define PORT_MIN_VAL 1025
+#define PORT_MAX_VAL 65535
+#define CLIENT_MAX_BODY_SIZE 1000000
+
+enum TokenType {
+    KEYWORD,
+    WORD,
+    SYMBOL
+};
+
+struct Token
+{
+    TokenType type;
+    std::string value;
+    int line; 
+};
+
+struct LocationBlock
+{
+    std::string path;
+    std::string root;
+    std::deque<std::string> index;
+    std::deque<std::string> allow_methods;
+    bool autoindex;
+    std::deque<std::string> cgi_extension;
+    std::deque<std::string> cgi_path;
+};
+
+struct ServerBlock
+{
+    int listen;
+    std::string root;
+    std::string host;
+    std::string server_name;
+    int client_max_body_size;
+    std::deque<std::string> index;
+    std::map<int, std::string> error_page;
+    std::deque<LocationBlock> locations;
+};
+
+// content check functions
+void error_line(std::string msg, int Line);
+void identifying_words_and_keywords(std::string& tok, std::deque<Token>& tokenContainer, int Line);
+void is_syntax_valid(std::deque<Token> tokenContainer);
+void duplicate_check(std::deque<std::string>& keywords, std::string name);
+int count_to_symbol(std::deque<Token>& tokenContainer, int& index, int count);
+void checking_for_keyword_dups(std::deque<Token>& tokenContainer);
+void checking_for_defaults(ServerBlock& Serv);
+void checking_for_virtual_hosts(std::multimap<int, std::string>& seen, std::string& msg);
+// configfile parsing
+void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool& insideLoc, ServerBlock& Serv, int& i);
+void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& ServerConfigs);
+void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock& Serv, size_t& i);
+void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& serverConfigs);
+void tokenzation(std::string fileContent);
+
+#endif
