@@ -1,5 +1,5 @@
-#ifndef CONFIGFILE_HPP
-#define CONFIGFILE_HPP
+#ifndef ConfigPars_HPP
+#define ConfigPars_HPP
 
 #include  <iostream>
 #include  <fstream>
@@ -55,12 +55,12 @@ void error_line(std::string msg, int Line);
 void identifying_words_and_keywords(std::string& tok, std::deque<Token>& tokenContainer, int Line);
 void is_syntax_valid(std::deque<Token> tokenContainer);
 void duplicate_check(std::deque<std::string>& keywords, std::string name);
-int count_to_symbol(std::deque<Token>& tokenContainer, int& index, int count);
+int count_to_symbol(std::deque<Token>& tokenContainer, size_t& index, int count);
 void checking_for_keyword_dups(std::deque<Token>& tokenContainer);
 void checking_for_defaults(ServerBlock& Serv);
 void checking_for_virtual_hosts(std::multimap<int, std::string>& seen, std::string& msg);
-// configfile parsing
-void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool& insideLoc, ServerBlock& Serv, int& i);
+// ConfigPars parsing
+void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool& insideLoc, ServerBlock& Serv, size_t& i);
 void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& ServerConfigs);
 void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock& Serv, size_t& i);
 void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& serverConfigs);

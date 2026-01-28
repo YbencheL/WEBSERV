@@ -1,4 +1,4 @@
-#include "ConfigFile.hpp"
+#include "ConfigPars.hpp"
 
 void identifying_words_and_keywords(std::string& tok, std::deque<Token>& tokenContainer, int Line)
 {
@@ -30,7 +30,7 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
     size_t LocationBlockCount = 0;
     bool insideServer = false;
 
-    for (int i = 0; i < tokenContainer.size(); i++)
+    for (size_t i = 0; i < tokenContainer.size(); i++)
     {
         if (tokenContainer[i].type == 2)
         {
@@ -79,8 +79,8 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
             else if (tokenContainer[i].value == "location")
                 LocationBlockCount++;
                 
-            if (i < tokenContainer.size() && (tokenContainer[i].value == "server" && tokenContainer[i + 1].value != "{") ||
-                    (tokenContainer[i].value == "location" && tokenContainer[i + 2].value != "{"))
+            if ((i < tokenContainer.size()) && ((tokenContainer[i].value == "server" && tokenContainer[i + 1].value != "{") ||
+                    (tokenContainer[i].value == "location" && tokenContainer[i + 2].value != "{")))
                 error_line(": server and location block must be followed with braces", tokenContainer[i].line);
             else if (tokenContainer[i].value == "location" && !insideServer)
                 error_line(": location block must be inside the server block", tokenContainer[i].line);

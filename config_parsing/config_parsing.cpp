@@ -1,6 +1,6 @@
-#include "ConfigFile.hpp"
+#include "ConfigPars.hpp"
 
-void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool& insideLoc, ServerBlock& Serv, int& i)
+void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool& insideLoc, ServerBlock& Serv, size_t& i)
 {
     int countARG = 0;
 
@@ -107,7 +107,7 @@ void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<Serv
     // duplicate check rule
     checking_for_keyword_dups(tokenContainer);
     // storing values
-    for (int i = 0; i < tokenContainer.size(); i++)
+    for (size_t i = 0; i < tokenContainer.size(); i++)
     {
         if (tokenContainer[i].type == 0)
         {
@@ -233,7 +233,7 @@ void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std:
     std::multimap<int, std::string> seenPortAndName;
 
     extracting_server_blocks(tokenContainer, serverConfigs);
-    for (int i = 0; i < serverConfigs.size(); i++)
+    for (size_t i = 0; i < serverConfigs.size(); i++)
     {
         extracting_location_blocks(tokenContainer, serverConfigs[i], indx);
         checking_for_defaults(serverConfigs[i]);
@@ -315,7 +315,7 @@ void tokenzation(std::string fileContent)
 {
     std::string tok;
     size_t Line;
-    size_t pos;
+    // size_t pos;
     std::deque<Token> tokenContainer;
     std::deque<ServerBlock> serverConfigs;
 

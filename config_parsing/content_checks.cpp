@@ -1,6 +1,6 @@
-#include "ConfigFile.hpp"
+#include "ConfigPars.hpp"
 
-int count_to_symbol(std::deque<Token>& tokenContainer, int& index, int count)
+int count_to_symbol(std::deque<Token>& tokenContainer, size_t& index, int count)
 {
     index++;
     while(tokenContainer[index].value != ";")
@@ -26,7 +26,7 @@ void duplicate_check(std::deque<std::string>& keywords, std::string name)
 {
     int count = 0;
 
-    for (int i = 0; i < keywords.size(); i++)
+    for (size_t i = 0; i < keywords.size(); i++)
     {
         if (keywords[i] == name)
             count++;
@@ -41,7 +41,7 @@ void checking_for_keyword_dups(std::deque<Token>& tokenContainer)
 {
     std::deque<std::string> keywords;
 
-    for (int i = 0; i < tokenContainer.size(); i++)
+    for (size_t i = 0; i < tokenContainer.size(); i++)
     {
         if (tokenContainer[i].type == 0)
             keywords.push_back(tokenContainer[i].value);
@@ -64,7 +64,7 @@ void checking_for_defaults(ServerBlock& Serv)
     if (Serv.server_name.empty()) Serv.server_name = "WEBSERV_42";
     if (Serv.index.empty()) Serv.index.push_back("index.html");
     if (!Serv.client_max_body_size) Serv.client_max_body_size = CLIENT_MAX_BODY_SIZE;
-    for (int i = 0; i < Serv.locations.size(); i++)
+    for (size_t i = 0; i < Serv.locations.size(); i++)
     {
         if (Serv.locations[i].root.empty())
         {
