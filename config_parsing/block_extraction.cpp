@@ -28,7 +28,7 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
     else if (i < tokenContainer.size() && tokenContainer[i].value == "root")
     {
         countARG = count_to_symbol(tokenContainer, i, countARG);
-        if (countARG == 1 && Serv.root.empty() && !insideLoc)
+        if (countARG == 1 && !insideLoc)
         {
             Serv.root = tokenContainer[i].value;
             countARG = 0;
