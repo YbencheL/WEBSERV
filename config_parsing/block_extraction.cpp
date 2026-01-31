@@ -290,8 +290,8 @@ void tokenzation(std::string fileContent)
         else
             tok.push_back(fileContent[i]);
     }
-    if (!tok.empty())
-        identifying_words_and_keywords(tok, tokenContainer, Line);
+    if (tokenContainer.empty())
+        throw std::runtime_error("ERROR: nothing was provided in the config file");
     is_syntax_valid(tokenContainer);
     extracting_blocks_plus_final_checks(tokenContainer, serverConfigs);
     // debugging code
