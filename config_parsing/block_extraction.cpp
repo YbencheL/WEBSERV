@@ -70,8 +70,10 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
             ss >> errornum;
             if (ss.fail())
             {
-                value = tokenContainer[i].value;
-                break;
+                if (!value.empty())
+                    error_line(": there must be only one path in erro_page", tokenContainer[i].line);
+                else
+                    value = tokenContainer[i].value;
             }
             else
             {
