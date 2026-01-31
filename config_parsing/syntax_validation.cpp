@@ -38,9 +38,7 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
             {
                 if (tokenContainer[i + 1].type != 0)
                 {
-                    if (tokenContainer[i + 1].value == "}")
-                        error_line(": sytanx error related to '}'", tokenContainer[i + 1].line);
-                    else
+                    if (tokenContainer[i + 1].value != "}")
                         error_line(": unkown keyword", tokenContainer[i + 1].line);
                 }
                 if ((i - 1) >= 0 && tokenContainer[i - 1].value == "server")

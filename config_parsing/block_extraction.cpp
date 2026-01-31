@@ -66,10 +66,7 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
             int errornum = 0;
             std::stringstream ss(tokenContainer[i].value);
             ss >> errornum;
-            std::pair<std::map<int,std::string>::iterator, bool> isdup;
-            isdup = Serv.error_page.insert(std::make_pair(errornum, tokenContainer[i + 1].value));
-            if (!isdup.second)
-                throw std::runtime_error("ERROR: Duplicated error page number in one server block");
+            Serv.error_page.insert(std::make_pair(errornum, tokenContainer[i + 1].value));
             countARG = 0;
         }else
             error_line(": error_page must have two values error num and path", tokenContainer[i].line);

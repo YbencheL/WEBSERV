@@ -9,12 +9,6 @@ server {
     error_page 404 error_pages/404.html;
     error_page 403 error_pages/404.html;
 
-    location / {
-        # root /lol;
-        allow_methods  DELETE POST GET;
-        autoindex off;
-    }
-    
     location /tours {
         # root /rfrf;
         autoindex on;
