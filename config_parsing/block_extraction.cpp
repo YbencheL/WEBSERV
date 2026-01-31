@@ -59,17 +59,38 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
     }
     else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "error_page")
     {
-        countARG = count_to_symbol(tokenContainer, i, countARG);
-        if (countARG == 2)
+        std::deque<int> errorsnum;
+        std::string value;
+        int errornum = 0;
+        i++;
+        while(tokenContainer[i].value != ";")
         {
-            i--;
-            int errornum = 0;
+            errornum = 0;
             std::stringstream ss(tokenContainer[i].value);
             ss >> errornum;
-            Serv.error_page.insert(std::make_pair(errornum, tokenContainer[i + 1].value));
-            countARG = 0;
-        }else
-            error_line(": error_page must have two values error num and path", tokenContainer[i].line);
+            if (ss.fail())
+            {
+                value = tokenContainer[i].value;
+                break;
+            }
+            else
+            {
+                if ((errornum >= 100 && errornum < 600))
+                    errorsnum.push_back(errornum);
+                else
+                    error_line(": error page number must be a valid http number", tokenContainer[i].line);
+            }
+            i++;
+        }
+        if (value.empty() || errorsnum.empty())
+            error_line(": error_page is missing a path or a page error number", tokenContainer[i].line);
+        else
+        {
+            std::map<std::deque<int>,std::string>::iterator it = Serv.error_page.find(errorsnum);
+            if (it != Serv.error_page.end())
+                Serv.error_page.erase(it);
+        }
+        Serv.error_page.insert(std::make_pair(errorsnum, value));
     }
     else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "index")
     {

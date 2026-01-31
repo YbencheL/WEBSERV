@@ -46,7 +46,7 @@ struct ServerBlock
     std::string server_name;
     int client_max_body_size;
     std::deque<std::string> index;
-    std::map<int, std::string> error_page;
+    std::map<std::deque<int>, std::string> error_page;
     std::deque<LocationBlock> locations;
 };
 

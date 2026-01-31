@@ -12,10 +12,17 @@ void debugging(std::deque<ServerBlock>& serverConfigs)
         std::cout << "client_max_body_size: " << serverConfigs[i].client_max_body_size << std::endl;
 
         std::cout << "--- error_page ---" << std::endl;
-        for (std::map<int, std::string>::iterator it = serverConfigs[i].error_page.begin();
+        for (std::map<std::deque<int>, std::string>::iterator it = serverConfigs[i].error_page.begin();
             it != serverConfigs[i].error_page.end(); ++it)
         {
-            std::cout << it->first << " -> " << it->second << std::endl;
+            const std::deque<int>& codes = it->first;
+            const std::string& page = it->second;
+
+            for (std::deque<int>::const_iterator c = codes.begin();
+                c != codes.end(); ++c)
+            {
+                std::cout << *c << " -> " << page << std::endl;
+            }
         }
 
         std::cout << "--- index ---" << std::endl;
