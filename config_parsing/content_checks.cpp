@@ -1,6 +1,6 @@
 #include "ConfigPars.hpp"
 
-int count_to_symbol(std::deque<Token>& tokenContainer, size_t& index, int count)
+int count_to_symbol(std::deque<Token>& tokenContainer, ssize_t& index, int count)
 {
     index++;
     while(tokenContainer[index].value != ";")
@@ -53,7 +53,9 @@ void checking_for_keyword_dups(std::deque<Token>& tokenContainer)
 
 void checking_for_defaults(ServerBlock& Serv)
 {
-    if ((Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL))
+    if (!Serv.listen)
+        throw std::runtime_error("ERROR: missing port value");
+    else if ((Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL))
         throw std::runtime_error("ERROR: port has incorrect value must be between 1024 and 65535");
     else if (Serv.client_max_body_size < 0)
         throw std::runtime_error("ERROR: client_max_body_size has incorrect value");

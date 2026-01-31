@@ -1,6 +1,6 @@
 #include "ConfigPars.hpp"
 
-void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool& insideLoc, ServerBlock& Serv, size_t& i)
+void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool& insideLoc, ServerBlock& Serv, ssize_t& i)
 {
     int countARG = 0;
 
@@ -15,7 +15,7 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
         }else
             error_line(": listen must only have one argument", tokenContainer[i].line);
     }
-    else if (i < tokenContainer.size() && tokenContainer[i].value == "host")
+    else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "host")
     {
         countARG = count_to_symbol(tokenContainer, i, countARG);
         if (countARG == 1)
@@ -25,7 +25,7 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
         }else
             error_line(": host must only have one argument", tokenContainer[i].line);
     }
-    else if (i < tokenContainer.size() && tokenContainer[i].value == "root")
+    else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "root")
     {
         countARG = count_to_symbol(tokenContainer, i, countARG);
         if (countARG == 1 && !insideLoc)
@@ -36,7 +36,7 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
             error_line(": root must only have one argument", tokenContainer[i].line);
         countARG = 0;
     }
-    else if (i < tokenContainer.size() && tokenContainer[i].value == "server_name")
+    else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "server_name")
     {
         countARG = count_to_symbol(tokenContainer, i, countARG);
         if (countARG == 1)
@@ -46,7 +46,7 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
         }else
             error_line(": server_name must only have one argument", tokenContainer[i].line);
     }
-    else if (i < tokenContainer.size() && tokenContainer[i].value == "client_max_body_size")
+    else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "client_max_body_size")
     {
         countARG = count_to_symbol(tokenContainer, i, countARG);
         if (countARG == 1)
@@ -57,7 +57,7 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
         }else
             error_line(": client_max_body_size must only have one argument", tokenContainer[i].line);
     }
-    else if (i < tokenContainer.size() && tokenContainer[i].value == "error_page")
+    else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "error_page")
     {
         countARG = count_to_symbol(tokenContainer, i, countARG);
         if (countARG == 2)
@@ -74,7 +74,7 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
         }else
             error_line(": error_page must have two values error num and path", tokenContainer[i].line);
     }
-    else if (i < tokenContainer.size() && tokenContainer[i].value == "index")
+    else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "index")
     {
         i++;
         if (Serv.index.empty())
@@ -95,7 +95,7 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
 void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& ServerConfigs)
 {
     ServerBlock Serv;
-    size_t keepCountOfBrase = 0;
+    ssize_t keepCountOfBrase = 0;
     bool insideLoc = false;
 
     // init
@@ -107,7 +107,7 @@ void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<Serv
     // duplicate check rule
     checking_for_keyword_dups(tokenContainer);
     // storing values
-    for (size_t i = 0; i < tokenContainer.size(); i++)
+    for (ssize_t i = 0; i < (ssize_t)tokenContainer.size(); i++)
     {
         if (tokenContainer[i].type == 0)
         {
@@ -128,13 +128,13 @@ void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<Serv
 
 }
 
-void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock& Serv, size_t& i)
+void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock& Serv, ssize_t& i)
 {
     bool InsideLocationBlock = false;
-    size_t keepCountOfBrase = 0;
-    size_t pos = 0;
+    ssize_t keepCountOfBrase = 0;
+    ssize_t pos = 0;
     
-    for (; i < tokenContainer.size(); i++)
+    for (; i < (ssize_t)tokenContainer.size(); i++)
     {
         if (!InsideLocationBlock && (tokenContainer[i].value == "cgi_extension" || tokenContainer[i].value == "cgi_path"))
             error_line(": unkown keyword", tokenContainer[i].line);
@@ -148,24 +148,24 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
             {
                 if (tokenContainer[i].value == "{")
                     keepCountOfBrase++;
-                else if ((i + 1) < tokenContainer.size() && (pos = tokenContainer[i].value.find_first_of("/")) != 0 && tokenContainer[i + 1].value == "{")
+                else if ((i + 1) < (ssize_t)tokenContainer.size() && (pos = tokenContainer[i].value.find_first_of("/")) != 0 && tokenContainer[i + 1].value == "{")
                     error_line(": paths must start with /", tokenContainer[i].line);
                 else if ((i - 1) >= 0 && tokenContainer[i].type == 1 && tokenContainer[i - 1].value == "location")
                     loc.path = tokenContainer[i].value;
-                else if (i < tokenContainer.size() && tokenContainer[i].value == "root")
+                else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "root")
                     loc.root = tokenContainer[i + 1].value;
-                else if (i < tokenContainer.size() && tokenContainer[i].value == "index")
+                else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "index")
                 {
                     i++;
-                    while(i < tokenContainer.size() && tokenContainer[i].type == 1)
+                    while(i < (ssize_t)tokenContainer.size() && tokenContainer[i].type == 1)
                     {
                         loc.index.push_back(tokenContainer[i].value);
                         i++;
                     }
-                }else if (i < tokenContainer.size() && tokenContainer[i].value == "allow_methods")
+                }else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "allow_methods")
                 {
                     i++;
-                    while(i < tokenContainer.size() && tokenContainer[i].type == 1)
+                    while(i < (ssize_t)tokenContainer.size() && tokenContainer[i].type == 1)
                     {
                         if (tokenContainer[i].value == "GET" || tokenContainer[i].value == "POST" || tokenContainer[i].value == "DELETE")
                         {
@@ -178,26 +178,26 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
                             error_line(": only allowed methods are (GET, POST, DELETE)", tokenContainer[i].line);
                         i++;
                     }
-                }else if (i < tokenContainer.size() && tokenContainer[i].value == "autoindex")
+                }else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "autoindex")
                 {
-                    if (i < tokenContainer.size() && tokenContainer[i + 1].value == "off")
+                    if (i < (ssize_t)tokenContainer.size() && tokenContainer[i + 1].value == "off")
                         loc.autoindex = false;
-                    else if (i < tokenContainer.size() && tokenContainer[i + 1].value == "on")
+                    else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i + 1].value == "on")
                         loc.autoindex = true;
                     else
                         error_line(": auto index works with only on or off options", tokenContainer[i].line);
-                }else if(i < tokenContainer.size() && tokenContainer[i].value == "cgi_extension")
+                }else if(i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "cgi_extension")
                 {
                     i++;
-                    while(i < tokenContainer.size() && tokenContainer[i].type == 1)
+                    while(i < (ssize_t)tokenContainer.size() && tokenContainer[i].type == 1)
                     {
                         loc.cgi_extension.push_back(tokenContainer[i].value);
                         i++;
                     }
-                }else if (i < tokenContainer.size() && tokenContainer[i].value == "cgi_path")
+                }else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "cgi_path")
                 {
                     i++;
-                    while(i < tokenContainer.size() && tokenContainer[i].type == 1)
+                    while(i < (ssize_t)tokenContainer.size() && tokenContainer[i].type == 1)
                     {
                         loc.cgi_path.push_back(tokenContainer[i].value);
                         i++;
@@ -227,13 +227,13 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
 
 void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& serverConfigs)
 {
-    size_t indx = 0;
+    ssize_t indx = 0;
     std::string msg;
     std::multimap<int, std::string> seenPortAndIp;
     std::multimap<int, std::string> seenPortAndName;
 
     extracting_server_blocks(tokenContainer, serverConfigs);
-    for (size_t i = 0; i < serverConfigs.size(); i++)
+    for (ssize_t i = 0; i < (ssize_t)serverConfigs.size(); i++)
     {
         extracting_location_blocks(tokenContainer, serverConfigs[i], indx);
         checking_for_defaults(serverConfigs[i]);
@@ -253,20 +253,20 @@ void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std:
 void tokenzation(std::string fileContent)
 {
     std::string tok;
-    size_t Line;
-    // size_t pos;
+    ssize_t Line;
+    // ssize_t pos;
     std::deque<Token> tokenContainer;
     std::deque<ServerBlock> serverConfigs;
 
     Line = 1;
-    for(size_t i = 0; i < fileContent.size(); i++)
+    for(ssize_t i = 0; i < (ssize_t)fileContent.size(); i++)
     {
         if (fileContent[i] == '#')
         {
-            while(fileContent[i] != '\n')
+            while((i <= (ssize_t)fileContent.size()) && fileContent[i] != '\n')
                 i++;
         }
-        if (fileContent[i] == '\n')
+        else if (fileContent[i] == '\n')
         {
             if (!tok.empty())
                 identifying_words_and_keywords(tok, tokenContainer, Line);

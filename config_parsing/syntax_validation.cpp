@@ -25,12 +25,12 @@ void identifying_words_and_keywords(std::string& tok, std::deque<Token>& tokenCo
 
 void is_syntax_valid(std::deque<Token> tokenContainer)
 {
-    size_t keepCountOfBrase = 0;
-    size_t ServerBlockCount = 0;
-    size_t LocationBlockCount = 0;
+    ssize_t keepCountOfBrase = 0;
+    ssize_t ServerBlockCount = 0;
+    ssize_t LocationBlockCount = 0;
     bool insideServer = false;
 
-    for (size_t i = 0; i < tokenContainer.size(); i++)
+    for (ssize_t i = 0; i < (ssize_t)tokenContainer.size(); i++)
     {
         if (tokenContainer[i].type == 2)
         {
@@ -68,7 +68,7 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
         {
             if ((i - 1) >= 0 && tokenContainer[i - 1].value != "location" && tokenContainer[i + 1].type != 1 && tokenContainer[i + 1].value != ";")
                 error_line(": directives must end with ;", tokenContainer[i].line);
-            if (!insideServer)
+            else if (!insideServer)
                 error_line(": configuration must be done inside a server block", tokenContainer[i].line);
         }
         else if (tokenContainer[i].type == 0)
@@ -79,7 +79,7 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
             else if (tokenContainer[i].value == "location")
                 LocationBlockCount++;
                 
-            if ((i < tokenContainer.size()) && ((tokenContainer[i].value == "server" && tokenContainer[i + 1].value != "{") ||
+            if (((tokenContainer[i].value == "server" && tokenContainer[i + 1].value != "{") ||
                     (tokenContainer[i].value == "location" && tokenContainer[i + 2].value != "{")))
                 error_line(": server and location block must be followed with braces", tokenContainer[i].line);
             else if (tokenContainer[i].value == "location" && !insideServer)

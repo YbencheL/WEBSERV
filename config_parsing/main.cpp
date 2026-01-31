@@ -69,12 +69,12 @@ int main(int ac, char **av)
         return 1;
     }
     std::ifstream infile(av[1]);
+    std::string fileContent((std::istreambuf_iterator<char>(infile)), std::istreambuf_iterator<char>());
     if (infile.fail())
     {
         std::cout << "Error: can't open file!" << std::endl;
         return 1;
     }
-    std::string fileContent((std::istreambuf_iterator<char>(infile)), std::istreambuf_iterator<char>());
     try
     {
         tokenzation(fileContent);

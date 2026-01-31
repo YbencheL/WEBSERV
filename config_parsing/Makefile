@@ -1,5 +1,5 @@
 CPP = c++
-CFLAGS = -Wall -Wextra -Werror -std=c++98
+CFLAGS = -Wall -Wextra -Werror -std=c++98 -g3
 
 SRC = main.cpp block_extraction.cpp content_checks.cpp syntax_validation.cpp
 
