@@ -7,6 +7,7 @@
 #include <cctype>
 #include <sstream>
 #include <map>
+#include <set>
 #include <algorithm>
 
 //define
@@ -40,10 +41,10 @@ struct LocationBlock
 
 struct ServerBlock
 {
-    int listen;
+    std::set<int> listen;
     std::string root;
-    std::string host;
-    std::string server_name;
+    std::set<std::string> host;
+    std::set<std::string> server_name;
     int client_max_body_size;
     std::deque<std::string> index;
     std::map<std::deque<int>, std::string> error_page;
@@ -55,7 +56,7 @@ void error_line(std::string msg, int Line);
 void duplicate_check(std::deque<std::string>& keywords, std::string name);
 void checking_for_keyword_dups(std::deque<Token>& tokenContainer);
 void checking_for_defaults(ServerBlock& Serv);
-void checking_for_virtual_hosts(std::multimap<int, std::string>& seen, std::string& msg);
+void checking_for_virtual_hosts(std::deque<int>& seen);
 int count_to_symbol(std::deque<Token>& tokenContainer, ssize_t& index, int count);
 // syntax validation
 void identifying_words_and_keywords(std::string& tok, std::deque<Token>& tokenContainer, int Line);
@@ -68,5 +69,7 @@ void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std:
 void tokenzation(std::string fileContent);
 // debugging
 void debugging(std::deque<ServerBlock>& serverConfigs);
+//get_values
+ServerBlock* getServerForRequest(const std::string &ip, int port, const std::string &host, const std::deque<ServerBlock> &serverConfigs);
 
 #endif

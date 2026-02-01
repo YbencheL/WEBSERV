@@ -46,24 +46,27 @@ void checking_for_keyword_dups(std::deque<Token>& tokenContainer)
         if (tokenContainer[i].type == 0)
             keywords.push_back(tokenContainer[i].value);
     }
-    duplicate_check(keywords, "listen");
+    // duplicate_check(keywords, "listen");
     duplicate_check(keywords, "client_max_body_size");
-    duplicate_check(keywords, "server_name");
+    // duplicate_check(keywords, "server_name");
 }
 
 void checking_for_defaults(ServerBlock& Serv)
 {
-    if (!Serv.listen)
+    if (Serv.listen.empty())
         throw std::runtime_error("ERROR: missing port value");
-    else if ((Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL))
-        throw std::runtime_error("ERROR: port has incorrect value must be between 1024 and 65535");
-    else if (Serv.client_max_body_size < 0)
+    for (std::set<int>::iterator it = Serv.listen.begin();
+        it != Serv.listen.end(); ++it)
+    {
+        if ((*it < PORT_MIN_VAL || *it > PORT_MAX_VAL))
+            throw std::runtime_error("ERROR: port has incorrect value must be between 1024 and 65535");
+    }
+    if (Serv.client_max_body_size < 0)
         throw std::runtime_error("ERROR: client_max_body_size has incorrect value");
-    else if (!Serv.listen)
-        throw std::runtime_error("ERROR: missing value (listen)");
+    // these values will have a default if they dont exist
     if (Serv.error_page.empty()) Serv.error_page.insert(std::make_pair(404, "/default_error_path"));
-    if (Serv.host.empty()) Serv.host = "127.0.0.1";
-    if (Serv.server_name.empty()) Serv.server_name = "WEBSERV_42";
+    if (Serv.host.empty()) Serv.host.insert("127.0.0.1");
+    if (Serv.server_name.empty()) Serv.server_name.insert("WEBSERV_42");
     if (Serv.index.empty()) Serv.index.push_back("index.html");
     if (!Serv.client_max_body_size) Serv.client_max_body_size = CLIENT_MAX_BODY_SIZE;
     for (size_t i = 0; i < Serv.locations.size(); i++)
@@ -76,6 +79,7 @@ void checking_for_defaults(ServerBlock& Serv)
 
         }
         if (Serv.locations[i].index.empty()) Serv.locations[i].index = Serv.index;
+        // if allow method directive is empty its gonna have these three
         if (Serv.locations[i].allow_methods.empty())
         {
             Serv.locations[i].allow_methods.push_back("GET");
@@ -85,27 +89,43 @@ void checking_for_defaults(ServerBlock& Serv)
     }
 }
 
-void checking_for_virtual_hosts(std::multimap<int, std::string>& seen, std::string& msg)
+void checking_for_virtual_hosts(std::deque<int>& seen)
 {
-    size_t key = 0;
-    size_t count = 0;
-    std::string value;
+    ssize_t count = 0;
+    int value = 0;
 
-    for (std::map<int, std::string>::iterator it = seen.begin();
-        it != seen.end(); ++it)
+    // checking if there is the same ip in multiple server block
+    for (std::deque<int>::iterator it = seen.begin(); it != seen.end(); ++it)
     {
-        count = 0;
-        key = it->first;
-        value = it->second;
-        std::multimap<int, std::string>::iterator lower = seen.lower_bound(key);
-        std::multimap<int, std::string>::iterator upper = seen.upper_bound(key);
-        for (std::map<int, std::string>::iterator it = lower;
-            it != upper; ++it)
-        {
-            if (value == it->second)
-                count++;
-        }
+        value = *it;
+        count = std::count(seen.begin(), seen.end(), value);
         if (count > 1)
-            throw std::runtime_error(msg);
+            throw std::runtime_error("ERROR: there must be only unique ports per server block");
     }
 }
+
+// used to check only for two server with both same port and ip or server name
+// void checking_for_virtual_hosts(std::multimap<int, std::string>& seen, std::string& msg)
+// {
+//     size_t key = 0;
+//     size_t count = 0;
+//     std::string value;
+
+//     for (std::map<int, std::string>::iterator it = seen.begin();
+//         it != seen.end(); ++it)
+//     {
+//         count = 0;
+//         key = it->first;
+//         value = it->second;
+//         std::multimap<int, std::string>::iterator lower = seen.lower_bound(key);
+//         std::multimap<int, std::string>::iterator upper = seen.upper_bound(key);
+//         for (std::map<int, std::string>::iterator it = lower;
+//             it != upper; ++it)
+//         {
+//             if (value == it->second)
+//                 count++;
+//         }
+//         if (count > 1)
+//             throw std::runtime_error(msg);
+//     }
+// }

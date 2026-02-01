@@ -6,7 +6,7 @@ server {
     root docs/fusion_web/;
     client_max_body_size 3000000;
 	index index.html index.htm;
-    error_page 40 error_pages/404.html;
+    error_page 404 error_pages/404.html;
 
     location /tours {
         # root /rfrf;
@@ -26,7 +26,7 @@ server {
 
 # # ===== Server 2 =====
 # server {
-#     listen 8003;
+#     listen 8002;
 #     server_name site2.local;
 #     host 192.168.1.10;
 #     root /var/www/site2;
