@@ -66,9 +66,16 @@ void debugging(std::deque<ServerBlock>& serverConfigs)
         }
         std::cout << "==============================" << std::endl << std::endl;
     }
-    // ServerBlock* server = getServerForRequest("127.0.0.1", 8002, "localhost", serverConfigs);
-    // if (server)
-    //     std::cout << server->listen << std::endl;
+    //these function return NULL when fail !!!!
+    const ServerBlock* server = getServerForRequest("127.0.0.1", 8080, "localhost", serverConfigs);
+    if (server)
+        std::cout << server->listen << std::endl;
+    if (server)
+    {
+        const LocationBlock* location = getLocation("/cgi-bin", *server);
+        if (location)
+            std::cout << location->path << std::endl;
+    }
 }
 
 int main(int ac, char **av)

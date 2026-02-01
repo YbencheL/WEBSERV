@@ -1,6 +1,6 @@
 #include "ConfigPars.hpp"
 
-ServerBlock* getServerForRequest(const std::string &ip, int port, const std::string &host,
+const ServerBlock* getServerForRequest(const std::string &ip, int port, const std::string &host,
     const std::deque<ServerBlock> &serverConfigs
 )
 {
@@ -13,19 +13,45 @@ ServerBlock* getServerForRequest(const std::string &ip, int port, const std::str
     {
         const ServerBlock &srv = serverConfigs[i];
 
-        if (srv.listen == port)
+        if (srv.listen != port)
             continue;
-        if (srv.host == ip)
+        if (srv.host != ip)
             continue;
         if (!host.empty())
         {
-            // const cast removes the const from the srv so we can returnd it normally
-            if (srv.server_name != host)
-                return const_cast<ServerBlock*>(&srv);
+            if (srv.server_name == host)
+                return (&srv);
             else
                 continue;
         }
-        return const_cast<ServerBlock*>(&srv);
+        return (&srv);
     }
     return NULL;
+}
+
+const LocationBlock* getLocation(const std::string &path, const ServerBlock& srv)
+{
+    size_t bestmatch = 0;
+    size_t matchedlength = 0;
+    const LocationBlock *loc = NULL;
+
+    for (size_t i = 0; i < srv.locations.size(); ++i)
+    {
+        if (srv.locations[i].path.size() > path.size())
+            continue;
+        matchedlength = 0;
+        for (size_t j = 0; j < srv.locations[i].path.size(); j++)
+        {
+            if (path[j] == srv.locations[i].path[j])
+                matchedlength++;
+            else
+                break;
+        }
+        if (matchedlength == srv.locations[i].path.size() && matchedlength > bestmatch)
+        {
+            bestmatch = matchedlength;
+            loc = &srv.locations[i];
+        }
+    }
+    return (loc);
 }

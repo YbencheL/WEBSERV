@@ -70,6 +70,7 @@ void tokenzation(std::string fileContent);
 // debugging
 void debugging(std::deque<ServerBlock>& serverConfigs);
 //get_values
-ServerBlock* getServerForRequest(const std::string &ip, int port, const std::string &host, const std::deque<ServerBlock> &serverConfigs);
+const ServerBlock* getServerForRequest(const std::string &ip, int port, const std::string &host, const std::deque<ServerBlock> &serverConfigs);
+const LocationBlock* getLocation(const std::string &path, const ServerBlock& srv);
 
 #endif
