@@ -19,6 +19,7 @@ ServerBlock* getServerForRequest(const std::string &ip, int port, const std::str
             continue;
         if (!host.empty())
         {
+            // const cast removes the const from the srv so we can returnd it normally
             if (srv.server_name != host)
                 return const_cast<ServerBlock*>(&srv);
             else

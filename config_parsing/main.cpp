@@ -66,8 +66,8 @@ void debugging(std::deque<ServerBlock>& serverConfigs)
         }
         std::cout << "==============================" << std::endl << std::endl;
     }
-    // ServerBlock* server = getServerForRequest("127.0.0.1", 8002, "localhost", serverConfigs);
-    // std::cout << server->client_max_body_size << std::endl;
+    ServerBlock* server = getServerForRequest("127.0.0.1", 8002, "localhost", serverConfigs);
+    std::cout << server->client_max_body_size << std::endl;
 }
 
 int main(int ac, char **av)

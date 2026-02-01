@@ -1,5 +1,5 @@
 CPP = c++
-CFLAGS = -Wall -Wextra -Werror -std=c++98 -g3
+CFLAGS = -Wall -Wextra -Werror -std=c++98
 
 SRC = main.cpp extracting_values.cpp content_checks.cpp get_values.cpp \
 		location_block.cpp server_block.cpp
