@@ -13,13 +13,13 @@ ServerBlock* getServerForRequest(const std::string &ip, int port, const std::str
     {
         const ServerBlock &srv = serverConfigs[i];
 
-        if (srv.listen.find(port) == srv.listen.end())
+        if (srv.listen == port)
             continue;
-        if (srv.host.find(ip) == srv.host.end())
+        if (srv.host == ip)
             continue;
         if (!host.empty())
         {
-            if (srv.server_name.find(host) != srv.server_name.end())
+            if (srv.server_name != host)
                 return const_cast<ServerBlock*>(&srv);
             else
                 continue;

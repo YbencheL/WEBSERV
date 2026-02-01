@@ -14,7 +14,7 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
             ss >> port;
             if (ss.fail())
                 error_line(": listen must only have a valid port number", tokenContainer[i].line);
-            Serv.listen.insert(port);
+            Serv.listen = port;
             port = 0;
             countARG = 0;
         }else
@@ -25,7 +25,7 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
         countARG = count_to_symbol(tokenContainer, i, countARG);
         if (countARG == 1)
         {
-            Serv.host.insert(tokenContainer[i].value);
+            Serv.host = tokenContainer[i].value;
             countARG = 0;
         }else
             error_line(": host must only have one argument", tokenContainer[i].line);
@@ -46,7 +46,7 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
         countARG = count_to_symbol(tokenContainer, i, countARG);
         if (countARG == 1)
         {
-            Serv.server_name.insert(tokenContainer[i].value);
+            Serv.server_name = tokenContainer[i].value;
             countARG = 0;
         }else
             error_line(": server_name must only have one argument", tokenContainer[i].line);
@@ -125,8 +125,8 @@ void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<Serv
 
     // init
     Serv.client_max_body_size = 0;
+    Serv.listen = 0;
     Serv.locations.clear();
-    Serv.listen.clear();
     Serv.error_page.clear();
     Serv.index.clear();
     // duplicate check rule

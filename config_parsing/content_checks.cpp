@@ -33,7 +33,7 @@ void duplicate_check(std::deque<std::string>& keywords, std::string name)
         else if (keywords[i] == "server")
             count = 0;
         if (count > 1)
-            throw std::runtime_error("ERROR: there must be no duplicates for these keywords: listen, client_max_body_size and server_name, or a duplicated method inside allow_methods directive");
+            throw std::runtime_error("ERROR: there must be no duplicates for these keywords: listen, host, client_max_body_size and server_name, or a duplicated method inside allow_methods directive");
     }
 }
 
@@ -46,27 +46,24 @@ void checking_for_keyword_dups(std::deque<Token>& tokenContainer)
         if (tokenContainer[i].type == 0)
             keywords.push_back(tokenContainer[i].value);
     }
-    // duplicate_check(keywords, "listen");
+    duplicate_check(keywords, "listen");
     duplicate_check(keywords, "client_max_body_size");
-    // duplicate_check(keywords, "server_name");
+    duplicate_check(keywords, "server_name");
+    duplicate_check(keywords, "host");
 }
 
 void checking_for_defaults(ServerBlock& Serv)
 {
-    if (Serv.listen.empty())
+    if (!Serv.listen)
         throw std::runtime_error("ERROR: missing port value");
-    for (std::set<int>::iterator it = Serv.listen.begin();
-        it != Serv.listen.end(); ++it)
-    {
-        if ((*it < PORT_MIN_VAL || *it > PORT_MAX_VAL))
-            throw std::runtime_error("ERROR: port has incorrect value must be between 1024 and 65535");
-    }
+    else if (Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL)
+        throw std::runtime_error("ERROR: port has incorrect value must be between 1024 and 65535");
     if (Serv.client_max_body_size < 0)
         throw std::runtime_error("ERROR: client_max_body_size has incorrect value");
     // these values will have a default if they dont exist
     if (Serv.error_page.empty()) Serv.error_page.insert(std::make_pair(404, "/default_error_path"));
-    if (Serv.host.empty()) Serv.host.insert("127.0.0.1");
-    if (Serv.server_name.empty()) Serv.server_name.insert("WEBSERV_42");
+    if (Serv.host.empty()) Serv.host = "127.0.0.1";
+    if (Serv.server_name.empty()) Serv.server_name = "WEBSERV_42";
     if (Serv.index.empty()) Serv.index.push_back("index.html");
     if (!Serv.client_max_body_size) Serv.client_max_body_size = CLIENT_MAX_BODY_SIZE;
     for (size_t i = 0; i < Serv.locations.size(); i++)

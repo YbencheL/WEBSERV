@@ -5,28 +5,11 @@ void debugging(std::deque<ServerBlock>& serverConfigs)
     for (size_t i = 0; i < serverConfigs.size(); i++)
     {
         std::cout << "===== ServerBlock #" << i << " =====" << std::endl;
+        std::cout << "listen: " << serverConfigs[i].listen << std::endl;
         std::cout << "root: " << serverConfigs[i].root << std::endl;
+        std::cout << "host: " << serverConfigs[i].host << std::endl;
+        std::cout << "server_name: " << serverConfigs[i].server_name << std::endl;
         std::cout << "client_max_body_size: " << serverConfigs[i].client_max_body_size << std::endl;
-        
-        std::cout << "--- host ---" << std::endl;
-        for (std::set<std::string>::iterator it = serverConfigs[i].host.begin();
-            it != serverConfigs[i].host.end(); ++it)
-        {
-            std::cout << *it << std::endl;
-        }
-        std::cout << "--- server_name ---" << std::endl;
-        for (std::set<std::string>::iterator it = serverConfigs[i].server_name.begin();
-            it != serverConfigs[i].server_name.end(); ++it)
-        {
-            std::cout << *it << std::endl;
-        }
-
-        std::cout << "--- listen ---" << std::endl;
-        for (std::set<int>::iterator it = serverConfigs[i].listen.begin();
-            it != serverConfigs[i].listen.end(); ++it)
-        {
-            std::cout << *it << std::endl;
-        }
         
         std::cout << "--- error_page ---" << std::endl;
         for (std::map<std::deque<int>, std::string>::iterator it = serverConfigs[i].error_page.begin();

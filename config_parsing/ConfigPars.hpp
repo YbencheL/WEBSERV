@@ -41,10 +41,10 @@ struct LocationBlock
 
 struct ServerBlock
 {
-    std::set<int> listen;
+    int listen;
     std::string root;
-    std::set<std::string> host;
-    std::set<std::string> server_name;
+    std::string host;
+    std::string server_name;
     int client_max_body_size;
     std::deque<std::string> index;
     std::map<std::deque<int>, std::string> error_page;
