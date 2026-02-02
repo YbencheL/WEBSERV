@@ -1,7 +1,6 @@
 # ===== Server 1 =====
 server {
     listen 8080;
-	server_name localhost;
     host 127.0.0.1;
     root docs/fusion_web/;
     client_max_body_size 3000000;

@@ -67,12 +67,12 @@ void debugging(std::deque<ServerBlock>& serverConfigs)
         std::cout << "==============================" << std::endl << std::endl;
     }
     //these function return NULL when fail !!!!
-    const ServerBlock* server = getServerForRequest("192.168.1.10", 8003, "", serverConfigs);
+    const ServerBlock* server = getServerForRequest("127.0.0.1", 8080, "", serverConfigs);
     if (server)
         std::cout << server->listen << std::endl;
     if (server)
     {
-        const LocationBlock* location = getLocation("/scripts", *server);
+        const LocationBlock* location = getLocation("/cgi-bin", *server);
         if (location)
             std::cout << location->path << std::endl;
     }
