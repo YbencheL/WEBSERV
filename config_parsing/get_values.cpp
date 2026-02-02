@@ -24,19 +24,32 @@ const ServerBlock* getServerForRequest(const std::string &ip, int port,
 }
 
 // checks for exact path match in location in case it didnt find it it gives the default one if it exist
+// this function uses prefix matche logic
 const LocationBlock* getLocation(const std::string &path, const ServerBlock& srv)
 {
-    const LocationBlock *Default;
+    size_t bestmatch = 0;
+    size_t matchedlength = 0;
     const LocationBlock *loc = NULL;
 
     for (size_t i = 0; i < srv.locations.size(); ++i)
     {
-        if (srv.locations[i].path == "/")
-            Default = &srv.locations[i];
-        else if (srv.locations[i].path == path)
+        if (srv.locations[i].path.size() > path.size())
+            continue;
+        matchedlength = 0;
+        for (size_t j = 0; j < srv.locations[i].path.size(); j++)
+        {
+            if (path[j] == srv.locations[i].path[j])
+                matchedlength++;
+            else
+                break;
+        }
+        if (matchedlength == srv.locations[i].path.size() && matchedlength > bestmatch)
+        {
+            bestmatch = matchedlength;
             loc = &srv.locations[i];
+            if (srv.locations[i].path == path)
+                return loc;
+        }
     }
-    if (!loc && Default)
-        return (Default);
     return (loc);
 }
