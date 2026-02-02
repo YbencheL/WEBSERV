@@ -33,7 +33,7 @@ void duplicate_check(std::deque<std::string>& keywords, std::string name)
         else if (keywords[i] == "server")
             count = 0;
         if (count > 1)
-            throw std::runtime_error("ERROR: there must be no duplicates for these keywords: listen, host, client_max_body_size and server_name, or a duplicated method inside allow_methods directive");
+            throw std::runtime_error("ERROR: there must be no duplicates for these keywords: listen, host, location paths, client_max_body_size and server_name, or a duplicated method inside allow_methods directive");
     }
 }
 
@@ -54,6 +54,8 @@ void checking_for_keyword_dups(std::deque<Token>& tokenContainer)
 
 void checking_for_defaults(ServerBlock& Serv)
 {
+    std::deque<std::string> seenLocationPaths;
+
     if (!Serv.listen)
         throw std::runtime_error("ERROR: missing port value");
     else if (Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL)
@@ -68,6 +70,8 @@ void checking_for_defaults(ServerBlock& Serv)
     if (!Serv.client_max_body_size) Serv.client_max_body_size = CLIENT_MAX_BODY_SIZE;
     for (size_t i = 0; i < Serv.locations.size(); i++)
     {
+        seenLocationPaths.push_back(Serv.locations[i].path);
+        duplicate_check(seenLocationPaths, Serv.locations[i].path);
         if (Serv.locations[i].root.empty())
         {
             Serv.locations[i].root = Serv.root;
