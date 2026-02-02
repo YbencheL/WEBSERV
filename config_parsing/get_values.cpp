@@ -1,7 +1,7 @@
 #include "ConfigPars.hpp"
 
 // looks for a serverblock in the config file
-const ServerBlock* getServerForRequest(const std::string &ip, int port, const std::string &host,
+const ServerBlock* getServerForRequest(const std::string &ip, int port,
     const std::deque<ServerBlock> &serverConfigs
 )
 {
@@ -18,13 +18,6 @@ const ServerBlock* getServerForRequest(const std::string &ip, int port, const st
             continue;
         if (srv.host != ip)
             continue;
-        if (!host.empty())
-        {
-            if (srv.server_name == host)
-                return (&srv);
-            else
-                continue;
-        }
         return (&srv);
     }
     return NULL;
