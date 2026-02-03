@@ -52,7 +52,7 @@ void checking_for_keyword_dups(std::deque<Token>& tokenContainer)
     duplicate_check(keywords, "host");
 }
 
-void checking_for_defaults(ServerBlock& Serv)
+void checking_values(ServerBlock& Serv)
 {
     std::deque<std::string> seenLocationPaths;
     std::deque<std::string> seenReturn;

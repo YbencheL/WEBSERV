@@ -101,7 +101,7 @@ void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std:
     for (ssize_t i = 0; i < (ssize_t)serverConfigs.size(); i++)
     {
         extracting_location_blocks(tokenContainer, serverConfigs[i], indx);
-        checking_for_defaults(serverConfigs[i]);
+        checking_values(serverConfigs[i]);
         seenPort.push_back(serverConfigs[i].listen);
         if (serverConfigs[i].locations.empty() && serverConfigs[i].root.empty())
             throw std::runtime_error("ERROR: missing value (root)");
