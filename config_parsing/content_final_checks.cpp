@@ -55,8 +55,6 @@ void checking_for_keyword_dups(std::deque<Token>& tokenContainer)
 void checking_values(ServerBlock& Serv)
 {
     std::deque<std::string> seenLocationPaths;
-    std::deque<std::string> seenReturn;
-    bool validReturn = false;
 
     if (!Serv.listen)
         throw std::runtime_error("ERROR: missing port value");
@@ -76,8 +74,6 @@ void checking_values(ServerBlock& Serv)
     for (size_t i = 0; i < Serv.locations.size(); i++)
     {
         seenLocationPaths.push_back(Serv.locations[i].path);
-        if (!Serv.locations[i].returN.empty())
-            seenReturn.push_back(Serv.locations[i].returN);
         duplicate_check(seenLocationPaths, Serv.locations[i].path);
         if (Serv.locations[i].root.empty())
         {
@@ -99,15 +95,7 @@ void checking_values(ServerBlock& Serv)
             Serv.locations[i].allow_methods.push_back("POST");
             Serv.locations[i].allow_methods.push_back("DELETE");
         }
-        for (std::deque<LocationBlock>::iterator it = Serv.locations.begin(); it != Serv.locations.end();
-            ++it)
-        {
-            if (Serv.locations[i].returN == it->path)
-                validReturn = true;
-        }
     }
-    if (!validReturn && !seenReturn.empty())
-        throw std::runtime_error("ERROR: the returned path does not exist");
 }
 
 void checking_for_virtual_hosts(std::deque<int>& seen)
