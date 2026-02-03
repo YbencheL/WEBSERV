@@ -6,14 +6,15 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
     ssize_t keepCountOfBrase = 0;
     int countARG = 0;
     ssize_t pos = 0;
-    
+
     for (; i < (ssize_t)tokenContainer.size(); i++)
     {
         if (!InsideLocationBlock && (tokenContainer[i].value == "cgi_extension" || tokenContainer[i].value == "cgi_path"))
-            error_line(": unkown keyword", tokenContainer[i].line);
+        error_line(": unkown keyword", tokenContainer[i].line);
         if (tokenContainer[i].value == "location")
         {
             LocationBlock loc;
+            loc.client_max_body_size = 0;
             loc.autoindex = false;
             i++;
             InsideLocationBlock = true;
@@ -27,6 +28,17 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
                     loc.path = tokenContainer[i].value;
                 else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "root")
                     loc.root = tokenContainer[i + 1].value;
+                else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "client_max_body_size")
+                {
+                    countARG = count_to_symbol(tokenContainer, i, countARG);
+                    if (countARG == 1)
+                    {
+                        std::stringstream ss(tokenContainer[i].value);
+                        ss >> Serv.client_max_body_size;
+                        countARG = 0;
+                    }else
+                        error_line(": client_max_body_size must only have one argument", tokenContainer[i].line);
+                }
                 else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "return")
                 {
                     countARG = count_to_symbol(tokenContainer, i, countARG);

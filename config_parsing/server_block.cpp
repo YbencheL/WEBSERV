@@ -54,12 +54,12 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
     else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "client_max_body_size")
     {
         countARG = count_to_symbol(tokenContainer, i, countARG);
-        if (countARG == 1)
+        if (countARG == 1 && !insideLoc)
         {
             std::stringstream ss(tokenContainer[i].value);
             ss >> Serv.client_max_body_size;
             countARG = 0;
-        }else
+        }else if (countARG > 1)
             error_line(": client_max_body_size must only have one argument", tokenContainer[i].line);
     }
     else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "error_page")

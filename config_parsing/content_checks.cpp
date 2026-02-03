@@ -47,7 +47,7 @@ void checking_for_keyword_dups(std::deque<Token>& tokenContainer)
             keywords.push_back(tokenContainer[i].value);
     }
     duplicate_check(keywords, "listen");
-    duplicate_check(keywords, "client_max_body_size");
+    // duplicate_check(keywords, "client_max_body_size");
     duplicate_check(keywords, "server_name");
     duplicate_check(keywords, "host");
 }
@@ -79,11 +79,17 @@ void checking_values(ServerBlock& Serv)
         if (!Serv.locations[i].returN.empty())
             seenReturn.push_back(Serv.locations[i].returN);
         duplicate_check(seenLocationPaths, Serv.locations[i].path);
-        if (Serv.locations[i].root.empty() && Serv.root.empty())
+        if (Serv.locations[i].root.empty())
         {
             Serv.locations[i].root = Serv.root;
             if (Serv.locations[i].root.empty())
                 throw std::runtime_error("ERROR: missing value (root)");
+        }
+        if (!Serv.locations[i].client_max_body_size)
+        {
+            Serv.locations[i].client_max_body_size = Serv.client_max_body_size;
+            if (!Serv.locations[i].client_max_body_size)
+                throw std::runtime_error("ERROR: missing value (client_max_body_size)");
         }
         if (Serv.locations[i].index.empty()) Serv.locations[i].index = Serv.index;
         // if allow method directive is empty its gonna have these three

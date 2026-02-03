@@ -40,6 +40,7 @@ void debugging(std::deque<ServerBlock>& serverConfigs)
             std::cout << "  path: " << loc.path << std::endl;
             std::cout << "  root: " << loc.root << std::endl;
             std::cout << "  return: " << loc.returN << std::endl;
+            std::cout << "  client_max_body_size: " << loc.client_max_body_size << std::endl;
 
             std::cout << "  index: ";
             for (size_t k = 0; k < loc.index.size(); k++)

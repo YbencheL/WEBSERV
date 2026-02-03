@@ -32,6 +32,7 @@ struct LocationBlock
 {
     std::string path;
     std::string returN;
+    int client_max_body_size;
     std::string root;
     std::deque<std::string> index;
     std::deque<std::string> allow_methods;
