@@ -33,7 +33,7 @@ void duplicate_check(std::deque<std::string>& keywords, std::string name)
         else if (keywords[i] == "server")
             count = 0;
         if (count > 1)
-            throw std::runtime_error("ERROR: there must be no duplicates for these keywords: listen, host, location paths, client_max_body_size and server_name, or a duplicated method inside allow_methods directive");
+            throw std::runtime_error("ERROR: there must be no duplicates for keywords");
     }
 }
 
@@ -55,29 +55,35 @@ void checking_for_keyword_dups(std::deque<Token>& tokenContainer)
 void checking_for_defaults(ServerBlock& Serv)
 {
     std::deque<std::string> seenLocationPaths;
+    std::deque<std::string> seenReturn;
+    bool validReturn = false;
 
     if (!Serv.listen)
         throw std::runtime_error("ERROR: missing port value");
     else if (Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL)
         throw std::runtime_error("ERROR: port has incorrect value must be between 1024 and 65535");
-    if (Serv.client_max_body_size < 0)
+    else if (Serv.client_max_body_size < 0 || !Serv.client_max_body_size)
         throw std::runtime_error("ERROR: client_max_body_size has incorrect value");
+    else if (Serv.error_page.empty())
+        throw std::runtime_error("ERROR: error_page has incorrect value");
+    else if (Serv.host.empty())
+        throw std::runtime_error("ERROR: host has incorrect value");
+    // else if (Serv.server_name.empty())
+    //     throw std::runtime_error("ERROR: server_name has incorrect value");
+    else if (Serv.index.empty())
+        throw std::runtime_error("ERROR: index has incorrect value");
     // these values will have a default if they dont exist
-    if (Serv.error_page.empty()) Serv.error_page.insert(std::make_pair(404, "/default_error_path"));
-    if (Serv.host.empty()) Serv.host = "127.0.0.1";
-    if (Serv.server_name.empty()) Serv.server_name = "WEBSERV_42";
-    if (Serv.index.empty()) Serv.index.push_back("index.html");
-    if (!Serv.client_max_body_size) Serv.client_max_body_size = CLIENT_MAX_BODY_SIZE;
     for (size_t i = 0; i < Serv.locations.size(); i++)
     {
         seenLocationPaths.push_back(Serv.locations[i].path);
+        if (!Serv.locations[i].returN.empty())
+            seenReturn.push_back(Serv.locations[i].returN);
         duplicate_check(seenLocationPaths, Serv.locations[i].path);
-        if (Serv.locations[i].root.empty())
+        if (Serv.locations[i].root.empty() && Serv.root.empty())
         {
             Serv.locations[i].root = Serv.root;
             if (Serv.locations[i].root.empty())
                 throw std::runtime_error("ERROR: missing value (root)");
-
         }
         if (Serv.locations[i].index.empty()) Serv.locations[i].index = Serv.index;
         // if allow method directive is empty its gonna have these three
@@ -87,7 +93,15 @@ void checking_for_defaults(ServerBlock& Serv)
             Serv.locations[i].allow_methods.push_back("POST");
             Serv.locations[i].allow_methods.push_back("DELETE");
         }
+        for (std::deque<LocationBlock>::iterator it = Serv.locations.begin(); it != Serv.locations.end();
+            ++it)
+        {
+            if (Serv.locations[i].returN == it->path)
+                validReturn = true;
+        }
     }
+    if (!validReturn && !seenReturn.empty())
+        throw std::runtime_error("ERROR: the returned path does not exist");
 }
 
 void checking_for_virtual_hosts(std::deque<int>& seen)

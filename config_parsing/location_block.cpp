@@ -4,6 +4,7 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
 {
     bool InsideLocationBlock = false;
     ssize_t keepCountOfBrase = 0;
+    int countARG = 0;
     ssize_t pos = 0;
     
     for (; i < (ssize_t)tokenContainer.size(); i++)
@@ -26,6 +27,19 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
                     loc.path = tokenContainer[i].value;
                 else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "root")
                     loc.root = tokenContainer[i + 1].value;
+                else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "return")
+                {
+                    countARG = count_to_symbol(tokenContainer, i, countARG);
+                    if (countARG == 1)
+                    {
+                        if (tokenContainer[i].value != "/")
+                            loc.returN = tokenContainer[i].value;
+                        else
+                            error_line(": return must not be given path of value /", tokenContainer[i].line);
+                        countARG = 0;
+                    }else
+                        error_line(": return must only have one argument", tokenContainer[i].line);
+                }
                 else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "index")
                 {
                     i++;
@@ -52,12 +66,19 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
                     }
                 }else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "autoindex")
                 {
-                    if (i < (ssize_t)tokenContainer.size() && tokenContainer[i + 1].value == "off")
-                        loc.autoindex = false;
-                    else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i + 1].value == "on")
-                        loc.autoindex = true;
-                    else
-                        error_line(": auto index works with only on or off options", tokenContainer[i].line);
+                    countARG = count_to_symbol(tokenContainer, i, countARG);
+                    if (countARG == 1)
+                    {
+                        if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "off")
+                            loc.autoindex = false;
+                        else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "on")
+                            loc.autoindex = true;
+                        else
+                            error_line(": autoindex works with only on or off options", tokenContainer[i].line);
+                        countARG = 0;
+                    }else
+                        error_line(": autoindex must only have one argument", tokenContainer[i].line);
+
                 }else if(i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "cgi_extension")
                 {
                     i++;

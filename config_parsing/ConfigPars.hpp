@@ -31,6 +31,7 @@ struct Token
 struct LocationBlock
 {
     std::string path;
+    std::string returN;
     std::string root;
     std::deque<std::string> index;
     std::deque<std::string> allow_methods;

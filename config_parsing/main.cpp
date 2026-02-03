@@ -39,6 +39,7 @@ void debugging(std::deque<ServerBlock>& serverConfigs)
             std::cout << "Location #" << j << ":" << std::endl;
             std::cout << "  path: " << loc.path << std::endl;
             std::cout << "  root: " << loc.root << std::endl;
+            std::cout << "  return: " << loc.returN << std::endl;
 
             std::cout << "  index: ";
             for (size_t k = 0; k < loc.index.size(); k++)
