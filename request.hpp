@@ -2,30 +2,30 @@
 #define REQUEST_HPP
 
 #include <iostream>
+#include <map>
 
 class Request
 {
   private:
-    std::string rawRequest;
-    std::string method;
-    std::string path;
-    std::string query;
-    std::string body;
-    std::string headers;
-    std::string httpVersion;
+    std::string                        method;
+    std::string                        path;
+    std::string                        query;
+    std::string                        body;
+    std::string                        httpVersion;
+    std::map<std::string, std::string> headers;
 
   public:
     Request();
-    Request(const std::string &rRequest);
+    Request(const std::string &);
     Request(const Request &);
     Request &operator=(const Request &);
 
-    std::string getMethod() const;
-    std::string getPath() const;
-    std::string getQuery() const;
-    std::string getBody() const;
-    std::string getHeaders() const;
-    std::string getHttpVersion() const;
+    std::string                        getMethod() const;
+    std::string                        getPath() const;
+    std::string                        getQuery() const;
+    std::string                        getBody() const;
+    std::string                        getHttpVersion() const;
+    std::map<std::string, std::string> getHeaders() const;
 
     void setMethod(std::string str);
     void setPath(std::string str);
@@ -33,8 +33,15 @@ class Request
     void setBody(std::string str);
     void setHeader(std::string str);
     void setHttpVersion(std::string str);
+};
 
-    void parseRawRequest();
+struct client
+{
+    Request req;
+    //Response res;
+    std::string remaining;
+    bool req_line = false;
+    bool req_ready = false;
 };
 
 #endif
