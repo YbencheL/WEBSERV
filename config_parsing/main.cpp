@@ -74,7 +74,7 @@ void debugging(std::deque<ServerBlock>& serverConfigs)
         std::cout << server->listen << std::endl;
     if (server)
     {
-        const LocationBlock* location = getLocation("/cgi-bint", *server);
+        const LocationBlock* location = getLocation("/cgi-bi", *server);
         if (location)
             std::cout << location->path << std::endl;
     }
