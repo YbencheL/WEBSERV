@@ -1,4 +1,4 @@
-#include "request.hpp"
+#include "includes/request.hpp"
 
 Request::Request()
 {
@@ -75,20 +75,4 @@ void Request::setHeader(std::string str)
 void Request::setHttpVersion(std::string str)
 {
     httpVersion = str;
-}
-
-int pareRequest(client &client, std::string recivedData)
-// return Error code when somethig wrong
-{
-    if (client.req_line == false)
-    {
-        client.remaining.append(recivedData);
-        if (client.remaining.find("\r\n"))
-        {
-            client.req_line = true;
-            //call request line parser
-        }
-    }
-    
-    return 200;
 }

@@ -35,13 +35,4 @@ class Request
     void setHttpVersion(std::string str);
 };
 
-struct client
-{
-    Request req;
-    //Response res;
-    std::string remaining;
-    bool req_line = false;
-    bool req_ready = false;
-};
-
 #endif
