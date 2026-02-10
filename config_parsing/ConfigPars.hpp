@@ -9,6 +9,9 @@
 #include <map>
 #include <set>
 #include <algorithm>
+#include <unistd.h>
+#include <netdb.h>
+#include <cstring>
 
 //define
 #define PORT_MIN_VAL 1025
@@ -93,7 +96,8 @@ void tokenzation(std::string fileContent);
 // debugging
 void debugging(std::deque<ServerBlock>& serverConfigs);
 //get_values
-const ServerBlock* getServerForRequest(const std::string &ip, int port, const std::deque<ServerBlock> &serverConfigs);
+const ServerBlock* getServerForRequest(const int ip, int port, const std::deque<ServerBlock> &serverConfigs);
 const LocationBlock* getLocation(const std::string &path, const ServerBlock& srv);
+in_addr_t address_resolution(std::string host);
 
 #endif
