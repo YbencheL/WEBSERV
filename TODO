@@ -1,2 +1,0 @@
-#1 -> same host in diff server-block, (another case "127.0.0.1 == localhost")
-#2 -> remove the server_name
