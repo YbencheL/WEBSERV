@@ -6,7 +6,7 @@ CPPFLAGS = -Wall -Wextra -Werror -std=c++98
 
 RM = rm -rf
 
-SRC = main.cpp request.cpp
+SRC = main.cpp request.cpp parseRequest.cpp
 
 all : ${NAME}
 
