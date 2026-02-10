@@ -280,15 +280,5 @@ struct ClientContext {
 };
 
 /* ------------------------------------------------------------------------------------------------ */ 
-std::string path_resolver(std::string root, std::string path)
-{
-    // 1. If root ends with '/', remove it
-    if (!root.empty() && root.at(root.length() - 1) == '/')
-        root.erase(root.length() - 1);
 
-    // 2. If path doesn't start with '/', add one
-    if (path.empty() || path.at(0) != '/')
-        path = "/" + path;
-
-    return (root + path);
-}
+mailto:support.global@support.mi.com

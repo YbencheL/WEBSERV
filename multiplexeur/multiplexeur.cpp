@@ -46,13 +46,13 @@ void socket_engine::process_connections(void)
                     std::cout << "[>] --- DATA START ---\n" << raw_data << "\n--- DATA END ---" << std::endl;
                     
                     // TODO: REQ/RES
-                    // ------------------------------------------------------------------------------------------ //
-                    // -- HARDCODED VALUES -- request expaction
-                    client &current_client = raw_client_data[fd];
-                    // void    request_handler(char *raw_data, client &client);
-                    // ------------------------------------------------------------------------------------------ //
-                    // response expaction
-                    response_handler(server_config_info ,current_client);
+                    // raw_client_data[fd].req;
+
+                    // if (raw_client_data[fd].req_ready) {
+                        raw_client_data[fd].res = response(raw_client_data[fd].req);
+                        raw_client_data[fd].res.response_handler(server_config_info);
+                        std::cout << ">>>>>>>>>> STATUS CODE: " << raw_client_data[fd].res.get_stat_code() << " <<<<<<<<<<" << std::endl;
+                    // }
                     // ------------------------------------------------------------------------------------------ //
                 }
                 else {
