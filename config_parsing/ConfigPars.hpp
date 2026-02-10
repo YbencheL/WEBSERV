@@ -92,9 +92,7 @@ void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, ssize_t
 void handle_cgi(std::deque<Token>& tokenContainer, LocationBlock& loc, ssize_t& i);
 void handle_autoindex(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i);
 void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& serverConfigs);
-void tokenzation(std::string fileContent);
-// debugging
-void debugging(std::deque<ServerBlock>& serverConfigs);
+std::deque<ServerBlock> tokenzation(std::string fileContent);
 //get_values
 const ServerBlock* getServerForRequest(const int ip, int port, const std::deque<ServerBlock> &serverConfigs);
 const LocationBlock* getLocation(const std::string &path, const ServerBlock& srv);

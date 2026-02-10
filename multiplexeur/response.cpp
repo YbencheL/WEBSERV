@@ -31,7 +31,8 @@ response::response(const request& req)
 void   response::response_handler(std::deque<ServerBlock> &server_config_info)
 {
     // get server block match
-    const ServerBlock *server_req = getServerForRequest(host, port, server_config_info);
+    int hostIp = address_resolution(host);
+    const ServerBlock *server_req = getServerForRequest(hostIp, port, server_config_info);
     
     if (server_req != NULL) {
         const LocationBlock *getLocatoin = getLocation(path, *server_req);   // get location
