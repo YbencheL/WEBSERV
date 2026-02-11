@@ -25,8 +25,8 @@ void freeTokens(token *tokens)
     }
 }
 
-//inisialize client struct
-void inisializeClient(client &client)
+// inisialize client struct
+void inisializeClient(Client &client)
 {
     client.parse.body       = false;
     client.parse.reqLine    = false;
@@ -108,16 +108,49 @@ bool checkMethod(token *token, std::string *methods, int methodNumber)
     return true;
 }
 
-//parse request line
-int parseRequestLine(client &client, std::string &data)
+// set method and checks if there wll be a body or not
+void setMethodBodyCheck(Client &client, token *tokens)
+{
+    client.req.setMethod(tokens->str);
+    if (tokens->str == "POST")
+        client.parse.body = true;
+}
+
+// parse path and check for query
+bool checkSetPathQuery(Client &cleint, token *tokens)
+{ // TODO : need to know if query should be flaged exist or not
+    if (tokens->str[0] != '/')
+        return false;
+    if (tokens->str.find('\r') != std::string::npos ||
+        tokens->str.find('\n') != std::string::npos)
+        return false;
+    if (tokens->str.find('?') != std::string::npos)
+    {
+        int queryStart = tokens->str.find('?');
+        cleint.req.setPath(tokens->str.substr(0, queryStart));
+        cleint.req.setQuery(tokens->str.substr(
+            queryStart + 1, tokens->str.length() - queryStart
+        ));
+    }
+    else
+        cleint.req.setPath(tokens->str);
+    return true;
+}
+
+// parse request line
+int parseRequestLine(Client &client, std::string &data)
 // in case of an error return the Error code thats will be handeled later
 {
-    std::cout << "data :" << data << std::endl;// debug
+    std::cout << "data :" << data << std::endl; // debug
     token *tokens = splitDataToTokens(data);
     if (!tokens)
         return 400;
     if (!checkMethod(tokens, client.parse.methods, 3))
+        return 405;
+    setMethodBodyCheck(client, tokens);
+    if (!checkSetPathQuery(client, tokens->next))
         return 400;
+
     //-------------------------------- test --------------------------------//
     token *tmp = tokens;
     while (tokens)
@@ -128,13 +161,11 @@ int parseRequestLine(client &client, std::string &data)
     tokens = tmp;
     freeTokens(tokens);
     //-------------------------------- test --------------------------------//
-
-    (void)client;
     return 0;
 }
 
-//request parser
-int parseRequest(client &client, std::string recivedData)
+// request parser
+int parseRequest(Client &client, std::string recivedData)
 // TODO: return a specific Error code when somethig wrong
 {
     // checks if request line is compeleted and parse it
@@ -148,6 +179,7 @@ int parseRequest(client &client, std::string recivedData)
                 0, client.parse.remaining.find("\r\n")
             );
             if (parseRequestLine(client, reqLine))
+                // TODO : handle wich error code been sent
                 return 400;
             client.parse.reqLine = true;
         }

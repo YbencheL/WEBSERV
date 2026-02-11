@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-struct client;
+struct Client;
 
 struct token
 {
@@ -19,8 +19,8 @@ struct reqParse
     std::string methods[3];
 };
 
-int    parseRequest(client &client, std::string recivedData);
-int    parseRequestLine(client &client, std::string &data);
+int    parseRequest(Client &client, std::string recivedData);
+int    parseRequestLine(Client &client, std::string &data);
 token *splitDataToTokens(std::string data);
 int    rangeToken(int begin, int &end, std::string &data);
 void   freeTokens(token *tokens);

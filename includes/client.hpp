@@ -8,7 +8,7 @@
 class Request;
 struct reqParse;
 
-struct client
+struct Client
 {
     Request req;
 	reqParse parse;
@@ -16,7 +16,7 @@ struct client
     bool    req_ready;
 };
 
-void inisializeClient(client &client);
+void inisializeClient(Client &client);
 
 
 #endif

@@ -17,8 +17,8 @@ class Request
   public:
     Request();
     Request(const std::string &);
-    Request(const Request &);
-    Request &operator=(const Request &);
+    Request(const Request &other);
+    Request &operator=(const Request &other);
 
     std::string                        getMethod() const;
     std::string                        getPath() const;

@@ -16,9 +16,19 @@ void replace_all(std::string &s, const std::string &from, const std::string &to)
     }
 }
 
+void    printClientInformation(Client client)
+{
+    std::cout << "--------------------------------------------" << std::endl;
+    std::cout << "Method :" << client.req.getMethod() << std::endl;
+    std::cout << "Path :" << client.req.getPath() << std::endl;
+    std::cout << "Query :" << client.req.getQuery() << std::endl;
+    std::cout << "HTTP version :" << client.req.getHttpVersion() << std::endl;
+    std::cout << "--------------------------------------------" << std::endl;
+}
+
 int main()
 {
-    client      test;
+    Client      test;
     std::string testData;
     inisializeClient(test);
 
@@ -31,4 +41,5 @@ int main()
         int exitCode = parseRequest(test, testData);
 		std::cout << "Exit code  :" << exitCode << std::endl;
     }
+    printClientInformation(test);
 }

@@ -8,12 +8,21 @@ Request::Request(const std::string &)
 {
 }
 
-Request::Request(const Request &)
+Request::Request(const Request &other)
 {
+    *this = other;
 }
 
-Request &Request::operator=(const Request &)
+Request &Request::operator=(const Request &other)
 {
+    if (this != &other)
+    {
+        method = other.method;
+        path = other.path;
+        query = other.query;
+        httpVersion = other.httpVersion;
+        body = other.body;
+    }
     return *this;
 }
 
