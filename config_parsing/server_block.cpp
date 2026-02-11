@@ -68,10 +68,11 @@ void handle_server_block_client_mbs(std::deque<Token>& tokenContainer, ServerBlo
         error_line(": client_max_body_size must only have one argument", tokenContainer[i].line);
 }
 
-void handle_server_block_index(std::deque<Token>& tokenContainer, ServerBlock& Serv, ssize_t& i)
+void handle_server_block_index(std::deque<Token>& tokenContainer, ServerBlock& Serv, ssize_t& i,
+bool& insideLoc)
 {
     i++;
-    if (Serv.index.empty())
+    if (Serv.index.empty() && !insideLoc)
     {
         while(tokenContainer[i].type == 1)
         {
@@ -81,41 +82,43 @@ void handle_server_block_index(std::deque<Token>& tokenContainer, ServerBlock& S
     }
 }
 
-void handle_error_page(std::deque<Token>& tokenContainer, ServerBlock& Serv, ssize_t& i)
+void handle_error_page_server(std::deque<Token>& tokenContainer, ServerBlock& Serv, ssize_t& i,
+bool& insideloc)
 {
-        std::deque<int> errorsnum;
-        std::string value;
-        int errornum = 0;
-        i++;
-        while(tokenContainer[i].value != ";")
+    std::deque<int> errorsnum;
+    std::string value;
+    int errornum = 0;
+    i++;
+    while(tokenContainer[i].value != ";")
+    {
+        errornum = 0;
+        std::stringstream ss(tokenContainer[i].value);
+        ss >> errornum;
+        if (ss.fail() || !ss.eof())
         {
-            errornum = 0;
-            std::stringstream ss(tokenContainer[i].value);
-            ss >> errornum;
-            if (ss.fail() || !ss.eof())
-            {
-                if (!value.empty())
-                    error_line(": there must be only one path in erro_page", tokenContainer[i].line);
-                else
-                    value = tokenContainer[i].value;
-            }
+            if (!value.empty())
+                error_line(": there must be only one path in erro_page", tokenContainer[i].line);
             else
-            {
-                if ((errornum >= 100 && errornum < 600))
-                    errorsnum.push_back(errornum);
-                else
-                    error_line(": error page number must be a valid http number", tokenContainer[i].line);
-            }
-            i++;
+                value = tokenContainer[i].value;
         }
-        if (value.empty() || errorsnum.empty())
-            error_line(": error_page is missing a path or a page error number", tokenContainer[i].line);
         else
         {
-            std::map<std::deque<int>,std::string>::iterator it = Serv.error_page.find(errorsnum);
-            if (it != Serv.error_page.end())
-                Serv.error_page.erase(it);
+            if ((errornum >= 100 && errornum < 600))
+                errorsnum.push_back(errornum);
+            else
+                error_line(": error page number must be a valid http number", tokenContainer[i].line);
         }
+        i++;
+    }
+    if (value.empty() || errorsnum.empty())
+        error_line(": error_page is missing a path or a page error number", tokenContainer[i].line);
+    else
+    {
+        std::map<std::deque<int>,std::string>::iterator it = Serv.error_page.find(errorsnum);
+        if (it != Serv.error_page.end())
+            Serv.error_page.erase(it);
+    }
+    if (!insideloc)
         Serv.error_page.insert(std::make_pair(errorsnum, value));
 }
 
@@ -134,9 +137,9 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
     else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "client_max_body_size")
         handle_server_block_client_mbs(tokenContainer, Serv, countARG, i, insideLoc);
     else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "error_page")
-        handle_error_page(tokenContainer, Serv, i);
+        handle_error_page_server(tokenContainer, Serv, i, insideLoc);
     else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "index")
-        handle_server_block_index(tokenContainer, Serv, i);
+        handle_server_block_index(tokenContainer, Serv, i, insideLoc);
     else if (tokenContainer[i].value == "location")
         insideLoc = true;
     else if (insideLoc && (tokenContainer[i].value == "listen" || tokenContainer[i].value == "server_name" || tokenContainer[i].value == "error_page"))

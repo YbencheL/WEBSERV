@@ -87,7 +87,19 @@ void checking_values(ServerBlock& Serv)
             if (!Serv.locations[i].client_max_body_size)
                 throw std::runtime_error("ERROR: missing value (client_max_body_size)");
         }
-        if (Serv.locations[i].index.empty()) Serv.locations[i].index = Serv.index;
+        if (Serv.locations[i].index.empty())
+        {
+            Serv.locations[i].index = Serv.index;
+            if (Serv.locations[i].index.empty())
+                throw std::runtime_error("ERROR: missing value (index)");
+        }
+        if (Serv.locations[i].error_page.empty())
+        {
+            Serv.locations[i].error_page = Serv.error_page;
+            if (Serv.locations[i].error_page.empty())
+                throw std::runtime_error("ERROR: missing value (index)");
+        }
+        // if (Serv.locations[i].index.empty()) Serv.locations[i].index = Serv.index;
         // if allow method directive is empty its gonna have these three
         if (Serv.locations[i].allow_methods.empty())
         {
