@@ -18,6 +18,7 @@
 #define PORT_MAX_VAL 65535
 #define CLIENT_MAX_BODY_SIZE 1000000
 
+
 enum TokenType {
     KEYWORD,
     WORD,
@@ -34,7 +35,7 @@ struct Token
 struct LocationBlock
 {
     std::string path;
-    std::string returN;
+    std::string redirection;
     int client_max_body_size;
     std::string root;
     std::deque<std::string> index;
@@ -75,11 +76,14 @@ void symbol_validation(std::deque<Token>& tokenContainer, ssize_t& ServerBlockCo
 void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool& insideLoc, ServerBlock& Serv, ssize_t& i);
 void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& ServerConfigs);
 // server block helpers
-void handle_listen(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i);
-void handle_host(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i);
+void handle_listen(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
+bool& insideLoc);
+void handle_host(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
+bool& insideLoc);
 void handle_server_block_root(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
     bool& insideLoc);
-void handle_server_name(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i);
+void handle_server_name(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
+bool& insideLoc);
 void handle_server_block_client_mbs(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
     bool& insideLoc);
 void handle_server_block_index(std::deque<Token>& tokenContainer, ServerBlock& Serv, ssize_t& i,
@@ -90,12 +94,12 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
 // location block helpers
 void handle_client_mbs(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i);
 void handle_return(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i);
-void handle_allow_methods(std::deque<Token>& tokenContainer, LocationBlock& loc, ssize_t& i);
-void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, ssize_t& i);
-void handle_cgi(std::deque<Token>& tokenContainer, LocationBlock& loc, ssize_t& i);
+void handle_allow_methods(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i);
+void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i);
+void handle_cgi(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i);
 void handle_autoindex(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i);
 void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& serverConfigs);
-void handle_error_page(std::deque<Token>& tokenContainer, LocationBlock& loc, ssize_t& i);
+void handle_error_page(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i);
 void tokenzation(std::string fileContent);
 // debugging
 void debugging(std::deque<ServerBlock>& serverConfigs);

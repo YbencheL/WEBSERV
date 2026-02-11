@@ -1,8 +1,10 @@
 #include "ConfigPars.hpp"
 
-void handle_listen(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i)
+void handle_listen(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
+bool& insideLoc)
 {
     int port = 0;
+    (void)insideLoc;
 
     countARG = count_to_symbol(tokenContainer, i, countARG);
     if (countARG == 1)
@@ -18,8 +20,10 @@ void handle_listen(std::deque<Token>& tokenContainer, ServerBlock& Serv, int cou
         error_line(": listen must only have one argument", tokenContainer[i].line);
 }
 
-void handle_host(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i)
+void handle_host(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
+bool& insideLoc)
 {
+    (void)insideLoc;
     countARG = count_to_symbol(tokenContainer, i, countARG);
     if (countARG == 1)
     {
@@ -30,7 +34,7 @@ void handle_host(std::deque<Token>& tokenContainer, ServerBlock& Serv, int count
 }
 
 void handle_server_block_root(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
-    bool& insideLoc)
+bool& insideLoc)
 {
     countARG = count_to_symbol(tokenContainer, i, countARG);
     if (countARG == 1 && !insideLoc)
@@ -42,8 +46,10 @@ void handle_server_block_root(std::deque<Token>& tokenContainer, ServerBlock& Se
     countARG = 0;
 }
 
-void handle_server_name(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i)
+void handle_server_name(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
+    bool& insideLoc)
 {
+    (void)insideLoc;
     countARG = count_to_symbol(tokenContainer, i, countARG);
     if (countARG == 1)
     {
@@ -54,7 +60,7 @@ void handle_server_name(std::deque<Token>& tokenContainer, ServerBlock& Serv, in
 }
 
 void handle_server_block_client_mbs(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
-    bool& insideLoc)
+bool& insideLoc)
 {
     countARG = count_to_symbol(tokenContainer, i, countARG);
     if (countARG == 1 && !insideLoc)
@@ -122,20 +128,26 @@ bool& insideloc)
         Serv.error_page.insert(std::make_pair(errorsnum, value));
 }
 
+typedef void(*handler)(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
+bool& insideLoc);
+
+void handler_caller(std::map<std::string, handler>& handler_map)
+{
+    handler_map["listen"] = &handle_listen;
+    handler_map["host"] = &handle_host;
+    handler_map["root"] = &handle_server_block_root;
+    handler_map["client_max_body_size"] = &handle_server_block_client_mbs;
+    handler_map["server_name"] = &handle_server_name;
+}
+
 void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool& insideLoc, ServerBlock& Serv, ssize_t& i)
 {
     int countARG = 0;
+    std::map<std::string, handler> handler_map;
 
-    if (tokenContainer[i].value == "listen")
-        handle_listen(tokenContainer, Serv, countARG, i);
-    else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "host")
-        handle_host(tokenContainer, Serv, countARG, i);
-    else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "root")
-        handle_server_block_root(tokenContainer, Serv, countARG, i, insideLoc);
-    else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "server_name")
-        handle_server_name(tokenContainer, Serv, countARG, i);
-    else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "client_max_body_size")
-        handle_server_block_client_mbs(tokenContainer, Serv, countARG, i, insideLoc);
+    handler_caller(handler_map);
+    if (handler_map.find(tokenContainer[i].value) != handler_map.end())
+        handler_map[tokenContainer[i].value](tokenContainer, Serv, countARG, i, insideLoc);
     else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "error_page")
         handle_error_page_server(tokenContainer, Serv, i, insideLoc);
     else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "index")

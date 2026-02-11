@@ -19,14 +19,15 @@ void handle_return(std::deque<Token>& tokenContainer, LocationBlock& loc, int co
     countARG = count_to_symbol(tokenContainer, i, countARG);
     if (countARG == 1)
     {
-        loc.returN = tokenContainer[i].value;
+        loc.redirection = tokenContainer[i].value;
         countARG = 0;
     }else
         error_line(": return must only have one argument", tokenContainer[i].line);
 }
 
-void handle_allow_methods(std::deque<Token>& tokenContainer, LocationBlock& loc, ssize_t& i)
+void handle_allow_methods(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i)
 {
+    (void)countARG;
     i++;
     while(i < (ssize_t)tokenContainer.size() && tokenContainer[i].type == 1)
     {
@@ -43,8 +44,9 @@ void handle_allow_methods(std::deque<Token>& tokenContainer, LocationBlock& loc,
     }
 }
 
-void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, ssize_t& i)
+void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i)
 {
+    (void)countARG;
     i++;
     while(i < (ssize_t)tokenContainer.size() && tokenContainer[i].type == 1)
     {
@@ -53,8 +55,9 @@ void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, ssize_t
     }
 }
 
-void handle_error_page(std::deque<Token>& tokenContainer, LocationBlock& loc, ssize_t& i)
+void handle_error_page(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i)
 {
+    (void)countARG;
     std::deque<int> errorsnum;
     std::string value;
     int errornum = 0;
@@ -91,8 +94,9 @@ void handle_error_page(std::deque<Token>& tokenContainer, LocationBlock& loc, ss
     loc.error_page.insert(std::make_pair(errorsnum, value));
 }
 
-void handle_cgi(std::deque<Token>& tokenContainer, LocationBlock& loc, ssize_t& i)
+void handle_cgi(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i)
 {
+    (void)countARG;
     if (tokenContainer[i].value == "cgi_extension")
     {
         i++;
@@ -128,17 +132,36 @@ void handle_autoindex(std::deque<Token>& tokenContainer, LocationBlock& loc, int
         error_line(": autoindex must only have one argument", tokenContainer[i].line);
 }
 
+typedef void(*handler)(std::deque<Token>&, LocationBlock&, int, ssize_t&);
+
+void handler_caller(std::map<std::string, handler>& handler_map)
+{
+    handler_map["client_max_body_size"] = &handle_client_mbs;
+    handler_map["return"] = &handle_return;
+    handler_map["index"] = &handle_index;
+    handler_map["error_page"] = &handle_error_page;
+    handler_map["allow_methods"] = &handle_allow_methods;
+    handler_map["autoindex"] = &handle_autoindex;
+    handler_map["cgi_extension"] = &handle_cgi;
+    handler_map["cgi_path"] = &handle_cgi;
+}
+
 void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock& Serv, ssize_t& i)
 {
     bool InsideLocationBlock = false;
     ssize_t keepCountOfBrase = 0;
     int countARG = 0;
+    std::map<std::string, void(*)(std::deque<Token>&, LocationBlock&, int, ssize_t&)> handler_map;
     ssize_t pos = 0;
 
+    handler_caller(handler_map);
     for (; i < (ssize_t)tokenContainer.size(); i++)
     {
         if (!InsideLocationBlock && (tokenContainer[i].value == "cgi_extension" || tokenContainer[i].value == "cgi_path"))
+        {
+            std::cout << tokenContainer[i].value << std::endl;
             error_line(": unkown keyword", tokenContainer[i].line);
+        }
         if (tokenContainer[i].value == "location")
         {
             LocationBlock loc;
@@ -156,20 +179,8 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
                     loc.path = tokenContainer[i].value;
                 else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "root")
                     loc.root = tokenContainer[i + 1].value;
-                else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "client_max_body_size")
-                    handle_client_mbs(tokenContainer, loc, countARG, i);
-                else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "return")
-                    handle_return(tokenContainer, loc, countARG, i);
-                else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "index")
-                    handle_index(tokenContainer, loc, i);
-                else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "error_page")
-                    handle_error_page(tokenContainer, loc, i);
-                else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "allow_methods")
-                    handle_allow_methods(tokenContainer, loc, i);
-                else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "autoindex")
-                    handle_autoindex(tokenContainer, loc, countARG, i);
-                else if(i < (ssize_t)tokenContainer.size() && (tokenContainer[i].value == "cgi_extension" || tokenContainer[i].value == "cgi_path"))
-                    handle_cgi(tokenContainer, loc, i);
+                else if (handler_map.find(tokenContainer[i].value) != handler_map.end())
+                    handler_map[tokenContainer[i].value](tokenContainer, loc, countARG, i);
                 else if (tokenContainer[i].value == "}")
                 {
                     keepCountOfBrase--;
