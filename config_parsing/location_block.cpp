@@ -53,6 +53,44 @@ void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, ssize_t
     }
 }
 
+void handle_error_page(std::deque<Token>& tokenContainer, LocationBlock& loc, ssize_t& i)
+{
+    std::deque<int> errorsnum;
+    std::string value;
+    int errornum = 0;
+    i++;
+    while(tokenContainer[i].value != ";")
+    {
+        errornum = 0;
+        std::stringstream ss(tokenContainer[i].value);
+        ss >> errornum;
+        if (ss.fail() || !ss.eof())
+        {
+            if (!value.empty())
+                error_line(": there must be only one path in erro_page", tokenContainer[i].line);
+            else
+                value = tokenContainer[i].value;
+        }
+        else
+        {
+            if ((errornum >= 100 && errornum < 600))
+                errorsnum.push_back(errornum);
+            else
+                error_line(": error page number must be a valid http number", tokenContainer[i].line);
+        }
+        i++;
+    }
+    if (value.empty() || errorsnum.empty())
+        error_line(": error_page is missing a path or a page error number", tokenContainer[i].line);
+    else
+    {
+        std::map<std::deque<int>,std::string>::iterator it = loc.error_page.find(errorsnum);
+        if (it != loc.error_page.end())
+            loc.error_page.erase(it);
+    }
+    loc.error_page.insert(std::make_pair(errorsnum, value));
+}
+
 void handle_cgi(std::deque<Token>& tokenContainer, LocationBlock& loc, ssize_t& i)
 {
     if (tokenContainer[i].value == "cgi_extension")
@@ -124,6 +162,8 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
                     handle_return(tokenContainer, loc, countARG, i);
                 else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "index")
                     handle_index(tokenContainer, loc, i);
+                else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "error_page")
+                    handle_error_page(tokenContainer, loc, i);
                 else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "allow_methods")
                     handle_allow_methods(tokenContainer, loc, i);
                 else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "autoindex")
@@ -136,7 +176,7 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
                     Serv.locations.push_back(loc);
                     InsideLocationBlock = false;
                     break;
-                }else if (tokenContainer[i].value == "listen" || tokenContainer[i].value == "server_name" || tokenContainer[i].value == "error_page" ||
+                }else if (tokenContainer[i].value == "listen" || tokenContainer[i].value == "server_name" ||
                         tokenContainer[i].value == "host")
                     error_line(": server only keyword inside location block", tokenContainer[i].line);
                 i++;
