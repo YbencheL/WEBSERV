@@ -74,9 +74,11 @@ bool& insideLoc)
         error_line(": client_max_body_size must only have one argument", tokenContainer[i].line);
 }
 
-void handle_server_block_index(std::deque<Token>& tokenContainer, ServerBlock& Serv, ssize_t& i,
+void handle_server_block_index(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
 bool& insideLoc)
 {
+    (void)countARG;
+    (void)insideLoc;
     i++;
     if (Serv.index.empty() && !insideLoc)
     {
@@ -88,9 +90,11 @@ bool& insideLoc)
     }
 }
 
-void handle_error_page_server(std::deque<Token>& tokenContainer, ServerBlock& Serv, ssize_t& i,
-bool& insideloc)
+void handle_error_page_server(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
+bool& insideLoc)
 {
+    (void)insideLoc;
+    (void)countARG;
     std::deque<int> errorsnum;
     std::string value;
     int errornum = 0;
@@ -124,7 +128,7 @@ bool& insideloc)
         if (it != Serv.error_page.end())
             Serv.error_page.erase(it);
     }
-    if (!insideloc)
+    if (!insideLoc)
         Serv.error_page.insert(std::make_pair(errorsnum, value));
 }
 
@@ -138,6 +142,8 @@ void handler_caller(std::map<std::string, handler>& handler_map)
     handler_map["root"] = &handle_server_block_root;
     handler_map["client_max_body_size"] = &handle_server_block_client_mbs;
     handler_map["server_name"] = &handle_server_name;
+    handler_map["error_page"] = &handle_error_page_server;
+    handler_map["index"] = &handle_server_block_index;
 }
 
 void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool& insideLoc, ServerBlock& Serv, ssize_t& i)
@@ -148,10 +154,6 @@ void extracting_values_from_server_block(std::deque<Token>& tokenContainer, bool
     handler_caller(handler_map);
     if (handler_map.find(tokenContainer[i].value) != handler_map.end())
         handler_map[tokenContainer[i].value](tokenContainer, Serv, countARG, i, insideLoc);
-    else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "error_page")
-        handle_error_page_server(tokenContainer, Serv, i, insideLoc);
-    else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "index")
-        handle_server_block_index(tokenContainer, Serv, i, insideLoc);
     else if (tokenContainer[i].value == "location")
         insideLoc = true;
     else if (insideLoc && (tokenContainer[i].value == "listen" || tokenContainer[i].value == "server_name" || tokenContainer[i].value == "error_page"))

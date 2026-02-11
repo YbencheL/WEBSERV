@@ -75,6 +75,7 @@ void checking_values(ServerBlock& Serv)
     {
         seenLocationPaths.push_back(Serv.locations[i].path);
         duplicate_check(seenLocationPaths, Serv.locations[i].path);
+        // inheritance logic
         if (Serv.locations[i].root.empty())
         {
             Serv.locations[i].root = Serv.root;

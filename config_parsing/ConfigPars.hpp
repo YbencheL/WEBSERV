@@ -86,9 +86,9 @@ void handle_server_name(std::deque<Token>& tokenContainer, ServerBlock& Serv, in
 bool& insideLoc);
 void handle_server_block_client_mbs(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
     bool& insideLoc);
-void handle_server_block_index(std::deque<Token>& tokenContainer, ServerBlock& Serv, ssize_t& i,
+void handle_server_block_index(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
 bool& insideLoc);
-void handle_error_page_server(std::deque<Token>& tokenContainer, ServerBlock& Serv, ssize_t& i,
+void handle_error_page_server(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
 bool& insideLoc);
 void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock& Serv, ssize_t& i);
 // location block helpers
