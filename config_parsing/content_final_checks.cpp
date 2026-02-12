@@ -52,55 +52,55 @@ void checking_for_keyword_dups(std::deque<Token>& tokenContainer)
     duplicate_check(keywords, "host");
 }
 
+template <typename T>
+void inherit_check(T& member, T& defaultValue, const std::string& fieldName)
+{
+    if (member.empty())
+    {
+        member = defaultValue;
+        if (member.empty())
+            throw std::runtime_error("ERROR: missing value " + fieldName);
+    }
+}
+
+template <typename T>
+void empty_values_check(T& member, const std::string& fieldName)
+{
+    if (member.empty())
+        throw std::runtime_error("ERROR: missing value (" + fieldName + ")");
+}
+
+
 void checking_values(ServerBlock& Serv)
 {
     std::deque<std::string> seenLocationPaths;
 
     if (!Serv.listen)
-        throw std::runtime_error("ERROR: missing port value");
+        throw std::runtime_error("ERROR: missing value (port)");
     else if (Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL)
         throw std::runtime_error("ERROR: port has incorrect value must be between 1024 and 65535");
     else if (Serv.client_max_body_size < 0 || !Serv.client_max_body_size)
         throw std::runtime_error("ERROR: client_max_body_size has incorrect value");
-    else if (Serv.error_page.empty())
-        throw std::runtime_error("ERROR: error_page has incorrect value");
-    else if (Serv.host.empty())
-        throw std::runtime_error("ERROR: host has incorrect value");
+    empty_values_check(Serv.error_page, "error_page");
+    empty_values_check(Serv.host, "host");
+    empty_values_check(Serv.index, "index");
     // else if (Serv.server_name.empty())
     //     throw std::runtime_error("ERROR: server_name has incorrect value");
-    else if (Serv.index.empty())
-        throw std::runtime_error("ERROR: index has incorrect value");
     // these values will have a default if they dont exist
     for (size_t i = 0; i < Serv.locations.size(); i++)
     {
         seenLocationPaths.push_back(Serv.locations[i].path);
         duplicate_check(seenLocationPaths, Serv.locations[i].path);
         // inheritance logic
-        if (Serv.locations[i].root.empty())
-        {
-            Serv.locations[i].root = Serv.root;
-            if (Serv.locations[i].root.empty())
-                throw std::runtime_error("ERROR: missing value (root)");
-        }
         if (!Serv.locations[i].client_max_body_size)
         {
             Serv.locations[i].client_max_body_size = Serv.client_max_body_size;
             if (!Serv.locations[i].client_max_body_size)
                 throw std::runtime_error("ERROR: missing value (client_max_body_size)");
         }
-        if (Serv.locations[i].index.empty())
-        {
-            Serv.locations[i].index = Serv.index;
-            if (Serv.locations[i].index.empty())
-                throw std::runtime_error("ERROR: missing value (index)");
-        }
-        if (Serv.locations[i].error_page.empty())
-        {
-            Serv.locations[i].error_page = Serv.error_page;
-            if (Serv.locations[i].error_page.empty())
-                throw std::runtime_error("ERROR: missing value (index)");
-        }
-        // if (Serv.locations[i].index.empty()) Serv.locations[i].index = Serv.index;
+        inherit_check(Serv.locations[i].root, Serv.root, "root");
+        inherit_check(Serv.locations[i].index, Serv.index, "index");
+        inherit_check(Serv.locations[i].error_page, Serv.error_page, "error_page");
         // if allow method directive is empty its gonna have these three
         if (Serv.locations[i].allow_methods.empty())
         {
