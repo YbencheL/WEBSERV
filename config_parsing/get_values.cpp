@@ -75,8 +75,5 @@ const LocationBlock* getLocation(const std::string &path, const ServerBlock& srv
                 return loc;
         }
     }
-    if (loc->path == "/")
-        return NULL;
-    std::cout << "lol" << std::endl;
     return (loc);
 }
