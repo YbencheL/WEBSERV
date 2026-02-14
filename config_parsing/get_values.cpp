@@ -53,6 +53,8 @@ const LocationBlock* getLocation(const std::string &path, const ServerBlock& srv
     size_t matchedlength = 0;
     const LocationBlock *loc = NULL;
 
+    if (srv.locations.empty())
+        return NULL;
     for (size_t i = 0; i < srv.locations.size(); ++i)
     {
         if (srv.locations[i].path.size() > path.size())
@@ -75,5 +77,6 @@ const LocationBlock* getLocation(const std::string &path, const ServerBlock& srv
     }
     if (loc->path == "/")
         return NULL;
+    std::cout << "lol" << std::endl;
     return (loc);
 }
