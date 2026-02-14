@@ -12,8 +12,8 @@ struct Client
 {
     Request req;
 	reqParse parse;
-    // Response res;
-    bool    req_ready;
+    //Response res;
+    bool    reqReady;
 };
 
 void inisializeClient(Client &client);

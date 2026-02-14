@@ -31,7 +31,7 @@ class Request
     void setPath(std::string str);
     void setQuery(std::string str);
     void setBody(std::string str);
-    void setHeader(std::string str);
+    void setHeader(std::map<std::string, std::string> map);
     void setHttpVersion(std::string str);
 };
 

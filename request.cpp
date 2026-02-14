@@ -76,9 +76,9 @@ void Request::setBody(std::string str)
     body = str;
 }
 
-void Request::setHeader(std::string str)
+void Request::setHeader(std::map<std::string, std::string> map)
 {
-    (void)str;
+    headers = map;
 }
 
 void Request::setHttpVersion(std::string str)

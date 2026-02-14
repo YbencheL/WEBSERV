@@ -2,28 +2,28 @@
 #define PARSEREQUEST_HPP
 
 #include <iostream>
+#include <list>
+#include <map>
+
+enum parseSteps
+{
+    REQLINE,
+    HEADERS,
+    BODY
+};
 
 struct Client;
 
-struct token
-{
-    std::string str;
-    token      *next;
-};
-
 struct reqParse
 {
-    std::string       remaining;
-    bool              reqLine;
-    bool              body;
+    parseSteps  step;
+    std::string remaining;
+    bool        body;
     std::string methods[3];
 };
 
-int    parseRequest(Client &client, std::string recivedData);
-int    parseRequestLine(Client &client, std::string &data);
-token *splitDataToTokens(std::string data);
-int    rangeToken(int begin, int &end, std::string &data);
-void   freeTokens(token *tokens);
-token *newToken(std::string data);
+bool parseHeaders(Client &client, std::string &data);
+int  parseRequestLine(Client &client, std::string &data);
+int  parseRequest(Client &client, std::string recivedData);
 
 #endif
