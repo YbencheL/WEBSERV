@@ -97,6 +97,7 @@ bool& insideLoc)
     std::deque<int> errorsnum;
     std::string value;
     int errornum = 0;
+    int num = errornum;
     i++;
     while(tokenContainer[i].value != ";")
     {
@@ -112,6 +113,7 @@ bool& insideLoc)
         }
         else
         {
+            num = errornum;
             if ((errornum >= 100 && errornum < 600))
                 errorsnum.push_back(errornum);
             else
@@ -123,9 +125,9 @@ bool& insideLoc)
         error_line(": error_page is missing a page error number", tokenContainer[i].line);
     else
     {
-        std::map<std::deque<int>,std::string>::iterator it = Serv.error_page.find(errorsnum);
-        if (it != Serv.error_page.end())
-            Serv.error_page.erase(it);
+        countARG = std::count(errorsnum.begin(), errorsnum.end(), num);
+        if (countARG > 1)
+            error_line(": duplicate status code in error_page", tokenContainer[i].line);
     }
     if (!insideLoc)
         Serv.error_page.insert(std::make_pair(errorsnum, value));

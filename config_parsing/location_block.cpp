@@ -53,13 +53,64 @@ void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, int cou
     }
 }
 
+// void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
+//     std::string& keyword)
+// {
+//     (void)countARG;
+//     std::deque<int> errorsnum;
+//     std::string value;
+//     int errornum = 0;
+
+//     i++;
+//     while(tokenContainer[i].value != ";")
+//     {
+//         errornum = 0;
+//         std::stringstream ss(tokenContainer[i].value);
+//         ss >> errornum;
+//         if (ss.fail() || !ss.eof())
+//         {
+//             if (!value.empty())
+//                 error_line(": there must be only one path in a directive or none", tokenContainer[i].line);
+//             else
+//                 value = tokenContainer[i].value;
+//         }
+//         else
+//         {
+//             if ((errornum >= 100 && errornum < 600))
+//                 errorsnum.push_back(errornum);
+//             else
+//                 error_line(": directive number must be a valid http number", tokenContainer[i].line);
+//         }
+//         i++;
+//     }
+//     if (errorsnum.empty())
+//         error_line(": directive is missing a error number", tokenContainer[i].line);
+//     else
+//     {
+//         if (keyword == "return")
+//         {
+//             std::map<std::deque<int>,std::string>::iterator it = loc.redirection.find(errorsnum);
+//             if (it != loc.redirection.end())
+//                 loc.redirection.erase(it);
+//         loc.redirection.insert(std::make_pair(errorsnum, value));
+//         }else
+//         {
+//             std::map<std::deque<int>,std::string>::iterator it = loc.error_page.find(errorsnum);
+//             if (it != loc.error_page.end())
+//                 loc.error_page.erase(it);
+//         }
+//         loc.error_page.insert(std::make_pair(errorsnum, value));
+//     }
+// }
+// work on it
 void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
     std::string& keyword)
 {
-    (void)countARG;
+    countARG = 0;
     std::deque<int> errorsnum;
     std::string value;
     int errornum = 0;
+    int num = 0;
 
     i++;
     while(tokenContainer[i].value != ";")
@@ -76,6 +127,7 @@ void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, 
         }
         else
         {
+            num = errornum;
             if ((errornum >= 100 && errornum < 600))
                 errorsnum.push_back(errornum);
             else
@@ -89,17 +141,16 @@ void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, 
     {
         if (keyword == "return")
         {
-            std::map<std::deque<int>,std::string>::iterator it = loc.redirection.find(errorsnum);
-            if (it != loc.redirection.end())
-                loc.redirection.erase(it);
-        loc.redirection.insert(std::make_pair(errorsnum, value));
+            if (errorsnum.size() > 1)
+                error_line(": more then one status code in return", tokenContainer[i].line);
+            loc.redirection.insert(std::make_pair(errorsnum, value));
         }else
         {
-            std::map<std::deque<int>,std::string>::iterator it = loc.error_page.find(errorsnum);
-            if (it != loc.error_page.end())
-                loc.error_page.erase(it);
+            countARG = std::count(errorsnum.begin(), errorsnum.end(), num);
+            if (countARG > 1)
+                error_line(": duplicate status code in error_page", tokenContainer[i].line);
+            loc.error_page.insert(std::make_pair(errorsnum, value));
         }
-        loc.error_page.insert(std::make_pair(errorsnum, value));
     }
 }
 
