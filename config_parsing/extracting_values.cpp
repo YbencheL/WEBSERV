@@ -43,7 +43,7 @@ void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std:
     checking_for_virtual_hosts(seenPort);
 }
 
-void tokenzation(std::string fileContent)
+std::deque<ServerBlock> tokenzation(std::string fileContent)
 {
     std::string tok;
     ssize_t Line;
@@ -87,6 +87,5 @@ void tokenzation(std::string fileContent)
         throw std::runtime_error("ERROR: nothing was provided in the config file");
     is_syntax_valid(tokenContainer);
     extracting_blocks_plus_final_checks(tokenContainer, serverConfigs);
-    // debugging code
-    debugging(serverConfigs);
+    return serverConfigs;
 }

@@ -76,7 +76,9 @@ std::string& keyword);
 void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& serverConfigs);
 void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
 std::string& keyword);
-void tokenzation(std::string fileContent);
+
+// main function
+std::deque<ServerBlock> tokenzation(std::string fileContent);
 
 // debugging
 void debugging(std::deque<ServerBlock>& serverConfigs);
