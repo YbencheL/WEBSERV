@@ -1,7 +1,9 @@
 #include "ConfigPars.hpp"
 
-void handle_client_mbs(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i)
+void handle_client_mbs(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
+    std::string& keyword)
 {
+    (void)keyword;
     countARG = count_to_symbol(tokenContainer, i, countARG);
     if (countARG == 1)
     {
@@ -14,24 +16,17 @@ void handle_client_mbs(std::deque<Token>& tokenContainer, LocationBlock& loc, in
         error_line(": client_max_body_size must only have one argument", tokenContainer[i].line);
 }
 
-void handle_return(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i)
-{
-    countARG = count_to_symbol(tokenContainer, i, countARG);
-    if (countARG == 1)
-    {
-        loc.redirection = tokenContainer[i].value;
-        countARG = 0;
-    }else
-        error_line(": return must only have one argument", tokenContainer[i].line);
-}
-
-void handle_allow_methods(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i)
+void handle_allow_methods(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
+    std::string& keyword)
 {
     (void)countARG;
+    (void)keyword;
     i++;
+
     while(i < (ssize_t)tokenContainer.size() && tokenContainer[i].type == 1)
     {
-        if (tokenContainer[i].value == "GET" || tokenContainer[i].value == "POST" || tokenContainer[i].value == "DELETE")
+        if (tokenContainer[i].value == "GET" || tokenContainer[i].value == "POST"
+            || tokenContainer[i].value == "DELETE")
         {
             loc.allow_methods.push_back(tokenContainer[i].value);
             duplicate_check(loc.allow_methods, "GET");
@@ -44,10 +39,13 @@ void handle_allow_methods(std::deque<Token>& tokenContainer, LocationBlock& loc,
     }
 }
 
-void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i)
+void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
+    std::string& keyword)
 {
     (void)countARG;
+    (void)keyword;
     i++;
+
     while(i < (ssize_t)tokenContainer.size() && tokenContainer[i].type == 1)
     {
         loc.index.push_back(tokenContainer[i].value);
@@ -55,12 +53,14 @@ void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, int cou
     }
 }
 
-void handle_error_page(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i)
+void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
+    std::string& keyword)
 {
     (void)countARG;
     std::deque<int> errorsnum;
     std::string value;
     int errornum = 0;
+
     i++;
     while(tokenContainer[i].value != ";")
     {
@@ -70,7 +70,7 @@ void handle_error_page(std::deque<Token>& tokenContainer, LocationBlock& loc, in
         if (ss.fail() || !ss.eof())
         {
             if (!value.empty())
-                error_line(": there must be only one path in erro_page", tokenContainer[i].line);
+                error_line(": there must be only one path in a directive or none", tokenContainer[i].line);
             else
                 value = tokenContainer[i].value;
         }
@@ -79,24 +79,36 @@ void handle_error_page(std::deque<Token>& tokenContainer, LocationBlock& loc, in
             if ((errornum >= 100 && errornum < 600))
                 errorsnum.push_back(errornum);
             else
-                error_line(": error page number must be a valid http number", tokenContainer[i].line);
+                error_line(": directive number must be a valid http number", tokenContainer[i].line);
         }
         i++;
     }
-    if (value.empty() || errorsnum.empty())
-        error_line(": error_page is missing a path or a page error number", tokenContainer[i].line);
+    if (errorsnum.empty())
+        error_line(": directive is missing a error number", tokenContainer[i].line);
     else
     {
-        std::map<std::deque<int>,std::string>::iterator it = loc.error_page.find(errorsnum);
-        if (it != loc.error_page.end())
-            loc.error_page.erase(it);
+        if (keyword == "return")
+        {
+            std::map<std::deque<int>,std::string>::iterator it = loc.redirection.find(errorsnum);
+            if (it != loc.redirection.end())
+                loc.redirection.erase(it);
+        loc.redirection.insert(std::make_pair(errorsnum, value));
+        }else
+        {
+            std::map<std::deque<int>,std::string>::iterator it = loc.error_page.find(errorsnum);
+            if (it != loc.error_page.end())
+                loc.error_page.erase(it);
+        }
+        loc.error_page.insert(std::make_pair(errorsnum, value));
     }
-    loc.error_page.insert(std::make_pair(errorsnum, value));
 }
 
-void handle_cgi(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i)
+void handle_cgi(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
+    std::string& keyword)
 {
     (void)countARG;
+    (void)keyword;
+
     if (tokenContainer[i].value == "cgi_extension")
     {
         i++;
@@ -112,12 +124,15 @@ void handle_cgi(std::deque<Token>& tokenContainer, LocationBlock& loc, int count
         {
             loc.cgi_path.push_back(tokenContainer[i].value);
             i++;
-        } 
+        }
     }
 }
 
-void handle_autoindex(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i)
+void handle_autoindex(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
+    std::string& keyword)
 {
+    (void)keyword;
+
     countARG = count_to_symbol(tokenContainer, i, countARG);
     if (countARG == 1)
     {
@@ -132,14 +147,14 @@ void handle_autoindex(std::deque<Token>& tokenContainer, LocationBlock& loc, int
         error_line(": autoindex must only have one argument", tokenContainer[i].line);
 }
 
-typedef void(*handler)(std::deque<Token>&, LocationBlock&, int, ssize_t&);
+typedef void(*handler)(std::deque<Token>&, LocationBlock&, int, ssize_t&, std::string&);
 
 void handler_caller(std::map<std::string, handler>& handler_map)
 {
     handler_map["client_max_body_size"] = &handle_client_mbs;
-    handler_map["return"] = &handle_return;
+    handler_map["return"] = &handle_redirections;
     handler_map["index"] = &handle_index;
-    handler_map["error_page"] = &handle_error_page;
+    handler_map["error_page"] = &handle_redirections;
     handler_map["allow_methods"] = &handle_allow_methods;
     handler_map["autoindex"] = &handle_autoindex;
     handler_map["cgi_extension"] = &handle_cgi;
@@ -151,7 +166,7 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
     bool InsideLocationBlock = false;
     ssize_t keepCountOfBrase = 0;
     int countARG = 0;
-    std::map<std::string, void(*)(std::deque<Token>&, LocationBlock&, int, ssize_t&)> handler_map;
+    std::map<std::string, void(*)(std::deque<Token>&, LocationBlock&, int, ssize_t&, std::string&)> handler_map;
     ssize_t pos = 0;
 
     handler_caller(handler_map);
@@ -180,7 +195,7 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
                 else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "root")
                     loc.root = tokenContainer[i + 1].value;
                 else if (handler_map.find(tokenContainer[i].value) != handler_map.end())
-                    handler_map[tokenContainer[i].value](tokenContainer, loc, countARG, i);
+                    handler_map[tokenContainer[i].value](tokenContainer, loc, countARG, i, tokenContainer[i].value);
                 else if (tokenContainer[i].value == "}")
                 {
                     keepCountOfBrase--;

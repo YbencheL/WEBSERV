@@ -93,7 +93,6 @@ bool& insideLoc)
 void handle_error_page_server(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
 bool& insideLoc)
 {
-    (void)insideLoc;
     (void)countARG;
     std::deque<int> errorsnum;
     std::string value;
@@ -107,7 +106,7 @@ bool& insideLoc)
         if (ss.fail() || !ss.eof())
         {
             if (!value.empty())
-                error_line(": there must be only one path in erro_page", tokenContainer[i].line);
+                error_line(": there must be only one path in erro_page or none", tokenContainer[i].line);
             else
                 value = tokenContainer[i].value;
         }
@@ -120,8 +119,8 @@ bool& insideLoc)
         }
         i++;
     }
-    if (value.empty() || errorsnum.empty())
-        error_line(": error_page is missing a path or a page error number", tokenContainer[i].line);
+    if (errorsnum.empty())
+        error_line(": error_page is missing a page error number", tokenContainer[i].line);
     else
     {
         std::map<std::deque<int>,std::string>::iterator it = Serv.error_page.find(errorsnum);
