@@ -24,6 +24,16 @@ void    printClientInformation(Client client)
     std::cout << "Query :" << client.req.getQuery() << std::endl;
     std::cout << "HTTP version :" << client.req.getHttpVersion() << std::endl;
     std::cout << "--------------------------------------------" << std::endl;
+        std::map<std::string, std::string>::const_iterator it;
+
+    std::cout << "----------- HEADERS -----------" << std::endl;
+
+    for (it = client.req.getHeaders().begin(); it != client.req.getHeaders().end(); ++it)
+    {
+        std::cout << it->first << ": " << it->second << std::endl;
+    }
+
+    std::cout << "-------------------------------" << std::endl;
 }
 
 int main()

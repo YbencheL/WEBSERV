@@ -74,14 +74,20 @@ bool checkSetPathQuery(Client &cleint, std::string &data)
     return true;
 }
 
-bool checkSetHttp(Client &client, std::string token)
+int checkSetHttp(Client &client, std::string token)
 {
+    std::string http[3] = {"HTTP/1.1", "HTTP/2.0", "HTTP/3.0"};
     if (token == "HTTP/1.0")
     {
         client.req.setHttpVersion(token);
-        return true;
+        return 0;
     }
-    return false;
+    for (int i = 0; i < 3; i++)
+    {
+        if (token == http[i])
+            return 505;
+    }
+    return 400;
 }
 
 int parseRequestLine(Client &client, std::string &data)
@@ -93,11 +99,8 @@ int parseRequestLine(Client &client, std::string &data)
         return 405;
     if (!checkSetPathQuery(client, tokens[1]))
         return 400;
-    if (!checkSetHttp(client, tokens[2]))
-        return 505;
-    //-------------------------------- test --------------------------------//
-    // for (int i = 0;i < 3;i++)
-    //     std::cout << "token :" << tokens[i] << "." << std::endl;
-    //-------------------------------- test --------------------------------//
+    int httpEC = checkSetHttp(client, tokens[2]);
+    if (httpEC)
+        return httpEC;
     return 0;
 }

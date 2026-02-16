@@ -10,7 +10,8 @@ int splitDataToTokens(std::string &data, std::map<int, std::string> &tokens)
     for (; true; i++)
     {
         end = data.find("\r\n", begin);
-        if (end == std::string::npos)
+        if (end == std::string::npos ||
+            (begin - 2) == data.find("\r\n\r\n", begin - 2))
             break;
         tokens[i] = data.substr(begin, end - begin);
         begin     = end + 2;
@@ -20,12 +21,13 @@ int splitDataToTokens(std::string &data, std::map<int, std::string> &tokens)
 
 bool checkNameField(std::string &name)
 {
+    static const std::string tspecials = "()<>@,;:\\\"/[]?={} \t";
+
+    if (name.empty())
+        return false;
     for (size_t i = 0; i < name.size(); i++)
     {
-        if (name[i] != '-' && name[i] != '_' && name[i] != '.' &&
-            name[i] != '+' && name[i] != '*' && name[i] != '!' &&
-            name[i] != '^' && name[i] != '|' && name[i] != '~' &&
-            name[i] != '=' && !isalnum(name[i]))
+        if (!isprint(name[i]) || tspecials.find(name[i]) != std::string::npos)
             return false;
     }
     return true;
@@ -35,7 +37,7 @@ bool checkValueField(std::string &value)
 {
     for (size_t i = 0; i < value.size(); i++)
     {
-        if (value[i] < 33 || value[i] > 126)
+        if (!isprint(value[i]) && value[i] != 9)
             return false;
     }
     return true;
@@ -49,7 +51,8 @@ bool parseToken(std::string token, std::map<std::string, std::string> &headers)
     std::string name = token.substr(0, pos);
     if (!checkNameField(name))
         return false;
-    std::string value = token.substr(pos + 1, token.size() - (pos + 1));
+    std::string value = token.substr(pos + 1);
+    std::cout << value << std::endl;
     if (!checkValueField(value))
         return false;
     headers[name] = value;
@@ -59,7 +62,7 @@ bool parseToken(std::string token, std::map<std::string, std::string> &headers)
 bool checkSetHeaders(int hn, Client &client, std::map<int, std::string> &tokens)
 {
     std::map<std::string, std::string> headers;
-    for (int i = 0;i < hn; hn++)
+    for (int i = 0; i < hn; i++)
     {
         if (!parseToken(tokens[i], headers))
             return false;
@@ -73,7 +76,19 @@ bool parseHeaders(Client &client, std::string &data)
     std::map<int, std::string> tokens;
     int                        NumberOfTokens = splitDataToTokens(data, tokens);
 
-    if(!checkSetHeaders(NumberOfTokens, client, tokens))
-		return false;
+    //
+    std::cout << NumberOfTokens << "---------------test-----------"
+              << std::endl;
+    for (int i = 0; i < NumberOfTokens; i++)
+    {
+        std::cout << tokens[i] << std::endl;
+    }
+    std::cout << "---------------test-----------" << std::endl;
+    //
+
+    if (!checkSetHeaders(NumberOfTokens, client, tokens))
+        return false;
     return true;
 }
+
+// GET / HTTP/1.0newlinehost: abenzahonewlineuser:abenzahonewlinenewline

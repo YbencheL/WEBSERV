@@ -22,8 +22,6 @@ int parseRequest(Client &client, std::string recivedData)
     }
     if (client.parse.step == HEADERS)
     {
-        std::cout << "remaining :" << client.parse.remaining << std::endl;// debug
-
         size_t headerEnd = client.parse.remaining.find("\r\n\r\n");
         if (headerEnd == 0)
         {
@@ -32,15 +30,16 @@ int parseRequest(Client &client, std::string recivedData)
         }
         else if (headerEnd != std::string::npos)
         {
-            std::string headers = client.parse.remaining.substr(2, headerEnd + 2);
-            parseHeaders(client, headers);
+            std::string headers =
+                client.parse.remaining.substr(2, headerEnd + 2);
+            if (!parseHeaders(client, headers))
+                return 400;
+            client.parse.step = BODY;
         }
         else
             return 0;
     }
-    else if (client.parse.step == BODY)
-    {
+    if (client.parse.step == BODY)
         return 0;
-    }
     return 200;
 }

@@ -1,0 +1,15 @@
+GET / HTTP/1.0newline
+Host: localhost:8080newline
+Connection: keep-alivenewline
+sec-ch-ua: "Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"newline
+sec-ch-ua-mobile: ?0newline
+sec-ch-ua-platform: "Linux"newline
+Upgrade-Insecure-Requests: 1newline
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36newline
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7newline
+Sec-Fetch-Site: nonenewline    
+Sec-Fetch-Mode: navigatenewline
+Sec-Fetch-User: ?1newline
+Sec-Fetch-Dest: documentnewline
+Accept-Encoding: gzip, deflate, br, zstdnewline
+Accept-Language: en-US,en;q=0.9,fr;q=0.8,ar;q=0.7newline
