@@ -20,6 +20,26 @@ bool& insideLoc)
         error_line(": listen must only have one argument", tokenContainer[i].line);
 }
 
+void handle_timeout(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
+bool& insideLoc)
+{
+    int sec = 0;
+    (void)insideLoc;
+
+    countARG = count_to_symbol(tokenContainer, i, countARG);
+    if (countARG == 1)
+    {
+        std::stringstream ss(tokenContainer[i].value);
+        ss >> sec;
+        if (ss.fail() || !ss.eof())
+            error_line(": set_timeout must only have a valid number", tokenContainer[i].line);
+        Serv.set_timeout = sec;
+        sec = 0;
+        countARG = 0;
+    }else
+        error_line(": set_timeout must only have one argument", tokenContainer[i].line);
+}
+
 void handle_host(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
 bool& insideLoc)
 {
@@ -97,6 +117,7 @@ bool& insideLoc)
     std::deque<int> errorsnum;
     std::string value;
     int errornum = 0;
+    int num = errornum;
     i++;
     while(tokenContainer[i].value != ";")
     {
@@ -112,6 +133,7 @@ bool& insideLoc)
         }
         else
         {
+            num = errornum;
             if ((errornum >= 100 && errornum < 600))
                 errorsnum.push_back(errornum);
             else
@@ -123,9 +145,9 @@ bool& insideLoc)
         error_line(": error_page is missing a page error number", tokenContainer[i].line);
     else
     {
-        std::map<std::deque<int>,std::string>::iterator it = Serv.error_page.find(errorsnum);
-        if (it != Serv.error_page.end())
-            Serv.error_page.erase(it);
+        countARG = std::count(errorsnum.begin(), errorsnum.end(), num);
+        if (countARG > 1)
+            error_line(": duplicate status code in error_page", tokenContainer[i].line);
     }
     if (!insideLoc)
         Serv.error_page.insert(std::make_pair(errorsnum, value));
@@ -137,6 +159,7 @@ bool& insideLoc);
 void handler_caller(std::map<std::string, handler>& handler_map)
 {
     handler_map["listen"] = &handle_listen;
+    handler_map["set_timeout"] = &handle_timeout;
     handler_map["host"] = &handle_host;
     handler_map["root"] = &handle_server_block_root;
     handler_map["client_max_body_size"] = &handle_server_block_client_mbs;
