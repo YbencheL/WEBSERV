@@ -20,6 +20,26 @@ bool& insideLoc)
         error_line(": listen must only have one argument", tokenContainer[i].line);
 }
 
+void handle_timeout(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
+bool& insideLoc)
+{
+    int sec = 0;
+    (void)insideLoc;
+
+    countARG = count_to_symbol(tokenContainer, i, countARG);
+    if (countARG == 1)
+    {
+        std::stringstream ss(tokenContainer[i].value);
+        ss >> sec;
+        if (ss.fail() || !ss.eof())
+            error_line(": set_timeout must only have a valid number", tokenContainer[i].line);
+        Serv.set_timeout = sec;
+        sec = 0;
+        countARG = 0;
+    }else
+        error_line(": set_timeout must only have one argument", tokenContainer[i].line);
+}
+
 void handle_host(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
 bool& insideLoc)
 {
@@ -139,6 +159,7 @@ bool& insideLoc);
 void handler_caller(std::map<std::string, handler>& handler_map)
 {
     handler_map["listen"] = &handle_listen;
+    handler_map["set_timeout"] = &handle_timeout;
     handler_map["host"] = &handle_host;
     handler_map["root"] = &handle_server_block_root;
     handler_map["client_max_body_size"] = &handle_server_block_client_mbs;

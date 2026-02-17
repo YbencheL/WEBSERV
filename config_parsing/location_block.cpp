@@ -53,55 +53,6 @@ void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, int cou
     }
 }
 
-// void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
-//     std::string& keyword)
-// {
-//     (void)countARG;
-//     std::deque<int> errorsnum;
-//     std::string value;
-//     int errornum = 0;
-
-//     i++;
-//     while(tokenContainer[i].value != ";")
-//     {
-//         errornum = 0;
-//         std::stringstream ss(tokenContainer[i].value);
-//         ss >> errornum;
-//         if (ss.fail() || !ss.eof())
-//         {
-//             if (!value.empty())
-//                 error_line(": there must be only one path in a directive or none", tokenContainer[i].line);
-//             else
-//                 value = tokenContainer[i].value;
-//         }
-//         else
-//         {
-//             if ((errornum >= 100 && errornum < 600))
-//                 errorsnum.push_back(errornum);
-//             else
-//                 error_line(": directive number must be a valid http number", tokenContainer[i].line);
-//         }
-//         i++;
-//     }
-//     if (errorsnum.empty())
-//         error_line(": directive is missing a error number", tokenContainer[i].line);
-//     else
-//     {
-//         if (keyword == "return")
-//         {
-//             std::map<std::deque<int>,std::string>::iterator it = loc.redirection.find(errorsnum);
-//             if (it != loc.redirection.end())
-//                 loc.redirection.erase(it);
-//         loc.redirection.insert(std::make_pair(errorsnum, value));
-//         }else
-//         {
-//             std::map<std::deque<int>,std::string>::iterator it = loc.error_page.find(errorsnum);
-//             if (it != loc.error_page.end())
-//                 loc.error_page.erase(it);
-//         }
-//         loc.error_page.insert(std::make_pair(errorsnum, value));
-//     }
-// }
 // work on it
 void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
     std::string& keyword)
@@ -254,7 +205,7 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
                     InsideLocationBlock = false;
                     break;
                 }else if (tokenContainer[i].value == "listen" || tokenContainer[i].value == "server_name" ||
-                        tokenContainer[i].value == "host")
+                        tokenContainer[i].value == "host" || tokenContainer[i].value == "set_timeout")
                     error_line(": server only keyword inside location block", tokenContainer[i].line);
                 i++;
             }
