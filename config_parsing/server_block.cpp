@@ -3,18 +3,18 @@
 void handle_listen(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
 bool& insideLoc)
 {
-    int port = 0;
+    // size_t port = 0;
     (void)insideLoc;
 
     countARG = count_to_symbol(tokenContainer, i, countARG);
     if (countARG == 1)
     {
         std::stringstream ss(tokenContainer[i].value);
-        ss >> port;
+        ss >> Serv.listen;
         if (ss.fail() || !ss.eof())
             error_line(": listen must only have a valid port number", tokenContainer[i].line);
-        Serv.listen = port;
-        port = 0;
+        // Serv.listen = port;
+        // port = 0;
         countARG = 0;
     }else
         error_line(": listen must only have one argument", tokenContainer[i].line);
@@ -23,18 +23,18 @@ bool& insideLoc)
 void handle_timeout(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
 bool& insideLoc)
 {
-    int sec = 0;
+    // size_t sec = 0;
     (void)insideLoc;
 
     countARG = count_to_symbol(tokenContainer, i, countARG);
     if (countARG == 1)
     {
         std::stringstream ss(tokenContainer[i].value);
-        ss >> sec;
+        ss >> Serv.set_timeout;
         if (ss.fail() || !ss.eof())
             error_line(": set_timeout must only have a valid number", tokenContainer[i].line);
-        Serv.set_timeout = sec;
-        sec = 0;
+        // Serv.set_timeout = sec;
+        // sec = 0;
         countARG = 0;
     }else
         error_line(": set_timeout must only have one argument", tokenContainer[i].line);
@@ -194,9 +194,7 @@ void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<Serv
     // init
     Serv.client_max_body_size = 0;
     Serv.listen = 0;
-    Serv.locations.clear();
-    Serv.error_page.clear();
-    Serv.index.clear();
+    Serv.set_timeout = 0;
     // duplicate check rule
     checking_for_keyword_dups(tokenContainer);
     // storing values

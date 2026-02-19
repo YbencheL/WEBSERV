@@ -77,6 +77,8 @@ void checking_values(ServerBlock& Serv)
 
     if (!Serv.listen)
         throw std::runtime_error("ERROR: missing value (port)");
+    else if (!Serv.set_timeout)
+        Serv.set_timeout = 100;
     else if (Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL)
         throw std::runtime_error("ERROR: port has incorrect value must be between 1024 and 65535");
     else if (Serv.client_max_body_size < 0 || !Serv.client_max_body_size)

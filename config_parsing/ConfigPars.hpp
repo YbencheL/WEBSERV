@@ -29,11 +29,11 @@ struct LocationBlock
 struct ServerBlock
 {
     int listen;
-    int set_timeout;
+    size_t set_timeout;
     std::string root;
     std::string host;
     std::string server_name;
-    int client_max_body_size;
+    size_t client_max_body_size;
     std::deque<std::string> index;
     std::map<std::deque<int>, std::string> error_page;
     std::deque<LocationBlock> locations;
