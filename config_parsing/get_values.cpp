@@ -46,67 +46,67 @@ const ServerBlock* getServerForRequest(const int ip, int port,
     return NULL;
 }
 
-std::string path_normalize(const std::string root, std::vector<std::string> path_holder)
-{
-    (void)root;
-    std::string final_url;
+// std::string path_normalize(const std::string root, std::vector<std::string> path_holder)
+// {
+//     (void)root;
+//     std::string final_url;
 
-    for (size_t i = 0; i < path_holder.size(); i++) {
-        final_url.append("/");
-        final_url.append(path_holder.at(i));
-    }
-    std::cout << ">>> request path afterrrrrrrrrrrrrrrrrr >>> " << final_url << std::endl;
-    return (final_url);
-}
+//     for (size_t i = 0; i < path_holder.size(); i++) {
+//         final_url.append("/");
+//         final_url.append(path_holder.at(i));
+//     }
+//     std::cout << ">>> request path afterrrrrrrrrrrrrrrrrr >>> " << final_url << std::endl;
+//     return (final_url);
+// }
 
-std::string   path_resolver(std::string request_path)
-{
-    std::string root;
-    std::string path;
-    std::vector<std::string> path_holder;
-    size_t      start = 0;
-    size_t      end;
+// std::string   path_resolver(std::string request_path)
+// {
+//     std::string root;
+//     std::string path;
+//     std::vector<std::string> path_holder;
+//     size_t      start = 0;
+//     size_t      end;
 
-    while ((end = request_path.find("/", start)) != std::string::npos)
-    {
-        std::string segment = request_path.substr(start, (end - start));
-        if (segment == ".." && path_holder.empty()) {
-            start = end + 1;
-            continue;
-        }
-        else if (segment == "..")
-            path_holder.pop_back();
-        else if (!segment.empty())
-            path_holder.push_back(segment);
-        start = end + 1;
-    }
-    path_holder.push_back(request_path.substr(start));
-    path = path_normalize(root, path_holder);
+//     while ((end = request_path.find("/", start)) != std::string::npos)
+//     {
+//         std::string segment = request_path.substr(start, (end - start));
+//         if (segment == ".." && path_holder.empty()) {
+//             start = end + 1;
+//             continue;
+//         }
+//         else if (segment == "..")
+//             path_holder.pop_back();
+//         else if (!segment.empty())
+//             path_holder.push_back(segment);
+//         start = end + 1;
+//     }
+//     path_holder.push_back(request_path.substr(start));
+//     path = path_normalize(root, path_holder);
     
-    return path;
-}
+//     return path;
+// }
 
 const LocationBlock* getLocation(const std::string &path, const ServerBlock& srv)
 {
     size_t bestmatch = 0;
     size_t matchedlength = 0;
     const LocationBlock *loc = NULL;
-    std::string newPath;
+    // std::string newPath;
 
-    newPath = path_resolver(path);
-    if(newPath.empty())
-        return NULL;
-    std::cout << "path : " << newPath << std::endl;
+    // newPath = path_resolver(path);
+    // if(newPath.empty())
+    //     return NULL;
+    // std::cout << "path : " << newPath << std::endl;
     if (srv.locations.empty())
         return NULL;
     for (size_t i = 0; i < srv.locations.size(); ++i)
     {
-        if (srv.locations[i].path.size() > newPath.size())
+        if (srv.locations[i].path.size() > path.size())
             continue;
         matchedlength = 0;
         for (size_t j = 0; j < srv.locations[i].path.size(); j++)
         {
-            if (newPath[j] == srv.locations[i].path[j])
+            if (path[j] == srv.locations[i].path[j])
                 matchedlength++;
             else
                 break;
@@ -115,7 +115,7 @@ const LocationBlock* getLocation(const std::string &path, const ServerBlock& srv
         {
             bestmatch = matchedlength;
             loc = &srv.locations[i];
-            if (srv.locations[i].path == newPath)
+            if (srv.locations[i].path == path)
                 return loc;
         }
     }
