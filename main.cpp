@@ -1,14 +1,13 @@
 # include "./socket_engine.hpp"
 # include "./config_parsing/ConfigPars.hpp"
-# include <csignal>
-
-// 11-DAYS
+# include "./utils/utils.hpp"
 
 socket_engine s_engine;
 
+# include <csignal>
 void signal_handler(int sig_flag) {
     (void)sig_flag;
-    s_engine.free_fds_list();
+    // s_engine.free_fds_list();
     throw std::runtime_error("[!] SIGINT interrupt, END :(");
 }
 
@@ -42,23 +41,26 @@ int main(int ac, char **av)
         return 1;
     }
 
-    // MY PART //
+    // --------------------- @ma1loc: MY PART START HERE ------------------------ //
     try
     {
-        int num = 0;
         signal(SIGINT, signal_handler);
         s_engine.set_server_config_info(ServerConfig);
 
-        // IN_FUNC
+        std::string host;
+        std::string port;
         for (size_t i = 0; i < ServerConfig.size(); i++)
         {
-            std::cout << "setup server number #" << i+1 << std::endl;
-            num = ServerConfig[i].listen;
-            std::stringstream port;
-            port << num;
-            s_engine.init_server_side(port.str(), ServerConfig[i].host); // done[*]
+            // ----------------- JUST LOGS ----------------- //
+            host = ServerConfig[i].host;
+            port = to_string(ServerConfig[i].listen);
+            std::cout << "Serving HTTP on " << host << " port " << port
+                << " (http://" << host << ":" << port << "/)" << std::endl;
+            // --------------------------------------------- //
+
+            s_engine.init_server_side(port, host);  // TO-CHECK LATER
         }
-        s_engine.process_connections(); // done []
+        s_engine.process_connections(); // done [-]
     }
     catch(const std::exception& e)
     {
@@ -66,6 +68,5 @@ int main(int ac, char **av)
         s_engine.free_fds_list();
     }
     
-
     return (0);
 }
