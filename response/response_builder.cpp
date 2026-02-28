@@ -5,6 +5,8 @@
 # include <stack>
 
 
+
+
 // -------------------- HARDCODED --------------------------
 std::string _method_ = "GET";
 // std::string _method_ = "POST";
@@ -15,8 +17,8 @@ std::string _protocol_ = "HTTP/1.0";
 // static std::string _host_ = "10.11.11.4";
 // static int _port_ = 8080;
 
-static std::string _host_ = "localhost";
-static int _port_ = 9090;
+// static std::string _host_ = "localhost";
+// static int _port_ = 9090;
 
 // -------------------------------------------------------
 
@@ -49,6 +51,7 @@ std::string response_builder::index_file_iterator(const std::string &full_path)
     return ("");
 }
 
+
 void response_builder::response_setup()
 {
     std::cout << "STATUS CODE " << current_client->res.get_stat_code() << std::endl;
@@ -63,12 +66,12 @@ void response_builder::response_setup()
     this->current_client->res.set_raw_response(response_holder);
 }
 
-// void    response_builder::init_response_builder(Client &current_client, std::deque<ServerBlock> &config) {
 void    response_builder::init_response_builder(Client &current_client) {
     this->current_client = &current_client;
 }
 
-void    response_builder::validate_headers(std::map<std::string, std::string> header)
+// extern socket_engine s_engine;
+void    response_builder::validate_headers()
 {
     // here will parse the header infos needed //
     /*
@@ -83,7 +86,50 @@ void    response_builder::validate_headers(std::map<std::string, std::string> he
                                 max-client-body-size
                                 CGI
     */
+    this->server_conf = NULL;
+    this->current_client->location_conf = NULL;
 
+    std::map<std::string, std::string> header = current_client->req.getHeaders();
+    std::map<std::string, std::string>::iterator it = header.find("HOST");
+
+    const unsigned long index = it->second.find(":");
+    if (index != std::string::npos)
+    {
+        std::string host = it->second.substr(0, index);
+        std::string port = it->second.substr((index + 1));
+
+        this->current_client->host = address_resolution(host);
+        if (this->current_client->host == INADDR_NONE)  // invalid host
+            this->current_client->host = 0;
+
+        this->current_client->port = valid_port_number(port);
+        if (!this->current_client->port)    // invalid port
+            this->current_client->port = 0;
+
+        if (this->current_client->port != 0 && this->current_client->host != INADDR_NONE)
+        {
+            // getLocation
+            this->server_conf = getServerForRequest(this->current_client->host,
+                this->current_client->port, s_engine.get_server_config_info()); // will match server-level
+            if (!this->server_conf) {
+                this->current_client->res.set_stat_code(NOT_FOUND);
+                return ;
+            }
+            this->current_client->location_conf = getLocation(this->current_client->req.getPath(), *this->server_conf);
+            if (!this->current_client->location_conf)
+            {
+                this->current_client->res.set_stat_code(NOT_FOUND);
+                return ;
+            }
+        }
+        // this->current_client->location_conf->allow_methods
+        // this->current_client->location_conf->client_max_body_size
+        // this->current_client->location_conf->cgi_extension
+        // this->current_client->location_conf->cgi_path
+        // this->current_client->location_conf->redirection???????
+    }
+    else
+        this->current_client->res.set_stat_code(NOT_FOUND);
 }
 
 
@@ -92,7 +138,7 @@ void response_builder::build_response()
     if (this->current_client->res.get_stat_code() == OK) {
         if (!is_allowd_method(_method_))
             this->current_client->res.set_stat_code(METHOD_NOT_ALLOWED);
-        else    // >>> join the root with path
+        else
             path_validation();
     }
     response_setup();

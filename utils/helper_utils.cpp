@@ -8,11 +8,13 @@
 # include <sys/stat.h>
 # include <unistd.h>
 
+# define MIN_VALID_PORT 1024
+# define MAX_VALID_PORT 65535
 
-const std::string   to_string(int num)
+const std::string   to_string(int digit)
 {
     std::stringstream str;
-    str << num;
+    str << digit;
     return (str.str());
 }
 
@@ -146,12 +148,16 @@ std::string   path_resolver(std::string request_path)
 
 // --------------------------------------------------------------------------------------------
 
-std::vector<std::string>    extract_host_info(std::string raw_req)
+
+unsigned short int  valid_port_number(std::string port_num)
 {
-    std::map<std::string, std::string>::iterator it;
-    std::map<std::string, std::string> headert = raw_client_data[fd].req.getHeaders();
-    for (it = headert.begin(); it != headert.end();it++)
-    {
-        std::cout << it->first << " :" << it->second << std::endl;
+    for (unsigned int i = 0; i < port_num.size(); i++) {
+        if (!std::isdigit(port_num[i])) {
+            return (0);
+        }
     }
+    unsigned int port = std::atoi(port_num.c_str());
+    if (port <= MIN_VALID_PORT || port > MAX_VALID_PORT)
+        return (0);
+    return (port);
 }

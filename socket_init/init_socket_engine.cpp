@@ -61,8 +61,12 @@ void socket_engine::set_server_side_fds(int s_fd) {
     server_side_fds.push_back(s_fd);
 }
 
-std::vector<int> socket_engine::get_server_side_fds(void) {
+std::vector<int> socket_engine::get_server_side_fds(void) const {
     return (server_side_fds);
+}
+
+const std::deque<ServerBlock> &socket_engine::get_server_config_info() const {
+    return (server_config_info);
 }
 
 void socket_engine::set_server_config_info(std::deque<ServerBlock> server_config_info)
@@ -79,6 +83,7 @@ void socket_engine::check_all_client_timeouts(void)
     {
         int fd = it->first;
         int port = it->second.port;
+        int host = it->second.host;
         size_t timeout_limit = TIMEOUT_LIMIT;
         
         // ----------------------------------------------------------
@@ -87,12 +92,7 @@ void socket_engine::check_all_client_timeouts(void)
         std::cout << "host -> " << it->second.host << std::endl;
         // ---------------------------------------------------------- 
 
-
-        // remove it later in the loop
-        int s_host = address_resolution(it->second.host);
-        // ----------------------------------------------
-
-        const ServerBlock *server_conf = getServerForRequest(s_host, port, server_config_info);
+        const ServerBlock *server_conf = getServerForRequest(host, port, server_config_info);
         if (server_conf != NULL)
             timeout_limit = server_conf->set_timeout;
 
@@ -138,3 +138,38 @@ void    socket_engine::modify_epoll_event(ssize_t fd, uint32_t events)
     if (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev) == -1)
         std::cerr << "[!] epoll_ctl: " << strerror(errno) << std::endl;
 }
+
+
+
+
+// void response_builder::path_validation() {
+//     // 1. Combine root + request path
+//     this->path = current_client->location_conf->root + current_client->req.getPath();
+
+//     // 2. Check if it's a directory
+//     if (is_directory(this->path)) {
+//         // If the path doesn't end in '/', many servers redirect or fix it
+//         if (this->path[this->path.size() - 1] != '/') this->path += "/";
+
+//         // 3. Look for Index files FIRST
+//         std::string index_file = index_file_iterator(this->path); 
+//         if (!index_file.empty()) {
+//             this->path = index_file; // We found indexx.html!
+//             return; // Exit, handle_get will now serve this file
+//         }
+
+//         // 4. If no index file, check Autoindex
+//         if (current_client->location_conf->autoindex == "on") {
+//             autoindex_page(this->path); // This sets is_body_ready = true
+//             return;
+//         } else {
+//             current_client->res.set_stat_code(FORBIDDEN); // 403
+//             return;
+//         }
+//     }
+    
+//     // 5. If it's a file, check if it exists
+//     if (!file_exists(this->path)) {
+//         current_client->res.set_stat_code(NOT_FOUND); // 404
+//     }
+// }

@@ -7,6 +7,7 @@
 # include <sys/stat.h>
 # include "response.hpp"
 # include "./config_parsing/ConfigPars.hpp"
+# include "./socket_engine.hpp"
 # include "client.hpp"
 
 
@@ -15,20 +16,19 @@
 # define DELETE_METHODE "DELETE"
 
 struct client;
+extern socket_engine s_engine;
 
 class response_builder
 {
     private:
         Client                  *current_client;
-        // const ServerBlock       *server_conf;
-        // const LocationBlock     *location_conf;
+        const ServerBlock       *server_conf;
         std::string             response_holder;
         std::string             path;
         std::string             header;
         std::string             body;
         bool                    is_body_ready;
         bool                    is_error_page;
-        
         
         bool            is_allowd_method(std::string method);
         void            path_validation(void);
@@ -38,6 +38,7 @@ class response_builder
         void            default_error_page(unsigned short int stat_code);
         std::string     get_stat_code_path(unsigned int stat_code);
         void            generate_error_page();
+        void            extract_host_info(std::string raw_req);
         void            set_header(void);
         void            set_body(void);
         void            handle_get();
@@ -49,8 +50,9 @@ class response_builder
         response_builder();
         // void    init_response_builder(Client &current_client, std::deque<ServerBlock> &config);
         void    init_response_builder(Client &current_client);
-        void    validate_headers(std::map<std::string, std::string> header);
+        void    validate_headers();
         void    build_response();
+
 };
 
 # endif

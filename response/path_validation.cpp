@@ -31,7 +31,7 @@ void    response_builder::path_validation()
     struct stat statbuf;
     std::string index;
 
-    this->path = join_root_path(location_conf->root, this->path);
+    this->path = join_root_path(current_client->location_conf->root, this->current_client->req.getPath());
     if (stat(path.c_str(), &statbuf) < 0) {
         this->current_client->res.set_stat_code(NOT_FOUND);
         return ;
@@ -45,7 +45,7 @@ void    response_builder::path_validation()
         index = index_file_iterator(path);
         if (!index.empty())     // here will server the static files .html
             this->path = index;
-        else if (index.empty() && this->location_conf->autoindex)
+        else if (index.empty() && current_client->location_conf->autoindex)
             autoindex_page(this->path);   // STOP HERE //
         else {
             this->current_client->res.set_stat_code(FORBIDDEN_ACCESS);

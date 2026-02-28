@@ -62,9 +62,10 @@ class socket_engine {
         void    set_server_side_fds(int s_fd);
         void    set_server_config_info(std::deque<ServerBlock> server_config);
 
-
-        std::vector<int>        get_server_side_fds(void);
-        std::map<int, Client>   &get_raw_client_data(void);
+        std::vector<int>        get_server_side_fds(void) const;
+        std::map<int, Client>   &get_raw_client_data(void) const;
+        const std::deque<ServerBlock> &get_server_config_info() const;
+        int one_tow;
 };
 
 time_t time(time_t* timer);

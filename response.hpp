@@ -7,7 +7,7 @@
 # include "config_parsing/ConfigPars.hpp"
 
 # define OK 200
-# define BAT_REQUEST 400
+# define BAD_REQUEST 400
 # define FORBIDDEN_ACCESS 403
 # define NOT_FOUND 404
 # define METHOD_NOT_ALLOWED 405

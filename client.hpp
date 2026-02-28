@@ -14,11 +14,11 @@ struct reqParse;
 // will add every thing need between [req/res] 
 struct Client
 {
-    // infos needed
-    int         port;
-    std::string host;
-    /// get the server-level match
-    const ServerBlock *server_conf;
+    // this is the besed port and host
+    // TODO: call = address_resolution(it->second.host);
+    unsigned short int  port;
+    unsigned int        host;
+
     /// get the location-level match
     const LocationBlock *location_conf;
 

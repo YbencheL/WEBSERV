@@ -33,7 +33,7 @@ int parseRequest(Client &client, std::string &recivedData)
             std::string headers =
                 client.parse.remaining.substr(2, headerEnd + 2);
             if (!parseHeaders(client, headers))
-                return BAT_REQUEST;
+                return BAD_REQUEST;
             client.parse.step = BODY;
             client.parse.remaining.erase(0, headerEnd + 4);
         }

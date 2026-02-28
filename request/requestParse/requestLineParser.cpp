@@ -102,18 +102,18 @@ int checkSetHttp(Client &client, std::string token)
         if (token == http[i])
             return VERSION_NOT_SUPP;
     }
-    return BAT_REQUEST;
+    return BAD_REQUEST;
 }
 
 int parseRequestLine(Client &client, std::string &data)
 {
     std::map<int, std::string> tokens;
     if (!splitDataToTokens(data, tokens))
-        return BAT_REQUEST;
+        return BAD_REQUEST;
     if (!checkSetMethod(tokens[0], client, client.parse.methods))
         return METHOD_NOT_ALLOWED;
     if (!checkSetPathQuery(client, tokens[1]))
-        return BAT_REQUEST;
+        return BAD_REQUEST;
     int httpEC = checkSetHttp(client, tokens[2]);
     if (httpEC)
         return httpEC;
