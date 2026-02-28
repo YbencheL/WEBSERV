@@ -3,13 +3,15 @@
 
 #include  <iostream>
 #include  <deque>
+#include  <vector>
 #include  <cstdlib>
 #include  <netdb.h>
 
 //define
-#define PORT_MIN_VAL 1025
+#define PORT_MIN_VAL 1024
 #define PORT_MAX_VAL 65535
 #define CLIENT_MAX_BODY_SIZE 1000000
+
 
 enum TokenType {
     KEYWORD,

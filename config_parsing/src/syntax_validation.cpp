@@ -1,4 +1,4 @@
-#include "ConfigPars.hpp"
+#include "../includes/ConfigPars.hpp"
 
 void keywords_validation(std::deque<Token>& tokenContainer, ssize_t& ServerBlockCount, ssize_t& LocationBlockCount, ssize_t& i, bool& insideServer)
 {

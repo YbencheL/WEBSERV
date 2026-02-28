@@ -1,4 +1,5 @@
-#include "ConfigPars.hpp"
+#include "../includes/ConfigPars.hpp"
+
 
 void handle_client_mbs(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
     std::string& keyword)
@@ -21,17 +22,20 @@ void handle_allow_methods(std::deque<Token>& tokenContainer, LocationBlock& loc,
 {
     (void)countARG;
     (void)keyword;
-    i++;
+    std::vector<std::string> non_duplicated_keyword;
+    non_duplicated_keyword.push_back("GET");
+    non_duplicated_keyword.push_back("POST");
+    non_duplicated_keyword.push_back("DELETE");
 
+    i++;
     while(i < (ssize_t)tokenContainer.size() && tokenContainer[i].type == 1)
     {
         if (tokenContainer[i].value == "GET" || tokenContainer[i].value == "POST"
             || tokenContainer[i].value == "DELETE")
         {
-            loc.allow_methods.push_back(tokenContainer[i].value);
-            duplicate_check(loc.allow_methods, "GET");
-            duplicate_check(loc.allow_methods, "POST");
-            duplicate_check(loc.allow_methods, "DELETE");
+        for(size_t i = 0; i < non_duplicated_keyword.size(); i++)
+            duplicate_check(loc.allow_methods, non_duplicated_keyword[i]);
+                loc.allow_methods.push_back(tokenContainer[i].value);
         }
         else
             error_line(": only allowed methods are (GET, POST, DELETE)", tokenContainer[i].line);
@@ -147,76 +151,4 @@ void handle_autoindex(std::deque<Token>& tokenContainer, LocationBlock& loc, int
         countARG = 0;
     }else
         error_line(": autoindex must only have one argument", tokenContainer[i].line);
-}
-
-typedef void(*handler)(std::deque<Token>&, LocationBlock&, int, ssize_t&, std::string&);
-
-void handler_caller(std::map<std::string, handler>& handler_map)
-{
-    handler_map["client_max_body_size"] = &handle_client_mbs;
-    handler_map["return"] = &handle_redirections;
-    handler_map["index"] = &handle_index;
-    handler_map["error_page"] = &handle_redirections;
-    handler_map["allow_methods"] = &handle_allow_methods;
-    handler_map["autoindex"] = &handle_autoindex;
-    handler_map["cgi_extension"] = &handle_cgi;
-    handler_map["cgi_path"] = &handle_cgi;
-}
-
-void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock& Serv, ssize_t& i)
-{
-    bool InsideLocationBlock = false;
-    ssize_t keepCountOfBrase = 0;
-    int countARG = 0;
-    std::map<std::string, void(*)(std::deque<Token>&, LocationBlock&, int, ssize_t&, std::string&)> handler_map;
-    ssize_t pos = 0;
-
-    handler_caller(handler_map);
-    for (; i < (ssize_t)tokenContainer.size(); i++)
-    {
-        if (!InsideLocationBlock && (tokenContainer[i].value == "cgi_extension" || tokenContainer[i].value == "cgi_path"))
-        {
-            std::cout << tokenContainer[i].value << std::endl;
-            error_line(": unkown keyword", tokenContainer[i].line);
-        }
-        if (tokenContainer[i].value == "location")
-        {
-            LocationBlock loc;
-            loc.client_max_body_size = 0;
-            loc.autoindex = false;
-            i++;
-            InsideLocationBlock = true;
-            while (InsideLocationBlock)
-            {
-                if (tokenContainer[i].value == "{")
-                    keepCountOfBrase++;
-                else if ((i + 1) < (ssize_t)tokenContainer.size() && (pos = tokenContainer[i].value.find_first_of("/")) != 0
-                    && tokenContainer[i + 1].value == "{")
-                    error_line(": paths must start with /", tokenContainer[i].line);
-                else if ((i - 1) >= 0 && tokenContainer[i].type == 1 && tokenContainer[i - 1].value == "location")
-                    loc.path = tokenContainer[i].value;
-                else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "root")
-                    loc.root = tokenContainer[i + 1].value;
-                else if (handler_map.find(tokenContainer[i].value) != handler_map.end())
-                    handler_map[tokenContainer[i].value](tokenContainer, loc, countARG, i, tokenContainer[i].value);
-                else if (tokenContainer[i].value == "}")
-                {
-                    keepCountOfBrase--;
-                    Serv.locations.push_back(loc);
-                    InsideLocationBlock = false;
-                    break;
-                }else if (tokenContainer[i].value == "listen" || tokenContainer[i].value == "server_name" ||
-                        tokenContainer[i].value == "host" || tokenContainer[i].value == "set_timeout")
-                    error_line(": server only keyword inside location block", tokenContainer[i].line);
-                i++;
-            }
-        }else if (tokenContainer[i].value == "{")
-            keepCountOfBrase++;
-        else if (tokenContainer[i].value == "}" && keepCountOfBrase)
-        {
-            keepCountOfBrase--;
-            if (keepCountOfBrase == 0)
-                break;
-        }
-    }           
 }

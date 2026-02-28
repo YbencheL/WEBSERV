@@ -1,4 +1,4 @@
-#include "ConfigPars.hpp"
+#include "../includes/ConfigPars.hpp"
 
 void identifying_words_and_keywords(std::string& tok, std::deque<Token>& tokenContainer, int Line)
 {

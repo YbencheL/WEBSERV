@@ -1,4 +1,4 @@
-#include "ConfigPars.hpp"
+#include "../includes/ConfigPars.hpp"
 #include <vector>
 
 in_addr_t address_resolution(std::string host)
@@ -22,7 +22,7 @@ in_addr_t address_resolution(std::string host)
 }
 
 // looks for a serverblock in the config file
-const ServerBlock* getServerForRequest(const int ip, int port,
+const ServerBlock* getServerForRequest(const int ip, const size_t port,
     const std::deque<ServerBlock> &serverConfigs
 )
 {
