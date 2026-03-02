@@ -1,19 +1,45 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webserv: Home</title>
+    <title>WebServ</title>
     <style>
-        .body {
-            background-color: black;
-        }
+        body { font-family: sans-serif; margin: 40px; line-height: 1.6; }
+        .box { border: 1px solid #ccc; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        button { cursor: pointer; padding: 10px; }
+        .delete-btn { background: #ff4444; color: white; border: none; }
     </style>
 </head>
-
 <body>
-    <div class="welc-msg">
-        <p> Welcome to our Webserv :) </p>
+    <h1>Webserv</h1>
+
+    <div class="box">
+        <h3>1. GET Test (Static Files)</h3>
+        <p>If you see the image below, good it works just fine</p>
+        <img src="./mem.png" alt="Image Not Found" style="max-width: 200px;">
     </div>
+
+    <div class="box">
+        <h3>2. POST Test (File Upload)</h3>
+        <form action="/upload" method="POST">
+            <input type="file" name="fileToUpload">
+            <button type="submit">Upload File</button>
+        </form>
+    </div>
+
+    <div class="box">
+        <h3>3. DELETE Test</h3>
+        <p>Clicking this will send a <code>DELETE</code> request for <code>/delete_me.txt</code>.</p>
+        <button class="delete-btn" onclick="sendDelete()">Delete test_file.txt</button>
+        <p id="deleteStatus"></p>
+    </div>
+
+    <!-- <script>
+        async function sendDelete() {
+            const res = await fetch('/delete_me.txt', { method: 'DELETE' });
+            document.getElementById('deleteStatus').innerText = 
+                res.ok ? "Deleted successfully!" : "Error: " + res.status;
+        }
+    </script> -->
 </body>
 </html>

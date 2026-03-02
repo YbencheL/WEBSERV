@@ -227,3 +227,26 @@ bool    validate_headers(Client &current_client)
         current_client.res.set_stat_code(NOT_FOUND);
     return (true);
 }
+
+// CGI --------------------------------------------------------------------------------------------
+
+bool is_cgi_request(std::string path)
+{
+    size_t last_dot = path.find_last_of('.');
+    if (last_dot == std::string::npos)
+        return false;
+
+    std::string ext = path.substr(last_dot);
+    if (ext == ".py" || ext == ".php")
+        return true; 
+    return false;
+}
+
+// --------------------------------------------------------------------------------------------
+
+bool    is_cgi_path_valid(std::string interpreter_path)
+{
+    if (access(interpreter_path.c_str(), F_OK | X_OK) < 0)
+        return (false);
+    return (true);
+}

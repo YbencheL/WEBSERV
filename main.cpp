@@ -1,13 +1,12 @@
 # include "./socket_engine.hpp"
 # include "./config_parsing/ConfigPars.hpp"
 # include "./utils/utils.hpp"
+# include <csignal>
 
 socket_engine s_engine;
 
-# include <csignal>
 void signal_handler(int sig_flag) {
     (void)sig_flag;
-    // s_engine.free_fds_list();
     throw std::runtime_error("[!] SIGINT interrupt, END :(");
 }
 
@@ -58,7 +57,6 @@ int main(int ac, char **av)
                 << " (http://" << host << ":" << port << "/)"
                 << GREEN_E << std::endl;
             // --------------------------------------------- //
-
             s_engine.init_server_side(port, host);  // TO-CHECK LATER
         }
         s_engine.process_connections(); // done [-]

@@ -6,6 +6,10 @@
 
 response_builder::response_builder(): is_body_ready(false), is_error_page(false) {};
 
+void    response_builder::init_response_builder(Client &current_client) {
+    this->current_client = &current_client;
+}
+
 bool    response_builder::is_allowd_method(std::string method)
 {
     for (size_t i = 0; i < current_client->location_conf->allow_methods.size(); i++) {
@@ -44,10 +48,9 @@ void response_builder::response_setup()
     else if (current_client->req.getMethod() == DELETE_METHODE)
         handle_delete();
     this->current_client->res.set_raw_response(response_holder);
-}
+    
+    std::cout << "--------- START RESPONSE\n" << response_holder << "\n------- END RESPONSE" << std::endl;
 
-void    response_builder::init_response_builder(Client &current_client) {
-    this->current_client = &current_client;
 }
 
 void response_builder::build_response()
@@ -60,4 +63,3 @@ void response_builder::build_response()
     }
     response_setup();
 }
-
