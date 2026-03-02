@@ -80,10 +80,10 @@ int collectBodyByLength(Client &client)
         client.req.setBody(
             client.parse.remaining.substr(0, client.parse.contentLength)
         );
-        return OK;
+        return 200;
     }
     else
-        return REQ_NOT_READY;
+        return 0;
 }
 
 int collectBodyByChunks(Client &client, std::string &remain)
@@ -94,12 +94,12 @@ int collectBodyByChunks(Client &client, std::string &remain)
         {
             size_t end = remain.find("\r\n");
             if (end == std::string::npos)
-                return REQ_NOT_READY;
+                return 0;
             std::string bytesLine = remain.substr(0, end);
             UpperCaseBodyBytes(bytesLine);
             int bytes = strToBase(bytesLine, 10000000, "0123456789ABCDEF");
             if (bytes == -1)
-                return BAD_REQUEST;
+                return 400;
             remain.erase(0, end + 2);
             if (bytes == 0)
                 client.parse.chunkState = FINALCRLF;
@@ -111,11 +111,11 @@ int collectBodyByChunks(Client &client, std::string &remain)
         {
             int bytes = client.parse.expectedBytes;
             if ((size_t)(bytes + 2) > remain.size())
-                return REQ_NOT_READY;
+                return 0;
             else
             {
                 if (remain.compare(bytes, 2, "\r\n") != 0)
-                    return BAD_REQUEST;
+                    return 400;
                 else
                 {
                     client.req.appendBody(remain.substr(0, bytes));
@@ -127,11 +127,11 @@ int collectBodyByChunks(Client &client, std::string &remain)
         if (client.parse.chunkState == FINALCRLF)
         {
             if (remain.size() < 2)
-                return REQ_NOT_READY;
+                return 0;
             if (remain.compare(0, 2, "\r\n") == 0)
-                return OK;
+                return 200;
             else
-                return BAD_REQUEST;
+                return 400;
         }
     }
     return 0;
@@ -142,7 +142,7 @@ int parseBody(Client &client)
     if (!client.parse.bodyBegin)
     {
         if (!checkForMethod(client))
-            return BAD_REQUEST;
+            return 400;
         else
             client.parse.bodyBegin = true;
     }

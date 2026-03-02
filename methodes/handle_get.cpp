@@ -16,6 +16,11 @@ void    response_builder::set_header(void)
 
 void    response_builder::set_body(void)
 {
+    /* TODO-CGI
+        Before calling the: this->body = file_to_string(this->path);
+        have to check if the this->path extansion is a CGI extansion
+        if yes execute that file, it's resoute will be in the body
+    */
     if (!is_body_ready)
         this->body = file_to_string(this->path);
 

@@ -1,5 +1,4 @@
 #include "../../client.hpp"
-#include "../../utils/utils.hpp"
 #include "../includes/parseRequest.hpp"
 #include "../includes/request.hpp"
 #include <boost/algorithm/string.hpp>
@@ -16,8 +15,8 @@ void UpperCaseHeaderName(std::string &name)
 int splitDataToTokens(std::string &data, std::map<int, std::string> &tokens)
 {
     size_t begin = 0;
-    size_t end   = 0;
-    int    i     = 0;
+    size_t end = 0;
+    int i = 0;
     for (; true; i++)
     {
         end = data.find("\r\n", begin);
@@ -25,7 +24,7 @@ int splitDataToTokens(std::string &data, std::map<int, std::string> &tokens)
             (begin - 2) == data.find("\r\n\r\n", begin - 2))
             break;
         tokens[i] = data.substr(begin, end - begin);
-        begin     = end + 2;
+        begin = end + 2;
     }
     return i;
 }
@@ -67,19 +66,8 @@ bool checkValueField(std::string &value)
     return true;
 }
 
-bool checkForDouble(
-    std::string &key, std::map<std::string, std::string> &header
-)
-{
-    return header.find(key) == header.end();
-}
-
-bool parseToken(
-    std::string token, std::map<std::string, std::string> &headers, bool &host
-)
-{
-    if (token.size() > MAX_SINGLE_HEADER_SIZE)
-        return false;
+bool parseToken(std::string token, std::map<std::string, std::string> &headers, bool &host)
+{// todo : need to check if key already exist
     size_t pos = token.find(":");
     if (pos == std::string::npos)
         return false;
@@ -87,8 +75,6 @@ bool parseToken(
     if (!checkNameField(name))
         return false;
     UpperCaseHeaderName(name);
-    if (!checkForDouble(name, headers))
-        return false;
     std::string value = token.substr(pos + 1);
     trimLeft(value, "\t ");
     if (!checkValueField(value))
@@ -101,7 +87,7 @@ bool parseToken(
 
 bool checkSetHeaders(int hn, Client &client, std::map<int, std::string> &tokens)
 {
-    bool                               host = false;
+    bool host = false;
     std::map<std::string, std::string> headers;
     for (int i = 0; i < hn; i++)
     {
@@ -114,25 +100,13 @@ bool checkSetHeaders(int hn, Client &client, std::map<int, std::string> &tokens)
     return true;
 }
 
-//later
-// int checkMethodAllowed(Client &client)
-// {
-//     for(int i = 0;i < 3;i++)
-//     {
-//         if (client.req.getMethod() == client.location_conf->allow_methods[i])
-
-//     }
-//     return 1;
-// }
-
-int parseHeaders(Client &client, std::string &data)
+bool parseHeaders(Client &client, std::string &data)
 {
     std::map<int, std::string> tokens;
-    int                        NumberOfTokens = splitDataToTokens(data, tokens);
+    int NumberOfTokens = splitDataToTokens(data, tokens);
 
     if (!checkSetHeaders(NumberOfTokens, client, tokens))
-        return BAD_REQUEST;
-    if (!validate_headers(client))
-        return NOT_FOUND;
-    return 1;
+        return false;
+    
+    return true;
 }

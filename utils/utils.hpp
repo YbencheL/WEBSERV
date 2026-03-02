@@ -4,9 +4,7 @@
 # include <string>
 # include <sstream>
 # include <vector>
-#include "../client.hpp"
 
-bool    validate_headers(Client &current_client);
 const std::string   to_string(int digit);
 const std::string   file_to_string(const std::string& path);
 const std::string   &stat_code_to_string(unsigned short int stat_code);

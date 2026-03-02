@@ -51,6 +51,9 @@ void    socket_engine::client_event(ssize_t fd, uint32_t events) // DONE []
         {
             this->raw_client_data[fd].last_activity = time(0);
             std::string raw_data_buff(raw_data, recv_stat);
+
+            // std::cout << "-----REQUEST " << raw_data_buff << "-----REQUEST " << std::endl;
+
             int req_stat = parseRequest(this->raw_client_data[fd], raw_data_buff);
 
             std::cout << "[>] req_stat exist with it -> " << req_stat << std::endl;
@@ -60,19 +63,21 @@ void    socket_engine::client_event(ssize_t fd, uint32_t events) // DONE []
             else if (req_stat == OK)    // header ready
             {
                 // -------------------------------------------------------------------------------
-                
                 validate_headers(raw_client_data[fd]);
-                
-
-
                 // -------------------------------------------------------------------------------
+
                 response_builder response_builder;
                 response_builder.init_response_builder(raw_client_data[fd]);
+
                 response_builder.build_response();
                 modify_epoll_event(fd, EPOLLOUT | EPOLLIN);
             }
             
             this->raw_client_data[fd].res.set_stat_code(req_stat);
+        }
+ 
+        else if (recv_stat == 0) {
+            terminate_client(fd, "[!] Client lost connection (EOF)");
         }
         else
         {

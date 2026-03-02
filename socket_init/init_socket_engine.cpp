@@ -52,6 +52,7 @@ void socket_engine::free_fds_list(void)
         close (fds_list.at(i));
         std::cout << ">>> free fd[" << fds_list.at(i) << "]" << std::endl;  // rm-me
     }
+    std::cout << ">>> free fd[" << epoll_fd << "]" << std::endl;  // rm-me
     close (epoll_fd);
 }
 
