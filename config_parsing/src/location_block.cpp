@@ -60,13 +60,13 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
             InsideLocationBlock = true;
             while (InsideLocationBlock)
             {
-                if (!brackets_count(tokenContainer[i].value, keepCountOfBrase, InsideLocationBlock, Serv.locations, &loc))
+                if (tokenContainer[i].type == 1 && loc.path.empty())
+                    loc.path = tokenContainer[i].value;
+                else if (!brackets_count(tokenContainer[i].value, keepCountOfBrase, InsideLocationBlock, Serv.locations, &loc))
                     break;
                 else if ((i + 1) < (ssize_t)tokenContainer.size() && (pos = tokenContainer[i].value.find_first_of("/")) != 0
                     && tokenContainer[i + 1].value == "{")
                     error_line(": paths must start with /", tokenContainer[i].line);
-                else if ((i - 1) >= 0 && tokenContainer[i].type == 1 && tokenContainer[i - 1].value == "location")
-                    loc.path = tokenContainer[i].value;
                 else if (i < (ssize_t)tokenContainer.size() && tokenContainer[i].value == "root")
                     loc.root = tokenContainer[i + 1].value;
                 else if (handler_map.find(tokenContainer[i].value) != handler_map.end())

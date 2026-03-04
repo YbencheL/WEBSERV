@@ -24,6 +24,18 @@ void identifying_words_and_keywords(std::string& tok, std::deque<Token>& tokenCo
     }
 }
 
+void identifying_symbols(std::string fileContent, size_t& i, std::string& tok, std::deque<Token>& tokenContainer,
+    size_t& Line)
+{
+    if (!tok.empty())
+        identifying_words_and_keywords(tok, tokenContainer, Line);
+    Token tikken;
+    tikken.type = SYMBOL;
+    tikken.value.push_back(fileContent[i]);
+    tikken.line = Line;
+    tokenContainer.push_back(tikken);
+    tok.clear();
+}
 
 void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& serverConfigs)
 {
@@ -38,28 +50,32 @@ void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std:
         checking_values(serverConfigs[i]);
         seenPort.push_back(serverConfigs[i].listen);
         if (serverConfigs[i].locations.empty() && serverConfigs[i].root.empty())
-            throw std::runtime_error("ERROR: missing value (root)");
+            error_line(": missing value (root)", -1);
     }
     // check for server blocks with same ip and port
     checking_for_virtual_hosts(seenPort);
 }
 
+void comment_handle(std::string fileContent, size_t& i, size_t& Line)
+{
+    while((i <= fileContent.size()) && fileContent[i] != '\n')
+        i++;
+    Line++;
+}
+
 std::deque<ServerBlock> tokenzation(std::string fileContent)
 {
     std::string tok;
-    ssize_t Line;
+    size_t Line;
     // ssize_t pos;
     std::deque<Token> tokenContainer;
     std::deque<ServerBlock> serverConfigs;
 
     Line = 1;
-    for(ssize_t i = 0; i < (ssize_t)fileContent.size(); i++)
+    for(size_t i = 0; i < fileContent.size(); i++)
     {
         if (fileContent[i] == '#')
-        {
-            while((i <= (ssize_t)fileContent.size()) && fileContent[i] != '\n')
-                i++;
-        }
+            comment_handle(fileContent, i, Line);
         else if (fileContent[i] == '\n')
         {
             if (!tok.empty())
@@ -71,21 +87,12 @@ std::deque<ServerBlock> tokenzation(std::string fileContent)
             if (!tok.empty())
                 identifying_words_and_keywords(tok, tokenContainer, Line);
         }else if ((fileContent[i] == ';' || fileContent[i] == '{' || fileContent[i] == '}'))
-        {
-            if (!tok.empty())
-                identifying_words_and_keywords(tok, tokenContainer, Line);
-            Token tikken;
-            tikken.type = SYMBOL;
-            tikken.value.push_back(fileContent[i]);
-            tikken.line = Line;
-            tokenContainer.push_back(tikken);
-            tok.clear();
-        }
+            identifying_symbols(fileContent, i, tok, tokenContainer, Line);
         else
             tok.push_back(fileContent[i]);
     }
     if (tokenContainer.empty())
-        throw std::runtime_error("ERROR: nothing was provided in the config file");
+        error_line(": nothing was provided in the config file", -1);
     is_syntax_valid(tokenContainer);
     extracting_blocks_plus_final_checks(tokenContainer, serverConfigs);
     return serverConfigs;

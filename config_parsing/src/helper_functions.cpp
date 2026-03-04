@@ -19,3 +19,24 @@ in_addr_t address_resolution(std::string host)
     freeaddrinfo(result);
     return (host_re);
 }
+
+void error_line(std::string msg, int Line)
+{
+    std::string errorLine;
+    std::stringstream ss;
+
+    if (Line != -1)
+    {
+        ss << Line;
+        errorLine = "ERROR on line " + ss.str() + msg;
+        throw std::runtime_error(errorLine);
+    }else
+        throw std::runtime_error("ERROR" + msg);
+}
+
+bool    is_cgi_path_valid(std::string interpreter_path)
+{
+    if (access(interpreter_path.c_str(), F_OK | X_OK) < 0)
+        return (false);
+    return (true);
+}
