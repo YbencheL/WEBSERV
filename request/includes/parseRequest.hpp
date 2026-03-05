@@ -1,8 +1,9 @@
 #ifndef PARSEREQUEST_HPP
 #define PARSEREQUEST_HPP
 
-#define MAX_REQ_SIZE 5000
-#define MAX_HEADER_SIZE 32000
+#define MAX_REQ_SIZE           5000
+#define MAX_SINGLE_HEADER_SIZE 8000
+#define MAX_HEADER_SIZE        32000
 
 #include <iostream>
 #include <list>
@@ -26,20 +27,20 @@ struct Client;
 
 struct reqParse
 {
-    parseSteps      step;
+    parseSteps     step;
     bodyChunkState chunkState;
-    size_t          expectedBytes;
-    std::string     remaining;
-    bool            body;
-    std::string     methods[3];
-    bool            bodyBegin;
-    std::string     bodyReadMod;
-    int             contentLength;
+    size_t         expectedBytes;
+    std::string    remaining;
+    bool           body;
+    std::string    methods[3];
+    bool           bodyBegin;
+    std::string    bodyReadMod;
+    int            contentLength;
 };
 
 void UpperCaseHeaderName(std::string &name);
 int  parseBody(Client &client);
-bool parseHeaders(Client &client, std::string &data);
+int  parseHeaders(Client &client, std::string &data);
 int  parseRequestLine(Client &client, std::string &data);
 int  parseRequest(Client &client, std::string &recivedData);
 
