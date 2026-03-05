@@ -71,5 +71,5 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
             keywords_validation(tokenContainer, ServerBlockCount, LocationBlockCount, i, insideServer);
     }
     if (keepCountOfBrase != 0)
-        throw std::runtime_error("ERROR: check brackets!");
+        error_line(": check brackets!", -1);
 }

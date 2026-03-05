@@ -41,8 +41,6 @@ void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<Serv
     Serv.client_max_body_size = 0;
     Serv.listen = 0; 
     Serv.set_timeout = 0;
-    // duplicate check rule
-    checking_for_keyword_dups(tokenContainer);
     // storing values
     for (ssize_t i = 0; i < (ssize_t)tokenContainer.size(); i++)
     {

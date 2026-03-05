@@ -12,20 +12,6 @@ int count_to_symbol(std::deque<Token>& tokenContainer, ssize_t& index, int count
     return count;
 }
 
-void error_line(std::string msg, int Line)
-{
-    std::string errorLine;
-    std::stringstream ss;
-
-    if (Line != -1)
-    {
-        ss << Line;
-        errorLine = "ERROR on line " + ss.str() + msg;
-        throw std::runtime_error(errorLine);
-    }else
-        throw std::runtime_error("ERROR" + msg);
-}
-
 void duplicate_check(std::deque<std::string>& keywords, std::string name)
 {
     int count = 0;
@@ -37,25 +23,8 @@ void duplicate_check(std::deque<std::string>& keywords, std::string name)
         else if (keywords[i] == "server")
             count = 0;
         if (count > 1)
-            throw std::runtime_error("ERROR: there must be no duplicates for keywords");
+            error_line(": there must be no duplicates for keywords", -1);
     }
-}
-
-void checking_for_keyword_dups(std::deque<Token>& tokenContainer)
-{
-    std::deque<std::string> keywords;
-    std::vector<std::string> non_duplicated_keyword;
-
-    for (size_t i = 0; i < tokenContainer.size(); i++)
-    {
-        if (tokenContainer[i].type == 0)
-            keywords.push_back(tokenContainer[i].value);
-    }
-    non_duplicated_keyword.push_back("listen");
-    non_duplicated_keyword.push_back("server_name");
-    non_duplicated_keyword.push_back("host");
-    for(size_t i = 0; i < non_duplicated_keyword.size(); i++)
-        duplicate_check(keywords, non_duplicated_keyword[i]);
 }
 
 template <typename T>
@@ -65,14 +34,14 @@ void inherit_check(T& member, T& defaultValue, const std::string& fieldName)
     {
         member = defaultValue;
         if (member.empty())
-            throw std::runtime_error("ERROR: missing value " + fieldName);
+            error_line(": missing value " + fieldName, -1);
     }
 }
 
 void empty_values_check(ServerBlock&  Serv)
 {
     if (Serv.error_page.empty() || Serv.host.empty() || Serv.index.empty())
-        throw std::runtime_error("ERROR: missing value (error_page, host or index)");
+        error_line(": missing value (error_page, host or index)", -1);
 }
 
 
@@ -81,13 +50,13 @@ void checking_values(ServerBlock& Serv)
     std::deque<std::string> seenLocationPaths;
 
     if (!Serv.listen)
-        throw std::runtime_error("ERROR: missing value (port)");
+        error_line(": missing value (port)", -1);
     else if (!Serv.set_timeout)
         Serv.set_timeout = 100;
     else if (Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL)
-        throw std::runtime_error("ERROR: port has incorrect value must be between 1024 and 65535");
+        error_line(": port has incorrect value must be between 1024 and 65535", -1);
     else if (Serv.client_max_body_size < 0 || !Serv.client_max_body_size)
-        throw std::runtime_error("ERROR: client_max_body_size has incorrect value");
+        error_line(": client_max_body_size has incorrect value", -1);
     //checking empty values
     empty_values_check(Serv);
     // these values will have a default if they dont exist
@@ -100,7 +69,7 @@ void checking_values(ServerBlock& Serv)
         {
             Serv.locations[i].client_max_body_size = Serv.client_max_body_size;
             if (!Serv.locations[i].client_max_body_size)
-                throw std::runtime_error("ERROR: missing value (client_max_body_size)");
+                error_line(": missing value (client_max_body_size)", -1);
         }
         inherit_check(Serv.locations[i].root, Serv.root, "root");
         inherit_check(Serv.locations[i].index, Serv.index, "index");
@@ -126,6 +95,6 @@ void checking_for_virtual_hosts(std::deque<int>& seen)
         value = *it;
         count = std::count(seen.begin(), seen.end(), value);
         if (count > 1)
-            throw std::runtime_error("ERROR: there must be only unique ports per server block");
+            error_line(": there must be only unique ports per server block", -1);
     }
 }

@@ -1,5 +1,4 @@
 #include "../includes/ConfigPars.hpp"
-#include <unistd.h>
 
 void handle_client_mbs(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
     std::string& keyword)
@@ -107,13 +106,6 @@ void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, 
             loc.error_page.insert(std::make_pair(errorsnum, value));
         }
     }
-}
-
-bool    is_cgi_path_valid(std::string interpreter_path)
-{
-    if (access(interpreter_path.c_str(), F_OK | X_OK) < 0)
-        return (false);
-    return (true);
 }
 
 void handle_cgi(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
