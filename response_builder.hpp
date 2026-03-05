@@ -32,7 +32,7 @@ class response_builder
         bool            is_allowd_method(std::string method);
         void            path_validation(void);
         std::string     index_file_iterator(const std::string &full_path);
-        void            autoindex_gen(std::vector<std::string> &dir_list, const std::string &uri_path);
+        void            autoindex_gen(std::vector<std::string> &dir_list, const std::string &full_path, const std::string &request_uri);
         // void            autoindex_page(const std::string &full_path);
         void            autoindex_page(const std::string &full_path, const std::string &request_uri);
         void            default_error_page(unsigned short int stat_code);
@@ -44,8 +44,7 @@ class response_builder
         void            handle_get();
         void            handle_post();
         void            handle_delete();
-
-        void            response_setup(void);   // MAKE "response_holder"
+        
     public:
         response_builder();
         // void    init_response_builder(Client &current_client, std::deque<ServerBlock> &config);

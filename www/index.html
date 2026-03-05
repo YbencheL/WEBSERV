@@ -8,17 +8,20 @@
         .box { border: 1px solid #ccc; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
         button { cursor: pointer; padding: 10px; }
         .delete-btn { background: #ff4444; color: white; border: none; }
+        img {height:fit-content; width: auto;}
     </style>
 </head>
 <body>
     <h1>Webserv</h1>
 
+    <!-- GET -->
     <div class="box">
         <h3>1. GET Test (Static Files)</h3>
         <p>If you see the image below, good it works just fine</p>
         <img src="./mem.png" alt="Image Not Found" style="max-width: 200px;">
     </div>
 
+    <!-- POST -->
     <div class="box">
         <h3>2. POST Test (File Upload)</h3>
         <form action="/upload" method="POST">
@@ -27,19 +30,25 @@
         </form>
     </div>
 
+    <!-- DELETE -->
     <div class="box">
         <h3>3. DELETE Test</h3>
-        <p>Clicking this will send a <code>DELETE</code> request for <code>/delete_me.txt</code>.</p>
+        <p>Clicking this will send a <code>DELETE</code> request for <code>delete_me.txt</code>.</p>
         <button class="delete-btn" onclick="sendDelete()">Delete test_file.txt</button>
         <p id="deleteStatus"></p>
     </div>
 
-    <!-- <script>
+    <script>
         async function sendDelete() {
-            const res = await fetch('/delete_me.txt', { method: 'DELETE' });
-            document.getElementById('deleteStatus').innerText = 
-                res.ok ? "Deleted successfully!" : "Error: " + res.status;
+            const res = await fetch('delete_me.txt', { method: 'DELETE' });
+            if (res.status === 204)
+                window.location.reload();
+            else {
+                const errorHtml = await res.text();
+                document.body.innerHTML = errorHtml; 
+            }
         }
-    </script> -->
+    </script>
+    
 </body>
 </html>

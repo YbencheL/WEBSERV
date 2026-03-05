@@ -8,7 +8,7 @@ void    response_builder::set_header(void)
     response_holder.append("Server: Webserv\r\n");
     response_holder.append("Date: " + get_time() + "\r\n");
     
-    if (is_body_ready || is_error_page)
+    if (is_body_ready || is_error_page)     // TODO-CHECK: CGI later check
         response_holder.append("Content-Type: text/html\r\n");  // just in case of autoindex //
     else
         response_holder.append("Content-Type: " + resolved_path_extension(this->path) + "\r\n");
@@ -21,6 +21,7 @@ void    response_builder::set_body(void)
         have to check if the this->path extansion is a CGI extansion
         if yes execute that file, it's resoute will be in the body
     */
+
     if (!is_body_ready)
         this->body = file_to_string(this->path);
 
@@ -51,3 +52,4 @@ void    response_builder::handle_get()  // OK request
     set_header();
     set_body();
 }
+

@@ -38,7 +38,8 @@ struct Client
     bool    reqReady;
 
     // about the timeout check
-    unsigned int last_activity;
+    unsigned int    last_activity;
+    bool            close_connection;
 };
 
 void inisializeClient(Client &client);

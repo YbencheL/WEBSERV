@@ -1,5 +1,6 @@
 # include "../response_builder.hpp"
 # include "../socket_engine.hpp"    // used just to indelucde the client struct //  rm-me
+# include "../utils/utils.hpp"
 
 std::string    response_builder::get_stat_code_path(unsigned int stat_code)
 {
@@ -40,8 +41,10 @@ void    response_builder::path_validation()
         return ;
     }
 
-    if (S_ISDIR(statbuf.st_mode)) {     // is DIR
-        std::cout << "[+] DDDDDDDDDDDDDDDDDDDIR IS HERE" << std::endl;
+    if (S_ISDIR(statbuf.st_mode))
+    {   
+        std::cout << "[+] DIR REQUESTED HEEEEEEEEEEEEEREEEEEEEEEE" << std::endl;
+
         index = index_file_iterator(this->path);
         if (!index.empty())     // here will server the static files .html
             this->path = index;

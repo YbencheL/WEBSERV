@@ -7,6 +7,7 @@
 # include "config_parsing/includes/ConfigPars.hpp"
 
 # define OK 200
+# define NO_CONTENT 204
 # define BAD_REQUEST 400
 # define FORBIDDEN_ACCESS 403
 # define NOT_FOUND 404
