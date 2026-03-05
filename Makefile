@@ -9,7 +9,7 @@ SRC = ./main.cpp ./socket_init/init_socket_engine.cpp ./socket_init/init_client_
         ./config_parsing/src/location_block.cpp ./config_parsing/src/server_block.cpp ./config_parsing/src/syntax_validation.cpp ./config_parsing/src/location_block_handlers.cpp \
         ./config_parsing/src/server_block_handlers.cpp ./config_parsing/src/server_block_lookup.cpp ./response/response_builder.cpp ./response/response.cpp \
 		./response/default_page_gen.cpp ./utils/helper_utils.cpp ./response/path_validation.cpp ./methodes/handle_post.cpp \
-		./methodes/handle_delete.cpp ./methodes/handle_get.cpp ./request/request.cpp ./request/client.cpp ./request/requestParse/requestParser.cpp \
+		./methodes/handle_delete.cpp ./methodes/handle_get.cpp ./request/request.cpp client.cpp ./request/requestParse/requestParser.cpp \
 		./request/requestParse/requestLineParser.cpp ./request/requestParse/headersParser.cpp ./request/requestParse/parseBody.cpp
 
 OBJ = $(SRC:.cpp=.o)

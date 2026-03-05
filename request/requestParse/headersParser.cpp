@@ -1,4 +1,4 @@
-#include "../../client.hpp
+#include "../../client.hpp"
 #include "../../utils/utils.hpp"
 #include "../includes/parseRequest.hpp"
 #include "../includes/request.hpp"
@@ -114,15 +114,15 @@ bool checkSetHeaders(int hn, Client &client, std::map<int, std::string> &tokens)
     return true;
 }
 
-int checkMethodAllowed(Client &client)
-{
-    for(int i = 0;i < 3;i++)
-    {
-        if (client.req.getMethod() == client.location_conf->allow_methods[i])
+// int checkMethodAllowed(Client &client)
+// {
+//     for(int i = 0;i < 3;i++)
+//     {
+//         if (client.req.getMethod() == client.location_conf->allow_methods[i])
 
-    }
-    return 1;
-}
+//     }
+//     return 1;
+// }
 
 int parseHeaders(Client &client, std::string &data)
 {
