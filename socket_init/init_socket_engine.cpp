@@ -73,42 +73,56 @@ void socket_engine::set_server_config_info(std::deque<ServerBlock> server_config
     this->server_config_info = server_config_info;
 }
 
-// ServerBlockLookup server(port, host, server_config_info);
-// // const ServerBlock *server_conf = getServerForRequest(host, port, server_config_info);
-// const ServerBlock *server_conf = server.getServer();
-// const LocationBlock*loc = server.getLocation("path");
+// --------------------------------------------------------------------------------------------------------------
 
 void socket_engine::check_all_client_timeouts(void) // TODO-CHECK
 {
     time_t now = time(0);
     std::map<int, Client>::iterator it = raw_client_data.begin();
-    ServerBlockLookup server_conf_block;
+    
+    std::cout << GREEN_S << "NUMBER of the clients -> " << raw_client_data.size() << GREEN_E << std::endl;
 
-    while (it != raw_client_data.end()) 
+    while (it != raw_client_data.end())
     {
-        int fd = it->first;
-        int port = it->second.port;
-        int host = it->second.host;
         size_t timeout_limit = TIMEOUT_LIMIT;
-        
-        server_conf_block.getServerForRequest(host, port, server_config_info);
-        const ServerBlock * server_conf = server_conf_block.getServer();
-        if (server_conf != NULL)
-            timeout_limit = server_conf->set_timeout;
 
-        if ((now - it->second.last_activity) > (time_t)timeout_limit)
+        int fd = it->first;
+        
+        if (it->second.close_connection)
         {
-            std::cout << "[-] Timeout detected on FD " << fd << ". Cleaning up..." << std::endl;
             epoll_ctl(this->epoll_fd, EPOLL_CTL_DEL, fd, NULL);
-            close(fd);
             raw_client_data.erase(it++);
             remove_fd_from_list(fd);
+            close(fd);
+            // terminate_client(fd, "Response sent Successfully (HTTP/1.0)");
+            std::cerr << GREEN_S <<  "+++++++++ Response sent Successfully (HTTP/1.0) +++++++++" << GREEN_E << std::endl;
+            continue ;
+        }
+
+        if (it->second.server_conf != NULL)
+            timeout_limit = it->second.server_conf->set_timeout;
+
+        std::cout << GREEN_S << "\n-------- INFO START\n" << "fd:" << fd
+            << "\nclose_connection: " << it->second.close_connection
+            << GREEN_E << "\n-------- INFO END" <<std::endl;
+
+        if ((now - it->second.last_activity) > (time_t)timeout_limit && !it->second.close_connection)
+        {
+            epoll_ctl(this->epoll_fd, EPOLL_CTL_DEL, fd, NULL);
+            raw_client_data.erase(it++);
+            remove_fd_from_list(fd);
+            close(fd);
+
+            continue ;
+
+            // std::cout << GREEN_S << "[-] Timeout detected on FD " << fd << ". Cleaning up..." << GREEN_E << std::endl;
         }
         else 
             ++it;
     }
-
 }
+
+// --------------------------------------------------------------------------------------------------------------
 
 void    socket_engine::terminate_client(int fd, std::string stat)
 {
@@ -116,7 +130,8 @@ void    socket_engine::terminate_client(int fd, std::string stat)
     this->raw_client_data.erase(fd);
     remove_fd_from_list(fd);
     close(fd);
-    std::cerr << READ_S << stat << READ_E << std::endl;
+
+    std::cerr << GREEN_S << stat << GREEN_E << std::endl;
 }
 
 void    socket_engine::modify_epoll_event(ssize_t fd, uint32_t events)

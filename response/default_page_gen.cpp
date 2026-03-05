@@ -71,7 +71,10 @@ void    response_builder::default_error_page(unsigned short int stat_code)
     this->is_body_ready = true;
 }
 
-void    response_builder::autoindex_gen(std::vector<std::string> &dir_list, const std::string &request_uri)
+// dir_list         ->      name of the files/dires
+// full_path        ->      root + getPath()
+// request_uri      ->      getPath() -> request
+void    response_builder::autoindex_gen(std::vector<std::string> &dir_list, const std::string &full_path, const std::string &request_uri)
 {
     std::string style = get_autoindex_page_style();
     this->body = "<!DOCTYPE html>\n"
@@ -88,19 +91,23 @@ void    response_builder::autoindex_gen(std::vector<std::string> &dir_list, cons
     std::cout << GREEN_S << "REQUEST PATH -> " << request_uri << GREEN_E << std::endl;
     if (request_uri != "/")
         this->body.append("\t\t<a class=\"index_path\" href=\"../\">../</a><br>\n");
-    // -------------------------------------------------------------- //
 
     for (size_t i = 0; i < dir_list.size(); i++)
     {
-        std::string &name = dir_list.at(i);
+        
+        std::string full_dir_path;
         std::string path = request_uri;
+        std::string &name = dir_list.at(i);
 
         if (name == ".") continue;
         if (name == "..") continue;
 
         if (request_uri.at(request_uri.length() - 1) != '/')
             path += '/';
+
         path += name;
+        full_dir_path = full_path + name;
+        dir_path_correction(full_dir_path ,path);
 
         this->body.append("\t\t<a href=\"" + path + "\">" + name + "</a><br>\n");
     }
@@ -108,7 +115,7 @@ void    response_builder::autoindex_gen(std::vector<std::string> &dir_list, cons
     this->is_body_ready = true;
 }
 
-void    response_builder::autoindex_page(const std::string &full_path, const std::string &request_uri)
+void    response_builder::autoindex_page(const std::string &full_path, const std::string &request_uri)  // auto-index gen
 {
     DIR *dir = opendir(full_path.c_str());
     if (dir == NULL){
@@ -120,8 +127,9 @@ void    response_builder::autoindex_page(const std::string &full_path, const std
         dirent *read_dir = readdir(dir);
         if (read_dir == NULL)
             break;
+        
         dir_list.push_back(read_dir->d_name);
     }
-    autoindex_gen(dir_list, request_uri);
+    autoindex_gen(dir_list, full_path, request_uri);
     closedir(dir);
 }

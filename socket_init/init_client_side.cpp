@@ -3,9 +3,9 @@
 // (DONE[*])
 void socket_engine::init_client_side(int fd)
 {
-
     inisializeClient(this->raw_client_data[fd]);
     this->raw_client_data[fd].last_activity = time(0);
+    this->raw_client_data[fd].close_connection = false;
 
     if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
         close (fd);
