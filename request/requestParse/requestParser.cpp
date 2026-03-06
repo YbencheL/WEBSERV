@@ -38,7 +38,7 @@ int parseRequest(Client &client, std::string &recivedData)
             std::string headers =
                 client.parse.remaining.substr(2, headerEnd + 2);
             int EXIT_CODE = parseHeaders(client, headers);
-            if (EXIT_CODE == NOT_FOUND || EXIT_CODE == BAD_REQUEST)
+            if (EXIT_CODE != 1)
                 return EXIT_CODE;
             client.parse.step = BODY;
             client.parse.remaining.erase(0, headerEnd + 4);
