@@ -10,6 +10,8 @@ void UpperCaseHeaderName(std::string &name)
     {
         if (name[i] <= 'z' && name[i] >= 'a')
             name[i] = toupper(name[i]);
+        if (name[i] == '-')
+            name[i] = '_';
     }
 }
 

@@ -8,6 +8,7 @@ class Cgi
   private:
     std::string interpreter;
     std::string extension;
+    char **envp;
 
   public:
     Cgi();
@@ -22,6 +23,7 @@ class Cgi
     std::string getExtension() const;
 
 	bool checkForCgi(Client &client);
+  void buildEnv(Client &client);
 };
 
 #endif
