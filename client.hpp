@@ -24,6 +24,7 @@ struct Client
     // TODO: call = address_resolution(it->second.host);
     unsigned short int  port;
     unsigned int        host;
+    std::string         host_str_format;
 
     /// get the location-level match
 

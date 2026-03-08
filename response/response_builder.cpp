@@ -42,18 +42,18 @@ void response_builder::build_response()
     path_validation();  // TOKNOW: auto-index gen
     
     std::cout << "STATUS CODE " << current_client->res.get_stat_code() << std::endl;
-    if (this->current_client->res.get_stat_code() != OK) {
-        generate_error_page();
-    }
+
+    if (this->current_client->res.get_stat_code() != OK)
+        generate_error_page();  // DONE [-]
 
     else if (this->current_client->req.getMethod() == GET_METHODE)
-        handle_get();
+        handle_get();   // DONE [-] working on it
 
     else if (this->current_client->req.getMethod() == POST_METHODE)
-        handle_post();
+        handle_post();  // DONE [-] working on it
     
     else if (this->current_client->req.getMethod() == DELETE_METHODE)
-        handle_delete();
+        handle_delete();    // DONE [+]
 
     this->current_client->res.set_raw_response(response_holder);
     

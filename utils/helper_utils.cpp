@@ -42,6 +42,7 @@ const std::string   &stat_code_to_string(unsigned short int stat_code)
     static std::map<int, std::string> stat_code_str;
     if (stat_code_str.empty()) {
         stat_code_str[200] = "OK";
+        stat_code_str[201] = "Created";
         stat_code_str[204] = "No Content";
         stat_code_str[403] = "Forbidden";
         stat_code_str[404] = "Not Found";
@@ -190,6 +191,7 @@ bool    validate_headers(Client &current_client)
 
         if (current_client.port != 0 && current_client.host != INADDR_NONE)
         {
+            current_client.host_str_format = host;
             current_client.config_file_info.setServerForRequest(current_client.host,
                 current_client.port, s_engine.get_server_config_info());
             current_client.server_conf = current_client.config_file_info.getServer();
@@ -210,19 +212,6 @@ bool    validate_headers(Client &current_client)
     return (true);
 }
 
-// CGI --------------------------------------------------------------------------------------------
-
-bool    is_cgi_request(std::string path)
-{
-    size_t last_dot = path.find_last_of('.');
-    if (last_dot == std::string::npos)
-        return false;
-
-    std::string ext = path.substr(last_dot);
-    if (ext == ".py" || ext == ".php")
-        return true; 
-    return false;
-}
 
 // --------------------------------------------------------------------------------------------
 
@@ -234,5 +223,20 @@ void    dir_path_correction(const std::string &full_dir_path, std::string &d_pat
     if (S_ISDIR(statbuf.st_mode) && d_path.at(d_path.size() - 1) != '/') {
         if (d_path.at(d_path.size() - 1) != '/')
             d_path.append("/");
-    }
+        }
+}
+
+
+// CGI --------------------------------------------------------------------------------------------
+        
+bool    is_cgi_request(std::string path)
+{
+    size_t last_dot = path.find_last_of('.');
+    if (last_dot == std::string::npos)
+        return false;
+
+    std::string ext = path.substr(last_dot);
+    if (ext == ".py" || ext == ".php")
+        return true; 
+    return false;
 }

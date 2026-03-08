@@ -52,35 +52,38 @@ void    socket_engine::client_event(ssize_t fd, uint32_t events) // DONE []
             this->raw_client_data[fd].last_activity = time(0);
             std::string raw_data_buff(raw_data, recv_stat);
 
-            // std::cout << "-----REQUEST " << raw_data_buff << "-----REQUEST " << std::endl;
+
+            std::cout << READ_S << "--------- recv_stat >>>> " << recv_stat << READ_E << std::endl;
+            std::cout << READ_S << "--------- START REQUEST\n" << raw_data_buff << "\n------- END RAQUEST" << READ_E << std::endl;
 
             int req_stat = parseRequest(this->raw_client_data[fd], raw_data_buff);
+            // std::cout << "req_stat >>> " << req_stat << std::endl;
+            // exit(1);
             if (req_stat == REQ_NOT_READY)  // request not ready
                 return ;
-            else if (req_stat == OK)    // request ready
-            {
-                validate_headers(raw_client_data[fd]);
-
-                // -------------------------------------------------------------------------------
-                std::cout << READ_S << "--------- START REQUEST\n" << raw_data_buff << "\n------- END RAQUEST" << READ_E << std::endl;
-
-
-                response_builder response_builder;
-                response_builder.init_response_builder(raw_client_data[fd]);
-                response_builder.build_response();
-                modify_epoll_event(fd, EPOLLOUT | EPOLLIN);
-                // -------------------------------------------------------------------------------
-            }
+            
             this->raw_client_data[fd].res.set_stat_code(req_stat);
+            
+            // -------------------------------------------------------------------------------
+            std::map<std::string, std::string> x = raw_client_data[fd].req.getHeaders();
+            
+            for (std::map<std::string, std::string>::iterator it = x.begin(); it != x.end(); it++)
+            {
+                std::cout << "key: " << it->first << " value: " << it->second << std::endl;
+            }
+            response_builder response_builder;
+            response_builder.init_response_builder(raw_client_data[fd]);
+            response_builder.build_response();
+            modify_epoll_event(fd, EPOLLOUT | EPOLLIN);
+            // -------------------------------------------------------------------------------
         }
         else if (recv_stat == 0)
             terminate_client(fd, "[!] Client lost connection (EOF)");
         else
             terminate_client(fd, "[!] Client connection broke");
     }
-    if (events & EPOLLOUT)  // READY TO WRITE
+    if (events & EPOLLOUT)
     {  
-        // std::cout << "=================================================================== inter ========================================================" << std::endl;
         std::string buffer_knowon = raw_client_data[fd].res.get_raw_response();
         if (!buffer_knowon.empty())
         {

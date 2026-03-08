@@ -22,13 +22,11 @@
     </div>
 
     <!-- POST -->
-    <div class="box">
-        <h3>2. POST Test (File Upload)</h3>
-        <form action="/upload" method="POST">
-            <input type="file" name="fileToUpload">
-            <button type="submit">Upload File</button>
-        </form>
-    </div>
+    <!-- <div class="box">
+        <h3>2. POST Test (Clean Upload)</h3>
+        <input type="file" id="myFileInput">
+        <button type="button" onclick="uploadFile()">Upload Raw</button>
+    </div> -->
 
     <!-- DELETE -->
     <div class="box">
@@ -38,6 +36,53 @@
         <p id="deleteStatus"></p>
     </div>
 
+
+    <div class="box">
+        <h3>2. POST Test (Clean Raw Upload)</h3>
+        <input type="file" id="fileInput">
+        <button onclick="uploadRaw()">Upload</button>
+    </div>
+
+    <script>
+        async function uploadRaw() {
+            const input = document.getElementById('fileInput');
+            if (!input.files[0]) return alert("Select a file!");
+            
+            const file = input.files[0];
+            await fetch('/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Length': file.size,
+                    'filename': file.name,
+                    'Content-Type': 'application/octet-stream'
+                },
+                body: file // This sends the RAW bytes
+            });
+            alert("Upload Attempted! Check your server logs.");
+        }
+    </script>
+
+    <!-- Scripte POST -->
+    <!-- <script>
+        async function uploadFile() {
+            const fileInput = document.getElementById('myFileInput');
+            const file = fileInput.files[0];
+            if (!file) return alert("Select a file first!");
+
+            // This sends the RAW file bytes. No boundaries!
+            await fetch('/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/octet-stream',
+                    'X-Filename': file.name // Send the name in a custom header
+                },
+                body: file 
+            });
+            alert("Sent!");
+        }
+    </script> -->
+
+    <!-- Scripte DELETE -->
     <script>
         async function sendDelete() {
             const res = await fetch('delete_me.txt', { method: 'DELETE' });
@@ -49,6 +94,7 @@
             }
         }
     </script>
-    
+
 </body>
 </html>
+
