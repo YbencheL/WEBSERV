@@ -21,6 +21,12 @@ Cgi &Cgi::operator=(const Cgi &other)
 
 Cgi::~Cgi()
 {
+    for (size_t i = 0; envp[i]; i++)
+        free(envp[i]);
+    delete envp;
+    for (size_t i = 0; i < 3; i++)
+        free(argv[i]);
+    delete argv;
 }
 
 void Cgi::setInterpreter(const std::string &interpreter)
@@ -41,6 +47,16 @@ std::string Cgi::getInterpreter() const
 std::string Cgi::getExtension() const
 {
     return extension;
+}
+
+char **Cgi::getArgv() const
+{
+    return argv;
+}
+
+char **Cgi::getEnv() const
+{
+    return envp;
 }
 
 bool Cgi::checkForCgi(Client &client)
@@ -67,4 +83,55 @@ bool Cgi::checkForCgi(Client &client)
         }
     }
     return false;
+}
+
+void collectEnv(Client &client, std::vector<std::string> &env)
+{
+    env.push_back("REQUEST_METHOD=" + client.req.getMethod());
+    env.push_back("SCRIPT_NAME=" + client.req.getPath());
+    env.push_back("QUERY_STRING=" + client.req.getQuery());
+    env.push_back("SERVER_PROTOCOL=" + client.req.getHttpVersion());
+    env.push_back("GATEWAY_INTERFACE=CGI/1.1");
+    env.push_back("SERVER_SOFTWARE=Webserve");
+    env.push_back(
+        "REQUEST_URI=" + client.req.getPath() + client.req.getQuery()
+    );
+    env.push_back("SERVER_NAME="); // hostname needed later
+    env.push_back("SERVER_PORT=" + client.port);
+    env.push_back("REDIRECT_STATUS=200");
+
+    std::map<std::string, std::string> headers      = client.req.getHeaders();
+    std::map<std::string, std::string>::iterator it = headers.begin();
+
+    for (; it != headers.end(); it++)
+    {
+
+        if (it->first == "CONTENT_LENGTH" || it->first == "CONTENT_TYPE")
+            env.push_back(it->first + "=" + it->second);
+        else
+            env.push_back("HTTP_" + it->first + "=" + it->second);
+    }
+}
+
+void Cgi::buildEnv(Client &client)
+{
+    std::vector<std::string> env;
+    size_t                   i;
+
+    collectEnv(client, env);
+    i    = env.size();
+    envp = new char *[i + 1];
+
+    for (size_t j = 0; j < i; j++)
+        envp[j] = strdup(env[j].c_str());
+    envp[i] = NULL;
+}
+
+void Cgi::buildArg(Client &client)
+{
+    argv = new char *[3];
+
+    argv[0] = strdup(interpreter.c_str());
+    argv[1] = strdup(client.req.getPath().c_str());
+    argv[2] = NULL;
 }
