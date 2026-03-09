@@ -46,6 +46,12 @@ struct Client
     // about the timeout check
     unsigned int    last_activity;
     bool            close_connection;
+
+    /*  TODO saving
+        open fd
+        content_length
+        written_bytes
+    */
 };
 
 void inisializeClient(Client &client);

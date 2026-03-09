@@ -39,6 +39,7 @@ void response_builder::build_response()
     // std::cout << READ_S << "--------- Methode: " << current_client->req.getMethod() << READ_E << std::endl;
     // std::cout << READ_S << "--------- Path: " << current_client->req.getPath() << READ_E << std::endl;
 
+    // exit(1); // TODO-FIX I have a SEGV here 
     path_validation();  // TOKNOW: auto-index gen
     
     std::cout << "STATUS CODE " << current_client->res.get_stat_code() << std::endl;

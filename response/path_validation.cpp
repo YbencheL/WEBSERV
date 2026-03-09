@@ -5,8 +5,10 @@
 bool    is_dir_exist(const std::string &path)
 {
     struct stat statbuf;
-    if (stat(path.c_str(), &statbuf) == 0 && S_ISDIR(statbuf.st_mode))
+    if (stat(path.c_str(), &statbuf) == 0 && S_ISDIR(statbuf.st_mode)) {
+
         return (true);
+    }
     return (false);
 }
 
