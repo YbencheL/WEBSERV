@@ -48,7 +48,7 @@ void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<Serv
             extracting_values_from_server_block(tokenContainer, insideLoc, Serv, i);
         else if (tokenContainer[i].value == "{")
             keepCountOfBrase++;
-        else if (tokenContainer[i].value == "}" && keepCountOfBrase)
+        else if (tokenContainer[i].value == "}" && keepCountOfBrase) 
         {
             keepCountOfBrase--;
             if (keepCountOfBrase == 0)
