@@ -13,8 +13,8 @@ struct LocationBlock
     std::map<int, std::string> redirection;
     int client_max_body_size;
     std::string root;
-    std::set<std::string> index;
-    std::set<std::string> allow_methods;
+    std::deque<std::string> index;
+    std::deque<std::string> allow_methods;
     bool autoindex;
     std::map<std::string, std::string> cgi_handler;
     std::map<int, std::string> error_page;
