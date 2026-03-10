@@ -27,7 +27,7 @@ void handle_allow_methods(std::deque<Token>& tokenContainer, LocationBlock& loc,
     {
         if (tokenContainer[i].value == "GET" || tokenContainer[i].value == "POST"
             || tokenContainer[i].value == "DELETE")
-            loc.allow_methods.insert(tokenContainer[i].value);
+            loc.allow_methods.push_back(tokenContainer[i].value);
         else
             error_line(": only allowed methods are (GET, POST, DELETE)", tokenContainer[i].line);
         i++;
@@ -43,7 +43,7 @@ void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, int cou
 
     while(tokenContainer[i].value != ";")
     {
-        loc.index.insert(tokenContainer[i].value);
+        loc.index.push_back(tokenContainer[i].value);
         i++;
     }
 }
