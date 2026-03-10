@@ -25,7 +25,7 @@ std::string response_builder::index_file_iterator(const std::string &full_path)
     if (!full_path.empty() && full_path.at(full_path.length() -1) != '/')
         based_path += '/';
 
-    for (size_t i = 0; i < current_client->location_conf->index.size(); i++) {
+    for (size_t i = 0; i < current_client->location_conf->index.size(); i++){
         redirection_path = based_path + current_client->location_conf->index.at(i);
         if (access(redirection_path.c_str(), F_OK | R_OK) == 0)
             return (redirection_path);
@@ -38,22 +38,21 @@ void response_builder::build_response()
 {
     // std::cout << READ_S << "--------- Methode: " << current_client->req.getMethod() << READ_E << std::endl;
     // std::cout << READ_S << "--------- Path: " << current_client->req.getPath() << READ_E << std::endl;
-
-    
-    // exit(1); // TODO-FIX I have a SEGV here
-    // if (this->current_client->server_conf == NULL)
-    //     current_client->res.set_stat_code(BAD_REQUEST);
     
     std::cout << "[>] STATUS CODE " << current_client->res.get_stat_code() << std::endl;
     std::cout << "[>] getMethod " << current_client->req.getMethod() << std::endl;
-    // exit(0);
 
     if (this->current_client->res.get_stat_code() != OK)
         generate_error_page();  // DONE [-]
     else
     {
         path_validation();  // TOKNOW: auto-index gen
-        
+        if (this->current_client->res.get_stat_code() != OK) {
+            this->is_body_ready = true;
+            set_header();
+            default_error_page(this->current_client->res.get_stat_code());
+        }
+
         if (this->current_client->req.getMethod() == GET_METHODE)
             handle_get();   // DONE [-] working on it
 
