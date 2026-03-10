@@ -7,14 +7,17 @@
 # include "config_parsing/includes/ConfigPars.hpp"
 
 # define OK 200
+# define CREATED 201
 # define NO_CONTENT 204
 # define BAD_REQUEST 400
 # define FORBIDDEN_ACCESS 403
 # define NOT_FOUND 404
 # define METHOD_NOT_ALLOWED 405
 # define PAYLOAD_TOO_LARGE 413
+# define URI_TOO_LONG 414
+# define HEADER_TOO_LARGE 431
 # define SERVER_ERROR 500
-# define METHOD_NOT_IMPLEMENTED 501
+// # define METHOD_NOT_IMPLEMENTED 501
 # define VERSION_NOT_SUPP 505
 
 # define REQ_NOT_READY 0

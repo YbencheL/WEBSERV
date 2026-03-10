@@ -22,11 +22,6 @@
     </div>
 
     <!-- POST -->
-    <!-- <div class="box">
-        <h3>2. POST Test (Clean Upload)</h3>
-        <input type="file" id="myFileInput">
-        <button type="button" onclick="uploadFile()">Upload Raw</button>
-    </div> -->
 
     <!-- DELETE -->
     <div class="box">
@@ -36,13 +31,14 @@
         <p id="deleteStatus"></p>
     </div>
 
-
+    <!-- POST -->
     <div class="box">
         <h3>2. POST Test (Clean Raw Upload)</h3>
         <input type="file" id="fileInput">
         <button onclick="uploadRaw()">Upload</button>
     </div>
 
+    <!-- POST script -->
     <script>
         async function uploadRaw() {
             const input = document.getElementById('fileInput');
@@ -54,33 +50,13 @@
                 headers: {
                     'Content-Length': file.size,
                     'filename': file.name,
-                    'Content-Type': 'application/octet-stream'
+                    'Content-Type': file.type
                 },
                 body: file // This sends the RAW bytes
             });
             alert("Upload Attempted! Check your server logs.");
         }
     </script>
-
-    <!-- Scripte POST -->
-    <!-- <script>
-        async function uploadFile() {
-            const fileInput = document.getElementById('myFileInput');
-            const file = fileInput.files[0];
-            if (!file) return alert("Select a file first!");
-
-            // This sends the RAW file bytes. No boundaries!
-            await fetch('/upload', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/octet-stream',
-                    'X-Filename': file.name // Send the name in a custom header
-                },
-                body: file 
-            });
-            alert("Sent!");
-        }
-    </script> -->
 
     <!-- Scripte DELETE -->
     <script>

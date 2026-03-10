@@ -36,24 +36,35 @@ std::string response_builder::index_file_iterator(const std::string &full_path)
 // TODO-LATER: Methode not allowed
 void response_builder::build_response()
 {
-    std::cout << READ_S << "--------- Methode: " << current_client->req.getMethod() << READ_E << std::endl;
-    std::cout << READ_S << "--------- Path: " << current_client->req.getPath() << READ_E << std::endl;
+    // std::cout << READ_S << "--------- Methode: " << current_client->req.getMethod() << READ_E << std::endl;
+    // std::cout << READ_S << "--------- Path: " << current_client->req.getPath() << READ_E << std::endl;
 
-    path_validation();  // TOKNOW: auto-index gen
     
-    std::cout << "STATUS CODE " << current_client->res.get_stat_code() << std::endl;
+    // exit(1); // TODO-FIX I have a SEGV here
+    // if (this->current_client->server_conf == NULL)
+    //     current_client->res.set_stat_code(BAD_REQUEST);
+    
+    std::cout << "[>] STATUS CODE " << current_client->res.get_stat_code() << std::endl;
+    std::cout << "[>] getMethod " << current_client->req.getMethod() << std::endl;
+    // exit(0);
 
     if (this->current_client->res.get_stat_code() != OK)
         generate_error_page();  // DONE [-]
+    else
+    {
+        path_validation();  // TOKNOW: auto-index gen
+        
+        if (this->current_client->req.getMethod() == GET_METHODE)
+            handle_get();   // DONE [-] working on it
 
-    else if (this->current_client->req.getMethod() == GET_METHODE)
-        handle_get();   // DONE [-] working on it
+        else if (this->current_client->req.getMethod() == POST_METHODE)
+            handle_post();  // DONE [-] working on it
+        
+        else if (this->current_client->req.getMethod() == DELETE_METHODE)
+            handle_delete();    // DONE [+]
+    }
 
-    else if (this->current_client->req.getMethod() == POST_METHODE)
-        handle_post();  // DONE [-] working on it
-    
-    else if (this->current_client->req.getMethod() == DELETE_METHODE)
-        handle_delete();    // DONE [+]
+    std::cout << "[>] STATUS CODE " << current_client->res.get_stat_code() << std::endl;
 
     this->current_client->res.set_raw_response(response_holder);
     

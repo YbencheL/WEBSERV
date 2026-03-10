@@ -57,23 +57,25 @@ void    socket_engine::client_event(ssize_t fd, uint32_t events) // DONE []
             std::cout << READ_S << "--------- START REQUEST\n" << raw_data_buff << "\n------- END RAQUEST" << READ_E << std::endl;
 
             int req_stat = parseRequest(this->raw_client_data[fd], raw_data_buff);
-            // std::cout << "req_stat >>> " << req_stat << std::endl;
-            // exit(1);
-            if (req_stat == REQ_NOT_READY)  // request not ready
+            std::cout << "[>] parseRequest stat -> " << req_stat << std::endl;
+            if (req_stat == REQ_NOT_READY)
                 return ;
             
             this->raw_client_data[fd].res.set_stat_code(req_stat);
             
             // -------------------------------------------------------------------------------
             std::map<std::string, std::string> x = raw_client_data[fd].req.getHeaders();
-            
             for (std::map<std::string, std::string>::iterator it = x.begin(); it != x.end(); it++)
             {
                 std::cout << "key: " << it->first << " value: " << it->second << std::endl;
             }
+            // -------------------------------------------------------------------------------
+
             response_builder response_builder;
             response_builder.init_response_builder(raw_client_data[fd]);
+
             response_builder.build_response();
+            
             modify_epoll_event(fd, EPOLLOUT | EPOLLIN);
             // -------------------------------------------------------------------------------
         }

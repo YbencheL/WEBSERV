@@ -11,7 +11,8 @@ bool    					validate_headers(Client &current_client);
 const std::string           to_string(int digit);
 const std::string           file_to_string(const std::string& path);
 const std::string           &stat_code_to_string(unsigned short int stat_code);
-const std::string           resolved_path_extension(std::string path);
+const std::string           extension_to_media_type(std::string path);
+const std::string           media_type_to_extension(std::string _media_type);
 std::string                 get_time();
 bool                        is_valid_error_path(std::string path);
 std::string                 path_normalize(std::vector<std::string> path_holder);
@@ -20,5 +21,15 @@ std::vector<std::string>    host_splite(std::string Host);
 unsigned short int          valid_port_number(std::string port_num);
 void                        dir_path_correction(const std::string &full_dir_path, std::string &d_path);
 void                        normalisePath(std::string &path, std::string target, std::string rep, size_t size);
+std::string                 extracting_from_header(const std::map<std::string, std::string> &header, std::string target);
+std::string                 rand_str_gen();
+std::string                 join_root_path(const std::string root, std::string path);
+bool                        is_dir_exist(const std::string &path);
 
 # endif
+
+// SEGV
+// (echo -e "POST /upload HTTP/1.1\r\n\r\n") | nc 10.11.11.6 8080
+// (echo -e "POST /upload HTTP/1.1\r\nHost: localhost\r\nContent-Length: 10\r\n\r\n"; sleep 0; echo "1234567890") | nc 10.11.11.6 8080
+// (echo -e "POST /upload HTTP/1.1\r\nHost: 10.11.11.6\r\nContent-Length: 10\r\n\r\n"; sleep 0; echo "1234567890") | nc 10.11.11.6 8080
+// (echo -e "POST /upload HTTP/1.1\r\nHost: 10.11.11.6:8080\r\nContent-Length: 10\r\n\r\n"; sleep 0; echo "1234567890") | nc 10.11.11.6 8080

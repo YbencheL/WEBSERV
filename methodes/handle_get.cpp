@@ -11,7 +11,7 @@ void    response_builder::set_header(void)
     if (is_body_ready || is_error_page)     // TODO-CHECK: CGI later check
         response_holder.append("Content-Type: text/html\r\n");  // just in case of autoindex //
     else
-        response_holder.append("Content-Type: " + resolved_path_extension(this->path) + "\r\n");
+        response_holder.append("Content-Type: " + extension_to_media_type(this->path) + "\r\n");
 }
 
 void    response_builder::set_body(void)

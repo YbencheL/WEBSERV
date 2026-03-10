@@ -49,17 +49,6 @@ void socket_engine::init_server_side(std::string port, std::string host)
         throw std::runtime_error(error_msg);
     }
 
-    // file control(fcntl) fix the defult socket (Blocking) and make it NON_Blocking
-    // if (fcntl(serv_socketFD, F_SETFL, O_NONBLOCK) < 0)
-    // {
-    //     freeaddrinfo(result);
-    //     close(serv_socketFD);
-
-    //     std::string errno_msg = std::strerror(errno);
-    //     std::string error_msg = "[-] Error: 'fcntl' failed: " + errno_msg;
-    //     throw std::runtime_error(error_msg);
-    // }
-
     // socket binding (IP ADDRESS, ) ..  | STOP HERE
     if (bind(serv_socketFD, result->ai_addr, result->ai_addrlen) < 0)
     {
