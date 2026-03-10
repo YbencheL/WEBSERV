@@ -22,7 +22,8 @@ LocationBlock* loc)
     else if (value == "}" && InsideLocationBlock)
     {
         keepCountOfBrase--;
-        locations.push_back(*loc);
+        if(loc)
+            locations.push_back(*loc);
         InsideLocationBlock = false;
         return false;
     }
@@ -42,7 +43,6 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
     bool InsideLocationBlock = false;
     ssize_t keepCountOfBrase = 0;
     int countARG = 0;
-    ssize_t pos = 0;
     std::map<std::string, void(*)(std::deque<Token>&, LocationBlock&,
         int, ssize_t&, std::string&)> handler_map;
 
@@ -63,9 +63,6 @@ void extracting_location_blocks(std::deque<Token>& tokenContainer , ServerBlock&
                     break;
                 else if (tokenContainer[i].type == 1 && loc.path.empty())
                     loc.path = tokenContainer[i].value;
-                else if ((i + 1) < (ssize_t)tokenContainer.size() && (pos = tokenContainer[i].value.find_first_of("/")) != 0
-                    && tokenContainer[i + 1].value == "{")
-                    error_line(": paths must start with /", tokenContainer[i].line);
                 else if (handler_map.find(tokenContainer[i].value) != handler_map.end())
                     handler_map[tokenContainer[i].value](tokenContainer, loc, countARG, i, tokenContainer[i].value);
                 i++;
