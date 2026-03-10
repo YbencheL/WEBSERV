@@ -48,14 +48,16 @@ void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<Serv
             extracting_values_from_server_block(tokenContainer, insideLoc, Serv, i);
         else if (tokenContainer[i].value == "{")
             keepCountOfBrase++;
-        else if (tokenContainer[i].value == "}" && keepCountOfBrase) 
+        else if (tokenContainer[i].value == "}") 
         {
             keepCountOfBrase--;
             if (keepCountOfBrase == 0)
             {
                 ServerConfigs.push_back(Serv);
                 Serv = ServerBlock();
-            }else
+            }else if (keepCountOfBrase < 0)
+                error_line(": check brackets!", tokenContainer[i].line);
+            else
                 insideLoc = false;
         }
     }
