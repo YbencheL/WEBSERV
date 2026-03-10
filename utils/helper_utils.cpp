@@ -42,15 +42,18 @@ const std::string   &stat_code_to_string(unsigned short int stat_code)
 {
     static std::map<int, std::string> stat_code_str;
     if (stat_code_str.empty()) {
-        stat_code_str[200] = "OK";
-        stat_code_str[201] = "Created";
-        stat_code_str[204] = "No Content";
-        stat_code_str[403] = "Forbidden";
-        stat_code_str[404] = "Not Found";
-        stat_code_str[405] = "Method Not Allowed";
-        stat_code_str[413] = "Payload Too Large";
-        stat_code_str[500] = "Internal Server Error";
-
+        stat_code_str[OK] = "OK";
+        stat_code_str[CREATED] = "Created";
+        stat_code_str[NO_CONTENT] = "No Content";
+        stat_code_str[BAD_REQUEST] = "Bad Request";
+        stat_code_str[FORBIDDEN_ACCESS] = "Forbidden";
+        stat_code_str[NOT_FOUND] = "Not Found";
+        stat_code_str[METHOD_NOT_ALLOWED] = "Method Not Allowed";
+        stat_code_str[PAYLOAD_TOO_LARGE] = "Payload Too Large";
+        stat_code_str[URI_TOO_LONG] = "URI Too Long";
+        stat_code_str[SERVER_ERROR] = "Internal Server Error";
+        stat_code_str[VERSION_NOT_SUPP] = "HTTP Version Not Supported";
+        stat_code_str[HEADER_TOO_LARGE] = "Request Header Fields Too Large";
         // TODO: bad request, ETC....
     }
     return (stat_code_str[stat_code]);
@@ -215,6 +218,11 @@ bool    validate_headers(Client &current_client)
     current_client.server_conf = NULL;
     current_client.location_conf = NULL;
 
+    if (it == header.end()) {
+        current_client.res.set_stat_code(BAD_REQUEST);
+        return (false);
+    }
+
     const unsigned long index = it->second.find(":");
     if (index != std::string::npos)
     {
@@ -229,7 +237,7 @@ bool    validate_headers(Client &current_client)
         if (!current_client.port)    // invalid port
             current_client.port = 0;
 
-        if (current_client.port != 0 && current_client.host != INADDR_NONE)
+        if (current_client.port != 0 && current_client.host != 0)
         {
             current_client.host_str_format = host;
             current_client.config_file_info.setServerForRequest(current_client.host,
@@ -246,9 +254,15 @@ bool    validate_headers(Client &current_client)
                 return (false);
             }
         }
+        else {
+            current_client.res.set_stat_code(BAD_REQUEST);
+            return (false);
+        }
     }
-    else
-        current_client.res.set_stat_code(NOT_FOUND);
+    else {
+        current_client.res.set_stat_code(BAD_REQUEST);
+        return (false);
+    }
     return (true);
 }
 

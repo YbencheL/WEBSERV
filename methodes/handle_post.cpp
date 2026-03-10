@@ -24,19 +24,18 @@ void    response_builder::handle_post()
     
     std::string file_path;
     file_path = join_root_path(this->current_client->location_conf->root, this->current_client->req.getPath());
-    
-    std::cout << "file_path: " << file_path << std::endl;
-
     if (!is_dir_exist(file_path)) {
         this->current_client->res.set_stat_code(NOT_FOUND);
         return ;
     }
-    file_path = join_root_path(file_path, file_name);
     if (access(file_path.c_str(), X_OK | W_OK) < 0) {
         this->current_client->res.set_stat_code(FORBIDDEN_ACCESS);
         return ;
     }
 
+    file_path = join_root_path(file_path, file_name);
+    
+    // TODO-CHECK LATER ON
     int fd = open(file_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd < 0) {
         this->current_client->res.set_stat_code(SERVER_ERROR);
@@ -45,6 +44,8 @@ void    response_builder::handle_post()
 
     // >>>>>>>>>>>>>>>>>>>>>>>>> Body Processing >>>>>>>>>>>>>>>>>>>>>>>>>
     this->current_client->req.getBody();
-    
+
+    std::cout << "[>] POST STATUS CODE " << current_client->res.get_stat_code() << std::endl;
+    std::cout << "THERE'S NO RESPONSE YET FOR THE POST :(" << std::endl;
 
 }

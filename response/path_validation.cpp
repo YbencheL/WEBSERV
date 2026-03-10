@@ -43,8 +43,14 @@ void    response_builder::path_validation()
     std::string index;
     struct stat statbuf;
 
-    this->path = join_root_path(current_client->location_conf->root, this->current_client->req.getPath());
+    // ----------------------------------------
+    // if (current_client->server_conf == NULL)
+    //     exit(100);
+    // if (current_client->location_conf == NULL)
+    //     exit(200);
+    // ----------------------------------------
 
+    this->path = join_root_path(current_client->location_conf->root, this->current_client->req.getPath());
     if (stat(path.c_str(), &statbuf) < 0) {
         this->current_client->res.set_stat_code(NOT_FOUND);
         return ;
