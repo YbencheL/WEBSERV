@@ -5,6 +5,7 @@
 #include <iostream>
 #include <deque>
 #include <map>
+#include <set>
 
 struct ServerBlock
 {

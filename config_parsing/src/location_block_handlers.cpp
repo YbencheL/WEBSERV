@@ -21,21 +21,13 @@ void handle_allow_methods(std::deque<Token>& tokenContainer, LocationBlock& loc,
 {
     (void)countARG;
     (void)keyword;
-    std::vector<std::string> non_duplicated_keyword;
-    non_duplicated_keyword.push_back("GET");
-    non_duplicated_keyword.push_back("POST");
-    non_duplicated_keyword.push_back("DELETE");
 
     i++;
     while(tokenContainer[i].value != ";")
     {
         if (tokenContainer[i].value == "GET" || tokenContainer[i].value == "POST"
             || tokenContainer[i].value == "DELETE")
-        {
-        for(size_t i = 0; i < non_duplicated_keyword.size(); i++)
-            duplicate_check(loc.allow_methods, non_duplicated_keyword[i]);
-                loc.allow_methods.push_back(tokenContainer[i].value);
-        }
+            loc.allow_methods.push_back(tokenContainer[i].value);
         else
             error_line(": only allowed methods are (GET, POST, DELETE)", tokenContainer[i].line);
         i++;
@@ -56,13 +48,26 @@ void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, int cou
     }
 }
 
+void handle_location_block_root(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
+    std::string& keyword)
+{
+    (void)countARG;
+    (void)keyword;
+    i++;
+
+    if (tokenContainer[i].value != ";")
+        loc.root = tokenContainer[i].value;
+    else
+        error_line(": root value is missing", tokenContainer[i].line);
+}
+
 // work on it
 void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
     std::string& keyword)
 {
     countARG = 0;
-    std::deque<int> errorsnum;
     std::string value;
+    std::deque<int> errorsnum;
     int errornum = 0;
     int num = 0;
 
@@ -81,30 +86,35 @@ void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, 
         }
         else
         {
-            num = errornum;
             if ((errornum >= 100 && errornum < 600))
-                errorsnum.push_back(errornum);
+            {
+                num = errornum;
+                errorsnum.push_back(num);
+            }
             else
                 error_line(": directive number must be a valid http number", tokenContainer[i].line);
         }
         i++;
     }
-    if (errorsnum.empty())
-        error_line(": directive is missing a error number", tokenContainer[i].line);
+    if (keyword == "return")
+    {
+        // for (std::set<int>::iterator it = errorsnum.begin();
+        //     it != errorsnum.end(); ++it)
+        // {
+        //     int code = *it;
+            // loc.redirection[code] = value;
+            loc.redirection.insert(std::make_pair(errorsnum, value));
+        // }
+    }
     else
     {
-        if (keyword == "return")
-        {
-            if (errorsnum.size() > 1)
-                error_line(": more then one status code in return", tokenContainer[i].line);
-            loc.redirection.insert(std::make_pair(errorsnum, value));
-        }else
-        {
-            countARG = std::count(errorsnum.begin(), errorsnum.end(), num);
-            if (countARG > 1)
-                error_line(": duplicate status code in error_page", tokenContainer[i].line);
+        // for (std::set<int>::iterator it = errorsnum.begin();
+        //     it != errorsnum.end(); ++it)
+        // {
+        //     int code = *it;
+            // loc.error_page[code] = value;
             loc.error_page.insert(std::make_pair(errorsnum, value));
-        }
+        // }
     }
 }
 

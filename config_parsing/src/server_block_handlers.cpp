@@ -119,6 +119,7 @@ bool& insideLoc)
     int errornum = 0;
     int num = errornum;
     i++;
+
     while(tokenContainer[i].value != ";")
     {
         errornum = 0;
@@ -133,22 +134,26 @@ bool& insideLoc)
         }
         else
         {
-            num = errornum;
             if ((errornum >= 100 && errornum < 600))
-                errorsnum.push_back(errornum);
+            {
+                num = errornum;
+                errorsnum.push_back(num);
+            }
             else
                 error_line(": error page number must be a valid http number", tokenContainer[i].line);
         }
         i++;
     }
-    if (errorsnum.empty())
-        error_line(": error_page is missing a page error number", tokenContainer[i].line);
-    else
-    {
-        countARG = std::count(errorsnum.begin(), errorsnum.end(), num);
-        if (countARG > 1)
-            error_line(": duplicate status code in error_page", tokenContainer[i].line);
-    }
     if (!insideLoc)
+    {
+        if (value.empty())
+            error_line(": there must be a path for error_page", tokenContainer[i].line);
         Serv.error_page.insert(std::make_pair(errorsnum, value));
+        // for (std::set<int>::iterator it = errorsnum.begin();
+        //         it != errorsnum.end(); ++it)
+        // {
+        //     int code = *it;
+        //     // Serv.error_page[code] = value;
+        // }
+    }
 }

@@ -3,6 +3,7 @@
 
 #include "ConfigPars.hpp"
 #include <map>
+#include <set>
 
 struct ServerBlock;
 
@@ -29,6 +30,8 @@ std::string& keyword);
 void handle_cgi(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
 std::string& keyword);
 void handle_autoindex(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
+std::string& keyword);
+void handle_location_block_root(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
 std::string& keyword);
 void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& serverConfigs);
 void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,

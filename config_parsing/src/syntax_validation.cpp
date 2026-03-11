@@ -42,9 +42,7 @@ void symbol_validation(std::deque<Token>& tokenContainer, ssize_t& ServerBlockCo
         LocationBlockCount = 0;
     }else if (tokenContainer[i].value == ";")
     {
-        if ((i - 2) >= 0 && tokenContainer[i - 2].value == ";")
-            error_line(": syntax error related to ;", tokenContainer[i].line);
-        else if (tokenContainer[i + 1].type == 1)
+        if (tokenContainer[i + 1].type == 1)
             error_line(": unkown keyword", tokenContainer[i + 1].line);
     }
 }
