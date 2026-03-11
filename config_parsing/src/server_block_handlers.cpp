@@ -104,7 +104,7 @@ bool& insideLoc)
     {
         while(tokenContainer[i].value != ";")
         {
-            Serv.index.push_back(tokenContainer[i].value);
+            Serv.index.insert(tokenContainer[i].value);
             i++;
         }
     }
@@ -114,7 +114,7 @@ void handle_error_page_server(std::deque<Token>& tokenContainer, ServerBlock& Se
 bool& insideLoc)
 {
     (void)countARG;
-    std::deque<int> errorsnum;
+    std::set<int> errorsnum;
     std::string value;
     int errornum = 0;
     int num = errornum;
@@ -137,7 +137,7 @@ bool& insideLoc)
             if ((errornum >= 100 && errornum < 600))
             {
                 num = errornum;
-                errorsnum.push_back(num);
+                errorsnum.insert(num);
             }
             else
                 error_line(": error page number must be a valid http number", tokenContainer[i].line);
@@ -148,12 +148,11 @@ bool& insideLoc)
     {
         if (value.empty())
             error_line(": there must be a path for error_page", tokenContainer[i].line);
-        Serv.error_page.insert(std::make_pair(errorsnum, value));
-        // for (std::set<int>::iterator it = errorsnum.begin();
-        //         it != errorsnum.end(); ++it)
-        // {
-        //     int code = *it;
-        //     // Serv.error_page[code] = value;
-        // }
+        for (std::set<int>::iterator it = errorsnum.begin();
+                it != errorsnum.end(); ++it)
+        {
+            int code = *it;
+            Serv.error_page[code] = value;
+        } 
     }
 }

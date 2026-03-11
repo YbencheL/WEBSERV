@@ -27,7 +27,7 @@ void handle_allow_methods(std::deque<Token>& tokenContainer, LocationBlock& loc,
     {
         if (tokenContainer[i].value == "GET" || tokenContainer[i].value == "POST"
             || tokenContainer[i].value == "DELETE")
-            loc.allow_methods.push_back(tokenContainer[i].value);
+            loc.allow_methods.insert(tokenContainer[i].value);
         else
             error_line(": only allowed methods are (GET, POST, DELETE)", tokenContainer[i].line);
         i++;
@@ -43,7 +43,7 @@ void handle_index(std::deque<Token>& tokenContainer, LocationBlock& loc, int cou
 
     while(tokenContainer[i].value != ";")
     {
-        loc.index.push_back(tokenContainer[i].value);
+        loc.index.insert(tokenContainer[i].value);
         i++;
     }
 }
@@ -67,7 +67,7 @@ void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, 
 {
     countARG = 0;
     std::string value;
-    std::deque<int> errorsnum;
+    std::set<int> errorsnum;
     int errornum = 0;
     int num = 0;
 
@@ -89,7 +89,7 @@ void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, 
             if ((errornum >= 100 && errornum < 600))
             {
                 num = errornum;
-                errorsnum.push_back(num);
+                errorsnum.insert(num);
             }
             else
                 error_line(": directive number must be a valid http number", tokenContainer[i].line);
@@ -98,23 +98,21 @@ void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, 
     }
     if (keyword == "return")
     {
-        // for (std::set<int>::iterator it = errorsnum.begin();
-        //     it != errorsnum.end(); ++it)
-        // {
-        //     int code = *it;
-            // loc.redirection[code] = value;
-            loc.redirection.insert(std::make_pair(errorsnum, value));
-        // }
+        for (std::set<int>::iterator it = errorsnum.begin();
+            it != errorsnum.end(); ++it)
+        {
+            int code = *it;
+            loc.redirection[code] = value;
+        }
     }
     else
     {
-        // for (std::set<int>::iterator it = errorsnum.begin();
-        //     it != errorsnum.end(); ++it)
-        // {
-        //     int code = *it;
-            // loc.error_page[code] = value;
-            loc.error_page.insert(std::make_pair(errorsnum, value));
-        // }
+        for (std::set<int>::iterator it = errorsnum.begin();
+            it != errorsnum.end(); ++it)
+        {
+            int code = *it;
+            loc.error_page[code] = value;
+        }
     }
 }
 
