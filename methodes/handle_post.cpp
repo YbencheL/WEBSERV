@@ -1,7 +1,10 @@
 # include "../response_builder.hpp"
 # include "../utils/utils.hpp"
 #include <fcntl.h>
-// unsigned short int validate_upload_path(const std::string &path)
+
+// unsigned short int validate_upload_path(const std::string &path) {
+
+// }
 
 void    response_builder::handle_post()
 {
@@ -36,16 +39,24 @@ void    response_builder::handle_post()
     file_path = join_root_path(file_path, file_name);
     
     // TODO-CHECK LATER ON
-    int fd = open(file_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (fd < 0) {
+    int file_fd = open(file_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (file_fd < 0) {
         this->current_client->res.set_stat_code(SERVER_ERROR);
         return ;
     }
 
     // >>>>>>>>>>>>>>>>>>>>>>>>> Body Processing >>>>>>>>>>>>>>>>>>>>>>>>>
-    this->current_client->req.getBody();
+    const std::string &body_buff = this->current_client->req.getBody();
+    int short write_stat = write(file_fd, body_buff.c_str(), body_buff.size());
+    if (write_stat < 0) {
+        close (file_fd);
+        unlink(file_name.c_str());
+        this->current_client->res.set_stat_code(SERVER_ERROR);
+        return ;
+    }
+    close (file_fd);
+    this->current_client->res.set_stat_code(CREATED);
 
     std::cout << "[>] POST STATUS CODE " << current_client->res.get_stat_code() << std::endl;
-    std::cout << "THERE'S NO RESPONSE YET FOR THE POST :(" << std::endl;
 
 }
