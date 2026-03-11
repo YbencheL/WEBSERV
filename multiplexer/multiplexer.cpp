@@ -42,7 +42,6 @@ void    socket_engine::client_event(ssize_t fd, uint32_t events) // DONE []
     }
     if (events & EPOLLIN)   // READY TO READ
     {
-        
         char raw_data[BUFFER_SIZE];
         std::memset(raw_data, 0, sizeof(raw_data));
 
@@ -53,53 +52,121 @@ void    socket_engine::client_event(ssize_t fd, uint32_t events) // DONE []
             std::string raw_data_buff(raw_data, recv_stat);
 
 
-            std::cout << READ_S << "--------- recv_stat >>>> " << recv_stat << READ_E << std::endl;
             std::cout << READ_S << "--------- START REQUEST\n" << raw_data_buff << "\n------- END RAQUEST" << READ_E << std::endl;
 
             int req_stat = parseRequest(this->raw_client_data[fd], raw_data_buff);
-            std::cout << "[>] parseRequest stat -> " << req_stat << std::endl;
             if (req_stat == REQ_NOT_READY)
                 return ;
-            
+
             this->raw_client_data[fd].res.set_stat_code(req_stat);
-            
-            // -------------------------------------------------------------------------------
-            std::map<std::string, std::string> x = raw_client_data[fd].req.getHeaders();
-            for (std::map<std::string, std::string>::iterator it = x.begin(); it != x.end(); it++)
-            {
-                std::cout << "key: " << it->first << " value: " << it->second << std::endl;
-            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             // -------------------------------------------------------------------------------
 
             response_builder response_builder;
+
             response_builder.init_response_builder(raw_client_data[fd]);
 
             response_builder.build_response();
             
             modify_epoll_event(fd, EPOLLOUT | EPOLLIN);
+
             // -------------------------------------------------------------------------------
+
+
         }
         else if (recv_stat == 0)
             terminate_client(fd, "[!] Client lost connection (EOF)");
         else
             terminate_client(fd, "[!] Client connection broke");
     }
-    if (events & EPOLLOUT)
-    {  
-        std::string buffer_knowon = raw_client_data[fd].res.get_raw_response();
-        if (!buffer_knowon.empty())
-        {
-            ssize_t send_stat = send(fd, buffer_knowon.c_str(), buffer_knowon.size(), 0);
-            if (send_stat > 0)
-                buffer_knowon.erase(buffer_knowon.begin(), buffer_knowon.begin() + send_stat);
-            else if (send_stat == -1)
-                return ;
-        }
 
-        if (buffer_knowon.empty())
+
+
+
+    if (events & EPOLLOUT)
+    {
+        if (raw_client_data[fd].is_serving_file)
+        {
+            exit(123);
+        }
+        else {
+            std::string buffer_knowon = raw_client_data[fd].res.get_raw_response();
+            if (!buffer_knowon.empty())
+            {
+                ssize_t send_stat = send(fd, buffer_knowon.c_str(), buffer_knowon.size(), 0);
+                if (send_stat > 0)
+                    buffer_knowon.erase(buffer_knowon.begin(), buffer_knowon.begin() + send_stat);
+                else if (send_stat == -1)
+                    return ;
+            }
+            
+            if (buffer_knowon.empty())
             raw_client_data[fd].close_connection = true;
+        }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void    socket_engine::process_connections(void)
 {

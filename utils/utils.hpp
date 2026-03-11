@@ -33,3 +33,5 @@ bool                        is_dir_exist(const std::string &path);
 // (echo -e "POST /upload HTTP/1.1\r\nHost: localhost\r\nContent-Length: 10\r\n\r\n"; sleep 0; echo "1234567890") | nc 10.11.11.6 8080
 // (echo -e "POST /upload HTTP/1.1\r\nHost: 10.11.11.6\r\nContent-Length: 10\r\n\r\n"; sleep 0; echo "1234567890") | nc 10.11.11.6 8080
 // (echo -e "POST /upload HTTP/1.1\r\nHost: 10.11.11.6:8080\r\nContent-Length: 10\r\n\r\n"; sleep 0; echo "1234567890") | nc 10.11.11.6 8080
+
+// off_t file_size -> based on content-length
