@@ -46,9 +46,9 @@ struct Client
     // serving static file
     // -----------------------------
     bool            is_serving_file;
-    int             static_file_fd;
-    off_t           file_size;
-    off_t           bytes_sent;
+    // int             static_file_fd;
+    // off_t           file_size;
+    // off_t           bytes_sent;
     // -----------------------------
 
     unsigned int    last_activity;

@@ -9,6 +9,9 @@ response::response() {
     this->is_body_ready = false;
     this->path = "";
 
+    this->static_file_fd = 0;
+    this->file_size = 0;
+    this->bytes_sent = 0;
 };
 
 void    response::set_stat_code(unsigned short int stat_code) {
@@ -20,12 +23,26 @@ void    response::set_path(std::string path) {
 }
 
 void    response::set_raw_response(std::string raw_res) {
-    this->raw_response = raw_res;
+    this->final_raw_response = raw_res;
 }
 
 unsigned short int response::get_stat_code(void) const {
     return (this->stat_code);
 }
+
+void    response::set_static_file_fd(int fd) {
+    this->static_file_fd = fd;
+}
+
+void    response::set_file_size(off_t file_size) {
+    this->file_size = file_size;
+}
+
+void    response::set_bytes_sent(off_t bytes_sent) {
+    this->bytes_sent = bytes_sent;
+}
+
+// -------------------------------------------------------------------
 
 ssize_t   response::get_content_length(void) const {
     return (this->content_length);
@@ -36,7 +53,7 @@ std::string response::get_path(void) const {
 }
 
 std::string response::get_raw_response(void) {
-    return (this->raw_response);
+    return (this->final_raw_response);
 }
 
 
@@ -50,4 +67,16 @@ std::string response::get_start_line()const
     start_line_gen.append(stat_code_to_string(stat_code) + "\r\n");
 
     return (start_line_gen);
+}
+
+int response::get_static_file_fd(void) const {
+    return (this->static_file_fd);
+}
+
+
+off_t response::get_file_size(void) const {
+    return (this->file_size);
+}
+off_t response::get_bytes_sent(void) const {
+    return (this->bytes_sent);
 }

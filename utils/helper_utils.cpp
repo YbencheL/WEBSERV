@@ -14,12 +14,6 @@
 # define MIN_VALID_PORT 1024
 # define MAX_VALID_PORT 65535
 
-const std::string   to_string(int digit)
-{
-    std::stringstream str;
-    str << digit;
-    return (str.str());
-}
 
 // --------------------------------------------------------------------------------------------
 

@@ -1,6 +1,5 @@
 # include "../response_builder.hpp"
 # include "../utils/utils.hpp"
-#include <fcntl.h>
 
 // unsigned short int validate_upload_path(const std::string &path) {
 

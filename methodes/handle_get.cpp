@@ -22,33 +22,27 @@ void    response_builder::set_body(void)
         if yes execute that file, it's resoute will be in the body
     */
 
-
+    std::cout << "this->path -> " << this->path << std::endl;
     if (!is_body_ready)
-        this->body = file_to_string(this->path);
-
-    response_holder.append("Content-Length: " + to_string(this->body.size()) + "\r\n\r\n");
-    response_holder.append(this->body);
+        serving_static_file(this->path);
+    else {
+        response_holder.append("Content-Length: " + to_string(this->body_buff.size()) + "\r\n\r\n");
+        response_holder.append(this->body_buff);
+    }
 }
 
 void    response_builder::generate_error_page()
 {
-    std::string res_path;
-
     this->is_error_page = true;
     unsigned short int status_code = this->current_client->res.get_stat_code();
     
     if (this->current_client->server_conf)
-        std::string res_path = get_stat_code_path(status_code);
+        this->path = get_stat_code_path(status_code);
     
-    if (is_valid_error_path(res_path))
-    {
-        current_client->is_serving_file = true;
-        this->path = res_path;
-        set_header();
-        set_body();
-    }
-    else
-    {
+    std::cout << "this->path -> " << this->path << std::endl;
+    if (is_valid_error_path(this->path))
+        serving_static_file(this->path);
+    else {
         set_header();
         default_error_page(status_code);
     }

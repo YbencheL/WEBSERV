@@ -24,8 +24,10 @@ class response_builder
         Client                  *current_client;
         std::string             response_holder;
         std::string             path;
-        std::string             header;
-        std::string             body;
+
+        std::string             header_buff;
+        std::string             body_buff;
+        
         bool                    is_body_ready;
         bool                    is_error_page;
         
@@ -44,6 +46,8 @@ class response_builder
         void            handle_get();
         void            handle_post();
         void            handle_delete();
+
+        void            serving_static_file(std::string path);
         
     public:
         response_builder();
