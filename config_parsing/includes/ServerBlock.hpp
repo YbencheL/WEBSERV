@@ -5,6 +5,7 @@
 #include <iostream>
 #include <deque>
 #include <map>
+#include <set>
 
 struct ServerBlock
 {
@@ -14,8 +15,8 @@ struct ServerBlock
     std::string host;
     std::string server_name;
     size_t client_max_body_size;
-    std::deque<std::string> index;
-    std::map<std::deque<int>, std::string> error_page;
+    std::set<std::string> index;
+    std::map<int, std::string> error_page;
     std::deque<LocationBlock> locations;
 };
 

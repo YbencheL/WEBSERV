@@ -3,20 +3,21 @@
 
 #include "ConfigPars.hpp"
 #include <map>
+#include <set>
 
 struct ServerBlock;
 
 struct LocationBlock
 {
     std::string path;
-    std::map<std::deque<int>, std::string> redirection;
+    std::map<int, std::string> redirection;
     int client_max_body_size;
     std::string root;
-    std::deque<std::string> index;
-    std::deque<std::string> allow_methods;
+    std::set<std::string> index;
+    std::set<std::string> allow_methods;
     bool autoindex;
     std::map<std::string, std::string> cgi_handler;
-    std::map<std::deque<int>, std::string> error_page;
+    std::map<int, std::string> error_page;
 };
 
 // location block helpers
@@ -29,6 +30,8 @@ std::string& keyword);
 void handle_cgi(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
 std::string& keyword);
 void handle_autoindex(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
+std::string& keyword);
+void handle_location_block_root(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
 std::string& keyword);
 void extracting_blocks_plus_final_checks(std::deque<Token>& tokenContainer, std::deque<ServerBlock>& serverConfigs);
 void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,

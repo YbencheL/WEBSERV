@@ -22,13 +22,6 @@
     </div>
 
     <!-- POST -->
-    <div class="box">
-        <h3>2. POST Test (File Upload)</h3>
-        <form action="/upload" method="POST">
-            <input type="file" name="fileToUpload">
-            <button type="submit">Upload File</button>
-        </form>
-    </div>
 
     <!-- DELETE -->
     <div class="box">
@@ -38,6 +31,34 @@
         <p id="deleteStatus"></p>
     </div>
 
+    <!-- POST -->
+    <div class="box">
+        <h3>2. POST Test (Clean Raw Upload)</h3>
+        <input type="file" id="fileInput">
+        <button onclick="uploadRaw()">Upload</button>
+    </div>
+
+    <!-- POST script -->
+    <script>
+        async function uploadRaw() {
+            const input = document.getElementById('fileInput');
+            if (!input.files[0]) return alert("Select a file!");
+            
+            const file = input.files[0];
+            await fetch('/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Length': file.size,
+                    'filename': file.name,
+                    'Content-Type': file.type
+                },
+                body: file // This sends the RAW bytes
+            });
+            alert("Upload Attempted! Check your server logs.");
+        }
+    </script>
+
+    <!-- Scripte DELETE -->
     <script>
         async function sendDelete() {
             const res = await fetch('delete_me.txt', { method: 'DELETE' });
@@ -49,6 +70,7 @@
             }
         }
     </script>
-    
+
 </body>
 </html>
+

@@ -77,9 +77,9 @@ void checking_values(ServerBlock& Serv)
         // if allow method directive is empty its gonna have these three
         if (Serv.locations[i].allow_methods.empty())
         {
-            Serv.locations[i].allow_methods.push_back("GET");
-            Serv.locations[i].allow_methods.push_back("POST");
-            Serv.locations[i].allow_methods.push_back("DELETE");
+            Serv.locations[i].allow_methods.insert("GET");
+            Serv.locations[i].allow_methods.insert("POST");
+            Serv.locations[i].allow_methods.insert("DELETE");
         }
     }
 }
