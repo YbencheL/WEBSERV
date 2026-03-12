@@ -2,6 +2,7 @@
 #define CGI_HPP
 
 #include "../client.hpp"
+#include <wait.h>
 
 class Cgi
 {
@@ -10,6 +11,8 @@ class Cgi
     std::string extension;
     char      **envp;
     char      **argv;
+    int         pipeIn[2];
+    int         pipeOut[2];
 
   public:
     Cgi();
@@ -28,6 +31,9 @@ class Cgi
     bool checkForCgi(Client &client);
     void buildEnv(Client &client);
     void buildArg(Client &client);
+    bool creatPipes();
+    void childProccess();
+    void parantProccess(Client &client);
 };
 
 #endif

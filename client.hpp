@@ -20,6 +20,16 @@
 class Request;
 struct reqParse;
 
+enum cgiState
+{
+    CHECKING,
+    SETUP_CGI,
+    CREAT_PIPES,
+    EXECUTING,
+    CGI_READING,
+    CGI_DONE,
+    ERROR
+};
 
 // MAIN
 // will add every thing need between [req/res] 
@@ -43,12 +53,15 @@ struct Client
     response res;
     bool    reqReady;
 
+    // cgi
+
+    cgiState state;
     // serving static file
     // -----------------------------
     bool            is_serving_file;
-    // int             static_file_fd;
-    // off_t           file_size;
-    // off_t           bytes_sent;
+    int             static_file_fd;
+    off_t           file_size;
+    off_t           bytes_sent;
     // -----------------------------
 
     unsigned int    last_activity;

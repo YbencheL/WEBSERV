@@ -135,3 +135,44 @@ void Cgi::buildArg(Client &client)
     argv[1] = strdup(client.req.getPath().c_str());
     argv[2] = NULL;
 }
+
+bool Cgi::creatPipes()
+{
+    if (pipe(pipeIn))
+    {
+        std::cerr << "PIPE ERROR" << std::endl;
+        return false;
+    }
+    if (pipe(pipeOut))
+    {
+        std::cerr << "PIPE ERROR" << std::endl;
+        close(pipeIn[1]);
+        close(pipeIn[0]);
+        return false;
+    }
+    return true;
+}
+
+void Cgi::childProccess()
+{
+    dup2(STDIN_FILENO, pipeIn[0]);
+    dup2(STDOUT_FILENO, pipeOut[1]);
+
+    close(pipeIn[1]);
+    close(pipeIn[0]);
+    close(pipeOut[0]);
+    close(pipeOut[1]);
+
+    execve(argv[0], argv, envp);
+    std::cerr << "execve failed: " << strerror(errno);
+    exit(1);
+}
+
+void Cgi::parantProccess(Client &client)
+{
+    close(pipeIn[0]);
+    close(pipeOut[1]);
+    if (client.parse.body)
+        write(pipeIn[1], client.req.getBody().c_str(), client.req.getBody().size());
+    close (pipeIn[1]);
+}

@@ -12,4 +12,6 @@ void inisializeClient(Client &client)
     client.parse.methods[0] = "GET";
     client.parse.methods[1] = "POST";
     client.parse.methods[2] = "DELETE";
+
+    client.state = CHECKING;
 }

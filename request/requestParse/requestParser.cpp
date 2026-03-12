@@ -29,10 +29,7 @@ int parseRequest(Client &client, std::string &recivedData)
             return HEADER_TOO_LARGE;
         size_t headerEnd = client.parse.remaining.find("\r\n\r\n");
         if (headerEnd == 0)
-        {
-            client.reqReady = true;
-            return OK;
-        }
+            return BAD_REQUEST;
         else if (headerEnd != std::string::npos)
         {
             std::string headers =
