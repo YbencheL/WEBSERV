@@ -98,12 +98,10 @@ void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, 
     }
     if (keyword == "return")
     {
-        for (std::set<int>::iterator it = errorsnum.begin();
-            it != errorsnum.end(); ++it)
-        {
-            int code = *it;
-            loc.redirection[code] = value;
-        }
+        if (errorsnum.size() == 1)
+            loc.redirection[num] = value;
+        else
+            error_line(": there must not be more then one status code in return", tokenContainer[i].line);
     }
     else
     {
