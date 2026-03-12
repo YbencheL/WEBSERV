@@ -27,13 +27,13 @@ int main()
     }
     if (client.state = EXECUTING)
     {
-        int pid = fork();
-        if (pid == -1)
+        cgiHandler.pid = fork();
+        if (cgiHandler.pid == -1)
         {
-            std::cerr << "FORK ERROR" << std::endl;
+            std::cerr << "FORK FAILED" << std::endl;
             client.state = ERROR;
         }
-        if (pid == 0)
+        if (cgiHandler.pid == 0)
             cgiHandler.childProccess();
         else
         {
@@ -41,7 +41,8 @@ int main()
             client.state = CGI_READING;
         }
     }
-    if (client.state = CGI_READING)
+    if (client.state == CGI_READING || client.state == CGI_WAITING)
     {
-        }
+
+    }
 }

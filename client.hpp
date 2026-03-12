@@ -27,6 +27,7 @@ enum cgiState
     CREAT_PIPES,
     EXECUTING,
     CGI_READING,
+    CGI_WAITING,
     CGI_DONE,
     ERROR
 };

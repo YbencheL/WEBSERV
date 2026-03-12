@@ -13,8 +13,12 @@ class Cgi
     char      **argv;
     int         pipeIn[2];
     int         pipeOut[2];
+    std::string response;
 
   public:
+    pid_t pid;
+    int   status;
+    
     Cgi();
     Cgi(const Cgi &other);
     Cgi &operator=(const Cgi &other);
@@ -34,6 +38,7 @@ class Cgi
     bool creatPipes();
     void childProccess();
     void parantProccess(Client &client);
+    void reading(Client &client);
 };
 
 #endif

@@ -140,12 +140,12 @@ bool Cgi::creatPipes()
 {
     if (pipe(pipeIn))
     {
-        std::cerr << "PIPE ERROR" << std::endl;
+        std::cerr << "PIPE FAILED" << std::endl;
         return false;
     }
     if (pipe(pipeOut))
     {
-        std::cerr << "PIPE ERROR" << std::endl;
+        std::cerr << "PIPE FAILED" << std::endl;
         close(pipeIn[1]);
         close(pipeIn[0]);
         return false;
@@ -164,7 +164,7 @@ void Cgi::childProccess()
     close(pipeOut[1]);
 
     execve(argv[0], argv, envp);
-    std::cerr << "execve failed: " << strerror(errno);
+    std::cerr << "EXECVE FAILED: " << strerror(errno);
     exit(1);
 }
 
@@ -173,6 +173,26 @@ void Cgi::parantProccess(Client &client)
     close(pipeIn[0]);
     close(pipeOut[1]);
     if (client.parse.body)
-        write(pipeIn[1], client.req.getBody().c_str(), client.req.getBody().size());
-    close (pipeIn[1]);
+        write(
+            pipeIn[1], client.req.getBody().c_str(), client.req.getBody().size()
+        );
+    close(pipeIn[1]);
+}
+
+void Cgi::reading(Client &client)
+{
+    if (client.state == CGI_READING)
+    {
+        char buff[1024];
+
+        int n = read(pipeOut[0], buff, 1024);
+        if (n > 0)
+            response.append(buff);
+        else if (n == 0)
+            client.state = CGI_WAITING;
+    }
+    pid_t wait = waitpid(pid, &status, WNOHANG);
+    if (wait == pid)
+        client.state = CGI_DONE;
+    //need now to add a check for cgi each time for timeout
 }
