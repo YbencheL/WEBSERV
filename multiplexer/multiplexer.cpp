@@ -60,29 +60,6 @@ void    socket_engine::client_event(ssize_t fd, uint32_t events) // DONE []
 
             this->raw_client_data[fd].res.set_stat_code(req_stat);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             // -------------------------------------------------------------------------------
 
             response_builder response_builder;
@@ -92,9 +69,9 @@ void    socket_engine::client_event(ssize_t fd, uint32_t events) // DONE []
             response_builder.build_response();
             
             modify_epoll_event(fd, EPOLLOUT | EPOLLIN);
+            // exit(1);
 
             // -------------------------------------------------------------------------------
-
 
         }
         else if (recv_stat == 0)
@@ -103,69 +80,76 @@ void    socket_engine::client_event(ssize_t fd, uint32_t events) // DONE []
             terminate_client(fd, "[!] Client connection broke");
     }
 
-
-
-
     if (events & EPOLLOUT)
     {
         if (raw_client_data[fd].is_serving_file)
         {
-            exit(123);
+            // exit(5);
+            std::cout << GREEN_S << "+++++++++++++++++++++++++++++++++ YOUR SERVING STATIC FILE +++++++++++++++++++++++++++++++++" << GREEN_E << std::endl;
+            off_t bytes_send = raw_client_data[fd].res.get_bytes_sent();
+            int file_fd = raw_client_data[fd].res.get_static_file_fd();
+            off_t file_total_size = raw_client_data[fd].res.get_file_size();
+            size_t header_size = raw_client_data[fd].res.get_raw_response().size();
+
+            if (bytes_send < (off_t)header_size) {
+                std::string buffer = raw_client_data[fd].res.get_raw_response();
+                // ssize_t send_stat = send(fd, buffer.c_str() + bytes_send, buffer.size() - bytes_send, 0);
+                ssize_t send_stat = send(fd, buffer.c_str() + bytes_send, buffer.size() - bytes_send, MSG_NOSIGNAL);
+                
+                if (send_stat == -1) return; 
+                
+                raw_client_data[fd].res.set_bytes_sent(bytes_send + send_stat);
+            }
+
+
+            else {
+                off_t file_offset = bytes_send - header_size;
+                
+                if (lseek(file_fd, file_offset, SEEK_SET) == (off_t)-1) {
+                    close(file_fd);
+                    raw_client_data[fd].close_connection = true;
+                    return;
+                }
+
+                char file_buffer[BUFFER_SIZE];
+                int readed = read(file_fd, file_buffer, BUFFER_SIZE);
+                
+                if (readed > 0) {
+                    // ssize_t bytes_actually_sent = send(fd, file_buffer, readed, 0);
+                    ssize_t bytes_actually_sent = send(fd, file_buffer, readed, MSG_NOSIGNAL);
+                    if (bytes_actually_sent > 0) {
+                        raw_client_data[fd].res.set_bytes_sent(bytes_send + bytes_actually_sent);
+                        
+                        if (off_t(bytes_send + bytes_actually_sent - header_size) >= file_total_size) {
+                            close(file_fd);
+                            raw_client_data[fd].close_connection = true;
+                        }
+                    }
+                    else if (bytes_actually_sent == -1)
+                        return ;
+                }
+                else if (readed == 0) {
+                    close(file_fd);
+                    raw_client_data[fd].close_connection = true;
+                }
+            }
         }
         else {
-            std::string buffer_knowon = raw_client_data[fd].res.get_raw_response();
-            if (!buffer_knowon.empty())
+            // exit(6);
+            std::string buffer = raw_client_data[fd].res.get_raw_response();
+            if (!buffer.empty())
             {
-                ssize_t send_stat = send(fd, buffer_knowon.c_str(), buffer_knowon.size(), 0);
-                if (send_stat > 0)
-                    buffer_knowon.erase(buffer_knowon.begin(), buffer_knowon.begin() + send_stat);
-                else if (send_stat == -1)
+                ssize_t send_stat = send(fd, buffer.c_str(), buffer.size(), MSG_NOSIGNAL);
+                if (send_stat == -1)
                     return ;
+                if ((ssize_t)buffer.size() == send_stat)
+                    raw_client_data[fd].close_connection = true;
             }
-            
-            if (buffer_knowon.empty())
-            raw_client_data[fd].close_connection = true;
+            if (buffer.empty())
+                    raw_client_data[fd].close_connection = true;
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 void    socket_engine::process_connections(void)

@@ -45,7 +45,7 @@ void    response_builder::default_error_page(unsigned short int stat_code)
     const std::string title = "Webserv: " + status_code + str_of_stat_code;
     const std::string style = get_error_page_style();
 
-    this->body = "<!DOCTYPE html>\n"
+    this->body_buff = "<!DOCTYPE html>\n"
         "<html lang=\"en\">\n"
         "<head>\n"
         "\t<meta charset=\"UTF-8\">\n"
@@ -66,8 +66,8 @@ void    response_builder::default_error_page(unsigned short int stat_code)
         "\t</div>\n"
         "</body>\n"
         "</html>";
-    this->response_holder.append("Content-Length: " + to_string(body.size()) + "\r\n\r\n");
-    this->response_holder.append(this->body);
+    this->response_holder.append("Content-Length: " + to_string(body_buff.size()) + "\r\n\r\n");
+    this->response_holder.append(this->body_buff);
     this->is_body_ready = true;
 }
 
@@ -77,7 +77,7 @@ void    response_builder::default_error_page(unsigned short int stat_code)
 void    response_builder::autoindex_gen(std::vector<std::string> &dir_list, const std::string &full_path, const std::string &request_uri)
 {
     std::string style = get_autoindex_page_style();
-    this->body = "<!DOCTYPE html>\n"
+    this->body_buff = "<!DOCTYPE html>\n"
         "<html lang=\"en\">\n"
         "<head>\n"
         "\t<meta charset=\"UTF-8\">\n"
@@ -90,7 +90,7 @@ void    response_builder::autoindex_gen(std::vector<std::string> &dir_list, cons
 
     std::cout << GREEN_S << "REQUEST PATH -> " << request_uri << GREEN_E << std::endl;
     if (request_uri != "/")
-        this->body.append("\t\t<a class=\"index_path\" href=\"../\">../</a><br>\n");
+        this->body_buff.append("\t\t<a class=\"index_path\" href=\"../\">../</a><br>\n");
 
     for (size_t i = 0; i < dir_list.size(); i++)
     {
@@ -109,9 +109,9 @@ void    response_builder::autoindex_gen(std::vector<std::string> &dir_list, cons
         full_dir_path = full_path + name;
         dir_path_correction(full_dir_path ,path);
 
-        this->body.append("\t\t<a href=\"" + path + "\">" + name + "</a><br>\n");
+        this->body_buff.append("\t\t<a href=\"" + path + "\">" + name + "</a><br>\n");
     }
-    this->body.append("\t\t<hr>\n\t</div>\n</body>\n</html>");
+    this->body_buff.append("\t\t<hr>\n\t</div>\n</body>\n</html>");
     this->is_body_ready = true;
 }
 
