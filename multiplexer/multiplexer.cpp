@@ -84,58 +84,11 @@ void    socket_engine::client_event(ssize_t fd, uint32_t events) // DONE []
     {
         if (raw_client_data[fd].is_serving_file)
         {
-            // exit(5);
             std::cout << GREEN_S << "+++++++++++++++++++++++++++++++++ YOUR SERVING STATIC FILE +++++++++++++++++++++++++++++++++" << GREEN_E << std::endl;
-            off_t bytes_send = raw_client_data[fd].res.get_bytes_sent();
-            int file_fd = raw_client_data[fd].res.get_static_file_fd();
-            off_t file_total_size = raw_client_data[fd].res.get_file_size();
-            size_t header_size = raw_client_data[fd].res.get_raw_response().size();
-
-            if (bytes_send < (off_t)header_size) {
-                std::string buffer = raw_client_data[fd].res.get_raw_response();
-                // ssize_t send_stat = send(fd, buffer.c_str() + bytes_send, buffer.size() - bytes_send, 0);
-                ssize_t send_stat = send(fd, buffer.c_str() + bytes_send, buffer.size() - bytes_send, MSG_NOSIGNAL);
-                
-                if (send_stat == -1) return; 
-                
-                raw_client_data[fd].res.set_bytes_sent(bytes_send + send_stat);
-            }
-
-
-            else {
-                off_t file_offset = bytes_send - header_size;
-                
-                if (lseek(file_fd, file_offset, SEEK_SET) == (off_t)-1) {
-                    close(file_fd);
-                    raw_client_data[fd].close_connection = true;
-                    return;
-                }
-
-                char file_buffer[BUFFER_SIZE];
-                int readed = read(file_fd, file_buffer, BUFFER_SIZE);
-                
-                if (readed > 0) {
-                    // ssize_t bytes_actually_sent = send(fd, file_buffer, readed, 0);
-                    ssize_t bytes_actually_sent = send(fd, file_buffer, readed, MSG_NOSIGNAL);
-                    if (bytes_actually_sent > 0) {
-                        raw_client_data[fd].res.set_bytes_sent(bytes_send + bytes_actually_sent);
-                        
-                        if (off_t(bytes_send + bytes_actually_sent - header_size) >= file_total_size) {
-                            close(file_fd);
-                            raw_client_data[fd].close_connection = true;
-                        }
-                    }
-                    else if (bytes_actually_sent == -1)
-                        return ;
-                }
-                else if (readed == 0) {
-                    close(file_fd);
-                    raw_client_data[fd].close_connection = true;
-                }
-            }
+            if (raw_client_data[fd].res.stream_response_to_client(fd))
+                raw_client_data[fd].close_connection = true;
         }
         else {
-            // exit(6);
             std::string buffer = raw_client_data[fd].res.get_raw_response();
             if (!buffer.empty())
             {
@@ -150,7 +103,6 @@ void    socket_engine::client_event(ssize_t fd, uint32_t events) // DONE []
         }
     }
 }
-
 
 void    socket_engine::process_connections(void)
 {

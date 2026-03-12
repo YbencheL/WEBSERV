@@ -45,7 +45,9 @@ void    response_builder::handle_post()
     }
 
     // >>>>>>>>>>>>>>>>>>>>>>>>> Body Processing >>>>>>>>>>>>>>>>>>>>>>>>>
+    
     const std::string &body_buff = this->current_client->req.getBody();
+
     int short write_stat = write(file_fd, body_buff.c_str(), body_buff.size());
     if (write_stat < 0) {
         close (file_fd);
