@@ -102,20 +102,18 @@ void socket_engine::check_all_client_timeouts(void) // TODO-CHECK
         if (it->second.server_conf != NULL)
             timeout_limit = it->second.server_conf->set_timeout;
 
-        std::cout << GREEN_S << "\n-------- INFO START\n" << "fd:" << fd
+        std::cout << GREEN_S << "\n\n-------- INFO START\n" << "fd:" << fd
             << "\nclose_connection: " << it->second.close_connection
-            << GREEN_E << "\n-------- INFO END" <<std::endl;
+            << "\n-------- INFO END\n\n" << GREEN_E <<std::endl;
 
         if ((now - it->second.last_activity) > (time_t)timeout_limit && !it->second.close_connection)
         {
+            std::cout << GREEN_S << "[!] Timeout detected on FD " << fd << ". Cleaning up..." << GREEN_E << std::endl;
             epoll_ctl(this->epoll_fd, EPOLL_CTL_DEL, fd, NULL);
             raw_client_data.erase(it++);
             remove_fd_from_list(fd);
             close(fd);
-
             continue ;
-
-            // std::cout << GREEN_S << "[-] Timeout detected on FD " << fd << ". Cleaning up..." << GREEN_E << std::endl;
         }
         else 
             ++it;

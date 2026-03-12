@@ -1,5 +1,6 @@
 # include "../response.hpp"
 # include "../utils/utils.hpp"
+# include "../socket_engine.hpp"
 
 // # include <ctime>
 
@@ -73,10 +74,53 @@ int response::get_static_file_fd(void) const {
     return (this->static_file_fd);
 }
 
-
 off_t response::get_file_size(void) const {
     return (this->file_size);
 }
 off_t response::get_bytes_sent(void) const {
     return (this->bytes_sent);
+}
+
+bool            response::stream_response_to_client(int fd)
+{
+    if (this->bytes_sent < (off_t)final_raw_response.size())
+    {
+        ssize_t send_stat = send(fd, final_raw_response.c_str() + this->bytes_sent, this->final_raw_response.size() - this->bytes_sent, MSG_NOSIGNAL);
+        if (send_stat == -1)
+            return (false);
+
+        this->set_bytes_sent(this->bytes_sent + send_stat);
+    }
+    else
+    {
+        off_t file_offset = this->bytes_sent - final_raw_response.size();
+        
+        if (lseek(static_file_fd, file_offset, SEEK_SET) == (off_t)-1) {
+            close(static_file_fd);
+            return (true);
+        }
+
+        char file_buffer[BUFFER_SIZE];
+        int readed = read(static_file_fd, file_buffer, BUFFER_SIZE);
+        if (readed > 0)
+        {
+            ssize_t bytes_actually_sent = send(fd, file_buffer, readed, MSG_NOSIGNAL);
+
+            if (bytes_actually_sent > 0)
+            {
+                this->set_bytes_sent(this->bytes_sent + bytes_actually_sent);
+                if (off_t(this->bytes_sent - final_raw_response.size()) >= this->file_size) {
+                    close(static_file_fd);
+                    return (true);
+                }
+            }
+            else if (bytes_actually_sent == -1)
+                return (false);
+        }
+        else if (readed == 0) {
+            close(static_file_fd);
+            return (true);
+        }
+    }
+    return (false);
 }

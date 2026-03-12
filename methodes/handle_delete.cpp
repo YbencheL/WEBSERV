@@ -1,19 +1,6 @@
 # include "../response_builder.hpp"
 # include "../utils/utils.hpp"
 
-// void normalisePath(std::string &path, std::string target, std::string rep, size_t size)
-// {
-//     size_t begin;
-//     while (true)
-//     {
-//         begin = path.find(target);
-//         if (begin != std::string::npos)
-//             path.replace(begin, size, rep);
-//         else
-//             break;
-//     }
-// }
-
 unsigned short int  ft_delete(const std::string &root, const std::string &path)
 {
     struct stat st;
@@ -32,10 +19,6 @@ unsigned short int  ft_delete(const std::string &root, const std::string &path)
 
 void    response_builder::handle_delete()
 {
-    // current_client->location_conf->root;
-
-    std::cout << "current_client->location_conf->root >>> " << current_client->location_conf->root << std::endl;
-    
     std::string path = this->current_client->req.getPath();
 
     unsigned short int stat_code = ft_delete(current_client->location_conf->root, path);

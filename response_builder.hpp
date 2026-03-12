@@ -47,7 +47,7 @@ class response_builder
         void            handle_post();
         void            handle_delete();
 
-        void            serving_static_file(std::string path);
+        void            serving_static_file();
         
     public:
         response_builder();
