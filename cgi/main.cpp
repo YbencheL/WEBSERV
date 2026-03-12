@@ -2,6 +2,7 @@
 //  only copy the code inside the main to put it in hte cgi section in wevserve
 
 #include "cgi.hpp"
+#include "../client.hpp"
 
 int main()
 {

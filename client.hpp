@@ -21,18 +21,6 @@
 class Request;
 struct reqParse;
 
-enum cgiState
-{
-    CHECKING,
-    SETUP_CGI,
-    CREAT_PIPES,
-    EXECUTING,
-    CGI_READING,
-    CGI_WAITING,
-    CGI_DONE,
-    ERROR
-};
-
 // MAIN
 // will add every thing need between [req/res] 
 struct Client

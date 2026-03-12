@@ -1,4 +1,6 @@
 #include "cgi.hpp"
+#include "../client.hpp"
+#include "../utils/utils.hpp"
 
 Cgi::Cgi()
 {
@@ -105,7 +107,7 @@ void collectEnv(Client &client, std::vector<std::string> &env)
         "REQUEST_URI=" + client.req.getPath() + client.req.getQuery()
     );
     env.push_back("SERVER_NAME="); // hostname needed later
-    env.push_back("SERVER_PORT=" + client.port);
+    env.push_back("SERVER_PORT=" + to_string(client.port));
     env.push_back("REDIRECT_STATUS=200");
 
     std::map<std::string, std::string> headers      = client.req.getHeaders();

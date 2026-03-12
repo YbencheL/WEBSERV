@@ -3,10 +3,24 @@
 
 #define CGI_TIMEOUT 5
 
-#include "../client.hpp"
 #include <wait.h>
 #include <sys/time.h>
+#include <iostream>
+#include <stdlib.h>
 
+enum cgiState
+{
+    CHECKING,
+    SETUP_CGI,
+    CREAT_PIPES,
+    EXECUTING,
+    CGI_READING,
+    CGI_WAITING,
+    CGI_DONE,
+    ERROR
+};
+
+struct Client;
 
 class Cgi
 {
