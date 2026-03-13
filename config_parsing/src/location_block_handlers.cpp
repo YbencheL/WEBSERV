@@ -159,5 +159,5 @@ void handle_autoindex(std::deque<Token>& tokenContainer, LocationBlock& loc, int
             error_line(": autoindex works with only on or off options", tokenContainer[i].line);
         countARG = 0;
     }else
-        error_line(": autoindex must only one argument", tokenContainer[i].line);
+        error_line(": autoindex must have one argument", tokenContainer[i].line);
 }
