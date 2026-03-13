@@ -3,10 +3,10 @@
 
 #define CGI_TIMEOUT 5
 
-#include <wait.h>
-#include <sys/time.h>
 #include <iostream>
 #include <stdlib.h>
+#include <sys/time.h>
+#include <wait.h>
 
 enum cgiState
 {
@@ -17,6 +17,7 @@ enum cgiState
     CGI_READING,
     CGI_WAITING,
     CGI_DONE,
+    CGI_NOT_REQUIRED,
     ERROR
 };
 
@@ -33,14 +34,14 @@ class Cgi
     int         pipeOut[2];
     std::string response;
 
-
   public:
-    cgiState state;
-    pid_t pid;
-    int   status;
+    static size_t  CGI_MAX_OUTPUT;
+    cgiState       state;
+    pid_t          pid;
+    int            status;
     struct timeval start;
     struct timeval current;
-    
+
     Cgi();
     Cgi(const Cgi &other);
     Cgi &operator=(const Cgi &other);
@@ -54,12 +55,15 @@ class Cgi
     char      **getArgv() const;
     char      **getEnv() const;
 
-    bool checkForCgi(Client &client);
+    void checkForCgi(Client &client);
     void buildEnv(Client &client);
     void buildArg(Client &client);
-    bool creatPipes();
-    void childProccess();
-    void parantProccess(Client &client);
+    void setupCgi(Client &client);
+    void createPipes();
+    void execution(Client &client);
+    void childProcess();
+    void parentProcess(Client &client);
+    void checkResponseAndTime();
     void reading();
 };
 

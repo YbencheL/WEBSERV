@@ -2,6 +2,8 @@
 #include "../client.hpp"
 #include "../utils/utils.hpp"
 
+size_t Cgi::CGI_MAX_OUTPUT = 10000000;
+
 Cgi::Cgi()
 {
     envp = NULL;
@@ -33,7 +35,7 @@ Cgi::~Cgi()
     }
     if (argv)
     {
-        for (size_t i = 0; i < 3; i++)
+        for (size_t i = 0; argv[i]; i++)
             free(argv[i]);
         delete[] argv;
     }
@@ -69,16 +71,20 @@ char **Cgi::getEnv() const
     return envp;
 }
 
-bool Cgi::checkForCgi(Client &client)
+void Cgi::checkForCgi(Client &client)
 {
     if (client.location_conf->cgi_handler.empty())
-        return false;
-
+    {
+        state = CGI_NOT_REQUIRED;
+        return;
+    }
     size_t dot = client.req.getPath().rfind('.');
 
     if (dot == std::string::npos)
-        return false;
-
+    {
+        state = CGI_NOT_REQUIRED;
+        return;
+    }
     std::string exten = client.req.getPath().substr(dot);
     std::map<std::string, std::string>::const_iterator it =
         client.location_conf->cgi_handler.begin();
@@ -89,10 +95,11 @@ bool Cgi::checkForCgi(Client &client)
         {
             interpreter = it->second;
             extension   = it->first;
-            return true;
+            state       = SETUP_CGI;
+            return;
         }
     }
-    return false;
+    state = CGI_NOT_REQUIRED;
 }
 
 void collectEnv(Client &client, std::vector<std::string> &env)
@@ -146,24 +153,51 @@ void Cgi::buildArg(Client &client)
     argv[2] = NULL;
 }
 
-bool Cgi::creatPipes()
+void Cgi::setupCgi(Client &client)
+{
+    buildEnv(client);
+    buildArg(client);
+    state = CREAT_PIPES;
+}
+
+void Cgi::createPipes()
 {
     if (pipe(pipeIn))
     {
         std::cerr << "PIPE FAILED" << std::endl;
-        return false;
+        state = ERROR;
+        return;
     }
     if (pipe(pipeOut))
     {
         std::cerr << "PIPE FAILED" << std::endl;
         close(pipeIn[1]);
         close(pipeIn[0]);
-        return false;
+        state = ERROR;
+        return;
     }
-    return true;
+    state = EXECUTING;
 }
 
-void Cgi::childProccess()
+void Cgi::execution(Client &client)
+{
+    pid_t tmpid = fork();
+    if (tmpid == -1)
+    {
+        std::cerr << "FORK FAILED" << std::endl;
+        state = ERROR;
+    }
+    if (tmpid == 0)
+        this->childProcess();
+    else
+    {
+        pid = tmpid;
+        this->parentProcess(client);
+        state = CGI_READING;
+    }
+}
+
+void Cgi::childProcess()
 {
     dup2(pipeIn[0], STDIN_FILENO);
     dup2(pipeOut[1], STDOUT_FILENO);
@@ -178,7 +212,7 @@ void Cgi::childProccess()
     exit(1);
 }
 
-void Cgi::parantProccess(Client &client)
+void Cgi::parentProcess(Client &client)
 {
     close(pipeIn[0]);
     close(pipeOut[1]);
@@ -188,6 +222,33 @@ void Cgi::parantProccess(Client &client)
         );
     close(pipeIn[1]);
     gettimeofday(&start, NULL);
+}
+
+void Cgi::checkResponseAndTime()
+{
+    if (response.size() > CGI_MAX_OUTPUT)
+    {
+        kill(pid, SIGTERM);
+        // todo add counter for it the killing proccess
+        state = ERROR;
+        return;
+    }
+    pid_t wait = waitpid(pid, &status, WNOHANG);
+    if (wait == pid && state == CGI_WAITING)
+    {
+        close(pipeOut[0]);
+        state = CGI_DONE;
+    }
+    else
+    {
+        gettimeofday(&current, NULL);
+        if (current.tv_sec - start.tv_sec > CGI_TIMEOUT)
+        {
+            kill(pid, SIGTERM);
+            // todo add counter for it the killing proccess
+            state = ERROR;
+        }
+    }
 }
 
 void Cgi::reading()
@@ -202,16 +263,8 @@ void Cgi::reading()
         else if (n == 0)
         {
             state = CGI_WAITING;
-            close (pipeOut[0]);
+            close(pipeOut[0]);
         }
     }
-    pid_t wait = waitpid(pid, &status, WNOHANG);
-    if (wait == pid && state == CGI_WAITING)
-        state = CGI_DONE;
-    gettimeofday(&current, NULL);
-    if (current.tv_sec - start.tv_sec > CGI_TIMEOUT)
-    {
-        kill(pid, SIGTERM);
-        state = ERROR;
-    }
+    checkResponseAndTime();
 }
