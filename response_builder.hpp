@@ -35,30 +35,27 @@ class response_builder
         void            path_validation(void);
         std::string     index_file_iterator(const std::string &full_path);
         void            autoindex_gen(std::vector<std::string> &dir_list, const std::string &full_path, const std::string &request_uri);
-        // void            autoindex_page(const std::string &full_path);
         void            autoindex_page(const std::string &full_path, const std::string &request_uri);
         void            default_error_page(unsigned short int stat_code);
         std::string     get_stat_code_path(unsigned int stat_code);
         void            generate_error_page();
         void            extract_host_info(std::string raw_req);
+        
         void            set_header(void);
         void            set_body(void);
         void            handle_get();
         void            handle_post();
         void            handle_delete();
-
         void            serving_static_file();
         
     public:
         response_builder();
-        // void    init_response_builder(Client &current_client, std::deque<ServerBlock> &config);
         void    init_response_builder(Client &current_client);
         void    validate_headers();
         void    build_response();
 
 };
 
-// void    validate_headers(Client &current_client);
 bool    validate_headers(Client &current_client);
 
 # endif

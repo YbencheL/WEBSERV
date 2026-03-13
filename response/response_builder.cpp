@@ -63,7 +63,6 @@ void    response_builder::serving_static_file()
 // TODO-LATER: Methode not allowed
 void response_builder::build_response()
 {
-    exit(1);
     // rm-me
     std::cout << READ_S << "--------- Methode: " << current_client->req.getMethod() << READ_E << std::endl;
     std::cout << READ_S << "--------- Path: " << current_client->req.getPath() << READ_E << std::endl;
@@ -91,8 +90,6 @@ void response_builder::build_response()
 
     }
     // std::cout << "[>] STATUS CODE " << current_client->res.get_stat_code() << std::endl;
-    std::cout << GREEN_S << "--------- START RESPONSE\n" << response_holder << "\n------- END RESPONSE" << GREEN_E << std::endl;
-    exit(1);
+    std::cout << READ_S << "--------- START RESPONSE\n" << response_holder << "\n------- END RESPONSE" << READ_E << std::endl;
     this->current_client->res.set_raw_response(response_holder);
-
 }

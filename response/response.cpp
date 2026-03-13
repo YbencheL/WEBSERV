@@ -81,6 +81,7 @@ off_t response::get_bytes_sent(void) const {
     return (this->bytes_sent);
 }
 
+
 bool            response::stream_response_to_client(int fd)
 {
     if (this->bytes_sent < (off_t)final_raw_response.size())
@@ -109,7 +110,9 @@ bool            response::stream_response_to_client(int fd)
             if (bytes_actually_sent > 0)
             {
                 this->set_bytes_sent(this->bytes_sent + bytes_actually_sent);
+                // - header size
                 if (off_t(this->bytes_sent - final_raw_response.size()) >= this->file_size) {
+                    std::cout << "file_is_done" << std::endl;
                     close(static_file_fd);
                     return (true);
                 }
