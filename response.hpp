@@ -64,6 +64,7 @@ class response  // DONE[]
         off_t               get_file_size(void) const;
         off_t               get_bytes_sent(void) const;
 
+        bool                stream_response_to_client(int fd);
 };
 
 # endif

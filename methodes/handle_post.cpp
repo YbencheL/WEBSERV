@@ -7,7 +7,7 @@
 
 void    response_builder::handle_post()
 {
-
+    exit(99);
     // >>>>>>>>>>>>>>>>>>>>>>>>> Header Processing >>>>>>>>>>>>>>>>>>>>>>>>>
     std::string file_name;
     std::string content_type;
@@ -45,7 +45,9 @@ void    response_builder::handle_post()
     }
 
     // >>>>>>>>>>>>>>>>>>>>>>>>> Body Processing >>>>>>>>>>>>>>>>>>>>>>>>>
+    
     const std::string &body_buff = this->current_client->req.getBody();
+
     int short write_stat = write(file_fd, body_buff.c_str(), body_buff.size());
     if (write_stat < 0) {
         close (file_fd);
@@ -55,6 +57,8 @@ void    response_builder::handle_post()
     }
     close (file_fd);
     this->current_client->res.set_stat_code(CREATED);
+
+    // NO response yet
 
     std::cout << "[>] POST STATUS CODE " << current_client->res.get_stat_code() << std::endl;
 

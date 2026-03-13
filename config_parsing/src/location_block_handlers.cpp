@@ -13,7 +13,7 @@ void handle_client_mbs(std::deque<Token>& tokenContainer, LocationBlock& loc, in
             error_line(": client_max_body_size must be a number", tokenContainer[i].line);
         countARG = 0;
     }else
-        error_line(": client_max_body_size must only have one argument", tokenContainer[i].line);
+        error_line(": client_max_body_size must have one argument", tokenContainer[i].line);
 }
 
 void handle_allow_methods(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
@@ -101,10 +101,12 @@ void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, 
         if (errorsnum.size() == 1)
             loc.redirection[num] = value;
         else
-            error_line(": there must not be more then one status code in return", tokenContainer[i].line);
+            error_line(": there must be one status code in return", tokenContainer[i].line);
     }
     else
     {
+        if (value.empty() || errorsnum.empty())
+            error_line(": there must be a code or path for error_page", tokenContainer[i].line);
         for (std::set<int>::iterator it = errorsnum.begin();
             it != errorsnum.end(); ++it)
         {
@@ -157,5 +159,5 @@ void handle_autoindex(std::deque<Token>& tokenContainer, LocationBlock& loc, int
             error_line(": autoindex works with only on or off options", tokenContainer[i].line);
         countARG = 0;
     }else
-        error_line(": autoindex must only have one argument", tokenContainer[i].line);
+        error_line(": autoindex must have one argument", tokenContainer[i].line);
 }

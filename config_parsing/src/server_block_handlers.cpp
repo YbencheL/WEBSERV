@@ -17,7 +17,7 @@ bool& insideLoc)
         // port = 0;
         countARG = 0;
     }else
-        error_line(": listen must only have one argument", tokenContainer[i].line);
+        error_line(": listen must have one argument", tokenContainer[i].line);
 }
 
 void handle_timeout(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
@@ -37,7 +37,7 @@ bool& insideLoc)
         // sec = 0;
         countARG = 0;
     }else
-        error_line(": set_timeout must only have one argument", tokenContainer[i].line);
+        error_line(": set_timeout must have one argument", tokenContainer[i].line);
 }
 
 void handle_host(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
@@ -50,7 +50,7 @@ bool& insideLoc)
         Serv.host = tokenContainer[i].value;
         countARG = 0;
     }else
-        error_line(": host must only have one argument", tokenContainer[i].line);
+        error_line(": host must have one argument", tokenContainer[i].line);
 }
 
 void handle_server_block_root(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
@@ -62,7 +62,7 @@ bool& insideLoc)
         Serv.root = tokenContainer[i].value;
         countARG = 0;
     }else if (countARG > 1)
-        error_line(": root must only have one argument", tokenContainer[i].line);
+        error_line(": root must have one argument", tokenContainer[i].line);
     countARG = 0;
 }
 
@@ -76,7 +76,7 @@ void handle_server_name(std::deque<Token>& tokenContainer, ServerBlock& Serv, in
         Serv.server_name = tokenContainer[i].value;
         countARG = 0;
     }else
-        error_line(": server_name must only have one argument", tokenContainer[i].line);
+        error_line(": server_name must have one argument", tokenContainer[i].line);
 }
 
 void handle_server_block_client_mbs(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
@@ -91,7 +91,7 @@ bool& insideLoc)
             error_line(": client_max_body_size must be a number", tokenContainer[i].line);
         countARG = 0;
     }else if (countARG > 1)
-        error_line(": client_max_body_size must only have one argument", tokenContainer[i].line);
+        error_line(": client_max_body_size must have one argument", tokenContainer[i].line);
 }
 
 void handle_server_block_index(std::deque<Token>& tokenContainer, ServerBlock& Serv, int countARG, ssize_t& i,
@@ -100,7 +100,7 @@ bool& insideLoc)
     (void)countARG;
     (void)insideLoc;
     i++;
-    if (Serv.index.empty() && !insideLoc)
+    if (!insideLoc)
     {
         while(tokenContainer[i].value != ";")
         {
@@ -146,8 +146,8 @@ bool& insideLoc)
     }
     if (!insideLoc)
     {
-        if (value.empty())
-            error_line(": there must be a path for error_page", tokenContainer[i].line);
+        if (value.empty() || errorsnum.empty())
+            error_line(": there must be a code or path for error_page", tokenContainer[i].line);
         for (std::set<int>::iterator it = errorsnum.begin();
                 it != errorsnum.end(); ++it)
         {

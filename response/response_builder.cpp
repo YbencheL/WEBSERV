@@ -16,21 +16,20 @@ std::string response_builder::index_file_iterator(const std::string &full_path)
     if (!full_path.empty() && full_path.at(full_path.length() -1) != '/')
         based_path += '/';
 
-    // std::set<std::string>::iterator 
-    for (size_t i = 0; i < current_client->location_conf->index.size(); i++)
+    std::set<std::string>::const_iterator it = current_client->location_conf->index.begin();
+    for ( ; it != current_client->location_conf->index.end(); it++)
     {
-        // redirection_path = based_path + current_client->location_conf->index.;
-        // redirection_path = based_path + current_client->location_conf->index.begin();
+        // std::cout << "[>] indext *it -> " << *it << std::endl;
+        redirection_path = based_path + *it;
         if (access(redirection_path.c_str(), F_OK | R_OK) == 0)
             return (redirection_path);
     }
     return ("");
 }
 
-void    response_builder::serving_static_file(std::string path)
+// void    response_builder::serving_static_file(std::string path)
+void    response_builder::serving_static_file()
 {
-    (void)path;
-
     struct stat st;
     stat(this->path.c_str(), &st);
 
@@ -59,37 +58,29 @@ void    response_builder::serving_static_file(std::string path)
     // __________________________________________________________________________________
 
     this->response_holder = header_buff;
-    // std::cout << ""
 }
 
 // TODO-LATER: Methode not allowed
 void response_builder::build_response()
 {
-    // std::cout << READ_S << "--------- Methode: " << current_client->req.getMethod() << READ_E << std::endl;
-    // std::cout << READ_S << "--------- Path: " << current_client->req.getPath() << READ_E << std::endl;
-    // std::cout << "[>] STATUS CODE " << current_client->res.get_stat_code() << std::endl;
-    // std::cout << "[>] getMethod " << current_client->req.getMethod() << std::endl;
+    exit(1);
+    // rm-me
+    std::cout << READ_S << "--------- Methode: " << current_client->req.getMethod() << READ_E << std::endl;
+    std::cout << READ_S << "--------- Path: " << current_client->req.getPath() << READ_E << std::endl;
+    std::cout << "[>] STATUS CODE " << current_client->res.get_stat_code() << std::endl;
 
-    if (this->current_client->res.get_stat_code() != OK) {
-        exit(2);
+
+    if (this->current_client->res.get_stat_code() != OK)
         generate_error_page();  // DONE [-] working on it
-    }
     else
     {
-        // exit(3);
         path_validation();  // TOKNOW: auto-index gen
-        if (this->current_client->res.get_stat_code() != OK) {
+        if (this->current_client->res.get_stat_code() != OK)
             generate_error_page();  // DONE [-] working on it
-            // exit(3);
-            // this->is_body_ready = true;
-            // set_header();
-            // default_error_page(this->current_client->res.get_stat_code());
-        } else {
+        else
+        {
             if (this->current_client->req.getMethod() == GET_METHODE)
-            {
-                // exit(1);
-                handle_get();   // DONE [-] working on it
-            }
+                handle_get();   // DONE [+]
 
             else if (this->current_client->req.getMethod() == POST_METHODE)
                 handle_post();  // DONE [-] working on it
@@ -100,6 +91,8 @@ void response_builder::build_response()
 
     }
     // std::cout << "[>] STATUS CODE " << current_client->res.get_stat_code() << std::endl;
+    std::cout << GREEN_S << "--------- START RESPONSE\n" << response_holder << "\n------- END RESPONSE" << GREEN_E << std::endl;
+    exit(1);
     this->current_client->res.set_raw_response(response_holder);
-    // std::cout << GREEN_S << "--------- START RESPONSE\n" << response_holder << "\n------- END RESPONSE" << GREEN_E << std::endl;
+
 }
