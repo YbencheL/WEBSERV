@@ -65,6 +65,7 @@ class Cgi
     void parentProcess(Client &client);
     void checkResponseAndTime();
     void reading();
+    void handleCGI(Client &client);
 };
 
 #endif
