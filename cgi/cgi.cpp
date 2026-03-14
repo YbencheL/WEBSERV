@@ -78,14 +78,14 @@ void Cgi::checkForCgi(Client &client)
         state = CGI_NOT_REQUIRED;
         return;
     }
-    size_t dot = client.req.getPath().rfind('.');
+    size_t dot = client.res.get_path().rfind('.');
 
     if (dot == std::string::npos)
     {
         state = CGI_NOT_REQUIRED;
         return;
     }
-    std::string exten = client.req.getPath().substr(dot);
+    std::string exten = client.res.get_path().substr(dot);
     std::map<std::string, std::string>::const_iterator it =
         client.location_conf->cgi_handler.begin();
 
@@ -149,7 +149,7 @@ void Cgi::buildArg(Client &client)
     argv = new char *[3];
 
     argv[0] = strdup(interpreter.c_str());
-    argv[1] = strdup(client.req.getPath().c_str());
+    argv[1] = strdup(client.res.get_path().c_str());
     argv[2] = NULL;
 }
 
@@ -267,4 +267,19 @@ void Cgi::reading()
         }
     }
     checkResponseAndTime();
+}
+
+void Cgi::handleCGI(Client &client)
+{
+    if (this->state == CHECKING)
+        this->checkForCgi(client);
+    if (this->state == SETUP_CGI)
+        this->setupCgi(client);
+    if (this->state == CREAT_PIPES)
+        this->createPipes();
+    if (this->state == EXECUTING)
+        this->execution(client);
+    if (this->state == CGI_READING ||
+        this->state == CGI_WAITING)
+        this->reading();
 }
