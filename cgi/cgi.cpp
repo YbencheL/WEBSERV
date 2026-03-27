@@ -35,10 +35,10 @@ Cgi &Cgi::operator=(const Cgi &other)
 {
     if (this != &other)
     {
-        interpreter = other.interpreter;
-        extension   = other.extension;
-        envp = deepCopy(other.envp);
-        argv = deepCopy(other.argv);
+        interpreter     = other.interpreter;
+        extension       = other.extension;
+        envp            = deepCopy(other.envp);
+        argv            = deepCopy(other.argv);
         pipeIn[0]       = other.pipeIn[0];
         pipeIn[1]       = other.pipeIn[1];
         pipeOut[0]      = other.pipeOut[0];
@@ -109,14 +109,16 @@ void Cgi::checkForCgi(Client &client)
         state = CGI_NOT_REQUIRED;
         return;
     }
-    size_t dot = client.res.get_path().rfind('.');
+    scriptPath = client.res.get_path();
+
+    size_t dot = scriptPath.rfind('.');
 
     if (dot == std::string::npos)
     {
         state = CGI_NOT_REQUIRED;
         return;
     }
-    std::string exten = client.res.get_path().substr(dot);
+    std::string exten = scriptPath.substr(dot);
     std::map<std::string, std::string>::const_iterator it =
         client.location_conf->cgi_handler.begin();
 
@@ -148,6 +150,17 @@ void collectEnv(Client &client, std::vector<std::string> &env)
     env.push_back("SERVER_PORT=" + to_string(client.port));
     env.push_back("REDIRECT_STATUS=200");
 
+    char *abs = realpath(client.res.get_path().c_str(), NULL);
+    if (abs)
+    {
+        env.push_back("SCRIPT_FILENAME=" + std::string(abs));
+        free(abs);
+    }
+    else
+        env.push_back("SCRIPT_FILENAME=" + client.res.get_path());
+
+    env.push_back("PATH_INFO=" + client.req.getPath());
+
     std::map<std::string, std::string> headers      = client.req.getHeaders();
     std::map<std::string, std::string>::iterator it = headers.begin();
 
@@ -175,19 +188,19 @@ void Cgi::buildEnv(Client &client)
     envp[i] = NULL;
 }
 
-void Cgi::buildArg(Client &client)
+void Cgi::buildArg()
 {
     argv = new char *[3];
 
     argv[0] = strdup(interpreter.c_str());
-    argv[1] = strdup(client.res.get_path().c_str());
+    argv[1] = strdup(scriptPath.substr(scriptPath.rfind('/') + 1).c_str());
     argv[2] = NULL;
 }
 
 void Cgi::setupCgi(Client &client)
 {
     buildEnv(client);
-    buildArg(client);
+    buildArg();
     state = CREAT_PIPES;
 }
 
@@ -230,6 +243,11 @@ void Cgi::execution(Client &client)
 
 void Cgi::childProcess()
 {
+    std::string scriptDir = scriptPath.substr(0, scriptPath.rfind('/'));
+
+    if (!scriptDir.empty())
+        chdir(scriptDir.c_str());
+
     dup2(pipeIn[0], STDIN_FILENO);
     dup2(pipeOut[1], STDOUT_FILENO);
 

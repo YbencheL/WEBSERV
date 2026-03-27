@@ -28,6 +28,7 @@ class Cgi
   private:
     std::string interpreter;
     std::string extension;
+    std::string scriptPath;
     char      **envp;
     char      **argv;
     int         pipeIn[2];
@@ -41,7 +42,7 @@ class Cgi
     int            status;
     struct timeval start;
     struct timeval current;
-    off_t			body_bytes_sent;
+    off_t          body_bytes_sent;
 
     Cgi();
     Cgi(const Cgi &other);
@@ -58,7 +59,7 @@ class Cgi
 
     void checkForCgi(Client &client);
     void buildEnv(Client &client);
-    void buildArg(Client &client);
+    void buildArg();
     void setupCgi(Client &client);
     void createPipes();
     void execution(Client &client);
