@@ -248,8 +248,18 @@ void Cgi::childProcess()
     if (!scriptDir.empty())
         chdir(scriptDir.c_str());
 
-    dup2(pipeIn[0], STDIN_FILENO);
-    dup2(pipeOut[1], STDOUT_FILENO);
+    if (dup2(pipeIn[0], STDIN_FILENO) == -1 ||
+        dup2(pipeOut[1], STDOUT_FILENO) == -1)
+    {
+        perror("dup2 failed :");
+
+        close(pipeIn[1]);
+        close(pipeIn[0]);
+        close(pipeOut[0]);
+        close(pipeOut[1]);
+
+        exit(1);
+    }
 
     close(pipeIn[1]);
     close(pipeIn[0]);
@@ -257,7 +267,7 @@ void Cgi::childProcess()
     close(pipeOut[1]);
 
     execve(argv[0], argv, envp);
-    std::cerr << "EXECVE FAILED: " << strerror(errno);
+    perror("execve failed :");
     exit(1);
 }
 
