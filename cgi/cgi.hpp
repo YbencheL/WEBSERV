@@ -41,6 +41,7 @@ class Cgi
     int            status;
     struct timeval start;
     struct timeval current;
+    off_t			body_bytes_sent;
 
     Cgi();
     Cgi(const Cgi &other);

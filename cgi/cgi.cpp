@@ -15,30 +15,61 @@ Cgi::Cgi(const Cgi &other)
     *this = other;
 }
 
+char **deepCopy(char **src)
+{
+    if (!src)
+        return NULL;
+
+    int i = 0;
+    for (i = 0; src[i]; i++)
+    {
+    }
+    char **copy = new char *[i + 1];
+    for (i = 0; src[i]; i++)
+        copy[i] = strdup(src[i]);
+    copy[i] = NULL;
+    return copy;
+}
+
 Cgi &Cgi::operator=(const Cgi &other)
 {
     if (this != &other)
     {
         interpreter = other.interpreter;
         extension   = other.extension;
+        envp = deepCopy(other.envp);
+        argv = deepCopy(other.argv);
+        pipeIn[0]       = other.pipeIn[0];
+        pipeIn[1]       = other.pipeIn[1];
+        pipeOut[0]      = other.pipeOut[0];
+        pipeOut[1]      = other.pipeOut[1];
+        response        = other.response;
+        state           = other.state;
+        pid             = other.pid;
+        status          = other.status;
+        start.tv_sec    = other.start.tv_sec;
+        start.tv_usec   = other.start.tv_usec;
+        current.tv_sec  = other.current.tv_sec;
+        current.tv_usec = other.current.tv_usec;
+        body_bytes_sent = other.body_bytes_sent;
     }
     return *this;
 }
 
 Cgi::~Cgi()
 {
-    // if (envp)
-    // {
-    //     for (size_t i = 0; envp[i]; i++)
-    //         free(envp[i]);
-    //     delete[] envp;
-    // }
-    // if (argv)
-    // {
-    //     for (size_t i = 0; argv[i]; i++)
-    //         free(argv[i]);
-    //     delete[] argv;
-    // }
+    if (envp)
+    {
+        for (size_t i = 0; envp[i]; i++)
+            free(envp[i]);
+        delete[] envp;
+    }
+    if (argv)
+    {
+        for (size_t i = 0; argv[i]; i++)
+            free(argv[i]);
+        delete[] argv;
+    }
 }
 
 void Cgi::setInterpreter(const std::string &interpreter)
@@ -279,7 +310,6 @@ void Cgi::handleCGI(Client &client)
         this->createPipes();
     if (this->state == EXECUTING)
         this->execution(client);
-    if (this->state == CGI_READING ||
-        this->state == CGI_WAITING)
+    if (this->state == CGI_READING || this->state == CGI_WAITING)
         this->reading();
 }
