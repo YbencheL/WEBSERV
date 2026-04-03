@@ -1,7 +1,8 @@
 #ifndef CGI_HPP
 #define CGI_HPP
 
-#define CGI_TIMEOUT 5
+#define CGI_TIMEOUT      5
+#define WRITE_READ_LIMIT 65000
 
 #include <iostream>
 #include <stdlib.h>
@@ -14,7 +15,7 @@ enum cgiState
     SETUP_CGI,
     CREAT_PIPES,
     EXECUTING,
-    CGI_READING,
+    CGI_READY,
     CGI_WAITING,
     CGI_DONE,
     CGI_NOT_REQUIRED,
@@ -42,7 +43,7 @@ class Cgi
     int            status;
     struct timeval start;
     struct timeval current;
-    off_t          body_bytes_sent;
+    size_t         sent;
 
     Cgi();
     Cgi(const Cgi &other);
@@ -65,9 +66,13 @@ class Cgi
     void execution(Client &client);
     void childProcess();
     void parentProcess(Client &client);
+    void writing(Client &client);
     void checkResponseAndTime();
     void reading();
     void handleCGI(Client &client);
+
+    int getPipeFd() const;
+    int getPipeInFd() const;
 };
 
 #endif

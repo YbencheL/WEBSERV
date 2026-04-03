@@ -1,11 +1,13 @@
 #include "cgi.hpp"
 #include "../client.hpp"
 #include "../utils/utils.hpp"
+#include <fcntl.h>
 
-size_t Cgi::CGI_MAX_OUTPUT = 10000000;
+size_t Cgi::CGI_MAX_OUTPUT = 1000000000;
 
 Cgi::Cgi()
 {
+    sent = 0;
     envp = NULL;
     argv = NULL;
 }
@@ -51,7 +53,7 @@ Cgi &Cgi::operator=(const Cgi &other)
         start.tv_usec   = other.start.tv_usec;
         current.tv_sec  = other.current.tv_sec;
         current.tv_usec = other.current.tv_usec;
-        body_bytes_sent = other.body_bytes_sent;
+        sent = other.sent;
     }
     return *this;
 }
@@ -220,6 +222,9 @@ void Cgi::createPipes()
         state = ERROR;
         return;
     }
+    fcntl(pipeIn[1], F_SETFL, O_NONBLOCK);
+    fcntl(pipeOut[0], F_SETFL, O_NONBLOCK);
+
     state = EXECUTING;
 }
 
@@ -230,6 +235,7 @@ void Cgi::execution(Client &client)
     {
         std::cerr << "FORK FAILED" << std::endl;
         state = ERROR;
+        return;
     }
     if (tmpid == 0)
         this->childProcess();
@@ -237,7 +243,8 @@ void Cgi::execution(Client &client)
     {
         pid = tmpid;
         this->parentProcess(client);
-        state = CGI_READING;
+        state = CGI_READY; // this state mean the cgi is ready to pass fds for
+                           // epoll event
     }
 }
 
@@ -273,60 +280,63 @@ void Cgi::childProcess()
 
 void Cgi::parentProcess(Client &client)
 {
+    (void)client;
     close(pipeIn[0]);
     close(pipeOut[1]);
-    if (client.parse.body)
-        write(
-            pipeIn[1], client.req.getBody().c_str(), client.req.getBody().size()
-        );
-    close(pipeIn[1]);
     gettimeofday(&start, NULL);
 }
 
-void Cgi::checkResponseAndTime()
+void Cgi::writing(Client &client)
 {
-    if (response.size() > CGI_MAX_OUTPUT)
-    {
-        kill(pid, SIGTERM);
-        // todo add counter for it the killing proccess
-        state = ERROR;
-        return;
-    }
-    pid_t wait = waitpid(pid, &status, WNOHANG);
-    if (wait == pid && state == CGI_WAITING)
-    {
-        close(pipeOut[0]);
-        state = CGI_DONE;
-    }
-    else
-    {
-        gettimeofday(&current, NULL);
-        if (current.tv_sec - start.tv_sec > CGI_TIMEOUT)
-        {
-            kill(pid, SIGTERM);
-            // todo add counter for it the killing proccess
-            state = ERROR;
-        }
-    }
+    std::string &body    = client.req.getBody();
+    size_t       sending = body.size() - sent;
+
+    if (sending > WRITE_READ_LIMIT)
+        sending = WRITE_READ_LIMIT;
+
+    write(pipeIn[1], body.c_str() + sent, sending);
 }
 
 void Cgi::reading()
 {
-    if (state == CGI_READING)
-    {
-        char buff[1024];
+    char buff[WRITE_READ_LIMIT];
 
-        int n = read(pipeOut[0], buff, 1024);
-        if (n > 0)
-            response.append(buff, n);
-        else if (n == 0)
-        {
-            state = CGI_WAITING;
-            close(pipeOut[0]);
-        }
-    }
-    checkResponseAndTime();
+    int n = read(pipeOut[0], buff, WRITE_READ_LIMIT);
+
+    if (n > 0)
+        response.append(buff, n);
+    else if (n == 0)
+        close(
+            pipeOut[0]
+        ); // need to know what state to be set or what should i do after this
 }
+
+// void Cgi::checkResponseAndTime()
+// {
+//     if (response.size() > CGI_MAX_OUTPUT)
+//     {
+//         kill(pid, SIGTERM);
+//         // todo add counter for it the killing proccess
+//         state = ERROR;
+//         return;
+//     }
+//     pid_t wait = waitpid(pid, &status, WNOHANG);
+//     if (wait == pid && state == CGI_WAITING)
+//     {
+//         close(pipeOut[0]);
+//         state = CGI_DONE;
+//     }
+//     else
+//     {
+//         gettimeofday(&current, NULL);
+//         if (current.tv_sec - start.tv_sec > CGI_TIMEOUT)
+//         {
+//             kill(pid, SIGTERM);
+//             // todo add counter for it the killing proccess
+//             state = ERROR;
+//         }
+//     }
+// }
 
 void Cgi::handleCGI(Client &client)
 {
@@ -338,6 +348,14 @@ void Cgi::handleCGI(Client &client)
         this->createPipes();
     if (this->state == EXECUTING)
         this->execution(client);
-    if (this->state == CGI_READING || this->state == CGI_WAITING)
-        this->reading();
+}
+
+int Cgi::getPipeFd() const
+{
+    return pipeOut[0];
+}
+
+int Cgi::getPipeInFd() const
+{
+    return pipeIn[1];
 }

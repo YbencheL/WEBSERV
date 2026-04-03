@@ -41,7 +41,7 @@ std::string Request::getQuery() const
     return query;
 }
 
-std::string Request::getBody() const
+std::string &Request::getBody()
 {
     return body;
 }

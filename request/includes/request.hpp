@@ -23,7 +23,7 @@ class Request
     std::string                        getMethod() const;
     std::string                        getPath() const;
     std::string                        getQuery() const;
-    std::string                        getBody() const;
+    std::string                       &getBody();
     std::string                        getHttpVersion() const;
     std::map<std::string, std::string> getHeaders() const;
 
@@ -34,7 +34,7 @@ class Request
     void setHeader(std::map<std::string, std::string> map);
     void setHttpVersion(std::string str);
 
-    void  appendBody(std::string str);
+    void appendBody(std::string str);
 };
 
 #endif

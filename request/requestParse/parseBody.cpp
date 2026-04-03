@@ -19,7 +19,7 @@ int strToBase(std::string &str, int maxBody, std::string base)
     int    match = 0;
 
     if (str.empty())
-        return -2;
+        return -1;
     for (; i < str.size(); i++)
     {
         for (match = 0; match < nBase; match++)
@@ -28,7 +28,7 @@ int strToBase(std::string &str, int maxBody, std::string base)
                 break;
         }
         if (match == nBase)
-            return -2;
+            return -1;
         else
         {
             n = (n * nBase) + match;
@@ -39,7 +39,7 @@ int strToBase(std::string &str, int maxBody, std::string base)
     return n;
 }
 
-int checkForMethod(Client &client)
+bool checkForMethod(Client &client)
 {
     std::map<std::string, std::string> headers = client.req.getHeaders();
     std::map<std::string, std::string>::iterator it;
@@ -50,16 +50,10 @@ int checkForMethod(Client &client)
         if (it->first == "CONTENT_LENGTH")
         {
             if (flag)
-                return BAD_REQUEST;
-            int length = strToBase(
-                it->second,
-                client.location_conf->client_max_body_size,
-                "0123456789"
-            );
+                return false;
+            int length = strToBase(it->second, client.location_conf->client_max_body_size, "0123456789");
             if (length == -1)
-                return PAYLOAD_TOO_LARGE;
-            else if (length == -2)
-                return BAD_REQUEST;
+                return false;
             else
                 client.parse.contentLength = length;
             client.parse.bodyReadMod = it->first;
@@ -68,18 +62,18 @@ int checkForMethod(Client &client)
         if (it->first == "TRANSFER_ENCODING" && it->second == "chunked")
         {
             if (flag)
-                return BAD_REQUEST;
+                return false;
             client.parse.bodyReadMod = it->first;
             flag                     = true;
         }
     }
     if (flag)
-        return 0;
-    return BAD_REQUEST;
+        return true;
+    return false;
 }
 
 int collectBodyByLength(Client &client)
-{
+{ 
     if (client.parse.remaining.size() >= (size_t)client.parse.contentLength)
     {
         client.req.setBody(
@@ -104,11 +98,7 @@ int collectBodyByChunks(Client &client, std::string &remain)
             if (bytesLine.size() > MAX_CHUNK_SIZE)
                 return BAD_REQUEST;
             UpperCaseBodyBytes(bytesLine);
-            int bytes = strToBase(
-                bytesLine,
-                client.location_conf->client_max_body_size,
-                "0123456789ABCDEF"
-            );
+            int bytes = strToBase(bytesLine, client.location_conf->client_max_body_size, "0123456789ABCDEF");
             if (bytes == -1)
                 return BAD_REQUEST;
             remain.erase(0, end + 2);
@@ -130,8 +120,7 @@ int collectBodyByChunks(Client &client, std::string &remain)
                 else
                 {
                     client.req.appendBody(remain.substr(0, bytes));
-                    if (client.req.getBody().size() >
-                        (size_t)client.location_conf->client_max_body_size)
+                    if (client.req.getBody().size() > (size_t)client.location_conf->client_max_body_size)
                         return PAYLOAD_TOO_LARGE;
                     client.parse.chunkState = CALCULATING;
                     remain.erase(0, bytes + 2);
@@ -155,9 +144,8 @@ int parseBody(Client &client)
 {
     if (!client.parse.bodyBegin)
     {
-        int ERROR = checkForMethod(client);
-        if (ERROR)
-            return ERROR;
+        if (!checkForMethod(client))
+            return BAD_REQUEST;
         else
             client.parse.bodyBegin = true;
     }
@@ -171,3 +159,4 @@ int parseBody(Client &client)
     }
     return 0;
 }
+

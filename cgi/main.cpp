@@ -16,7 +16,4 @@ int main()
         client.cgiHandler.createPipes();
     if (client.cgiHandler.state == EXECUTING)
         client.cgiHandler.execution(client);
-    if (client.cgiHandler.state == CGI_READING ||
-        client.cgiHandler.state == CGI_WAITING)
-        client.cgiHandler.reading();
 }
