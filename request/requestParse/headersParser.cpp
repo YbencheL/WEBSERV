@@ -140,7 +140,7 @@ int parseHeaders(Client &client, std::string &data)
     if (ERROR)
         return ERROR;
     if (!validate_headers(client))
-        return NOT_FOUND;
+        return (client.res.get_stat_code());
     if (!checkMethodAllowed(client))
         return METHOD_NOT_ALLOWED;
     return 1;
