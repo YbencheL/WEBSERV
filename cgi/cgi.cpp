@@ -53,7 +53,7 @@ Cgi &Cgi::operator=(const Cgi &other)
         start.tv_usec   = other.start.tv_usec;
         current.tv_sec  = other.current.tv_sec;
         current.tv_usec = other.current.tv_usec;
-        sent = other.sent;
+        sent            = other.sent;
     }
     return *this;
 }
@@ -288,13 +288,26 @@ void Cgi::parentProcess(Client &client)
 
 void Cgi::writing(Client &client)
 {
-    std::string &body    = client.req.getBody();
-    size_t       sending = body.size() - sent;
+    std::string &body = client.req.getBody();
 
-    if (sending > WRITE_READ_LIMIT)
-        sending = WRITE_READ_LIMIT;
+    size_t remaining = body.size() - sent;
 
-    write(pipeIn[1], body.c_str() + sent, sending);
+    if (remaining == 0)
+    {
+        close(pipeIn[1]);
+        return;
+    }
+
+    size_t chunk = remaining;
+    if (chunk > WRITE_READ_LIMIT)
+        chunk = WRITE_READ_LIMIT;
+
+    ssize_t written = write(pipeIn[1], body.c_str() + sent, chunk);
+
+    if (written > 0)
+    {
+        sent += written;
+    }
 }
 
 void Cgi::reading()
@@ -306,9 +319,8 @@ void Cgi::reading()
     if (n > 0)
         response.append(buff, n);
     else if (n == 0)
-        close(
-            pipeOut[0]
-        ); // need to know what state to be set or what should i do after this
+        close(pipeOut[0]);
+    // need to know what state to be set or what should i do after this
 }
 
 // void Cgi::checkResponseAndTime()
