@@ -322,3 +322,10 @@ bool    is_cgi_request(std::string path)
     return false;
 }
 
+bool    is_server(std::vector<int> &server_side_fds, unsigned short int fd)
+{
+    std::vector<int>::iterator is_server = std::find(server_side_fds.begin(), server_side_fds.end(), fd);
+    if (is_server != server_side_fds.end())
+        return (true);
+    return (false);
+}

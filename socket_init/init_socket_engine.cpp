@@ -42,7 +42,6 @@ void socket_engine::remove_fd_from_list(int fd)
     std::cout << "\n";
     std::cout << "--------------------------------------------------------------" << std::endl;
     // rm-me
-
 }
 
 void socket_engine::free_fds_list(void)
@@ -75,7 +74,7 @@ void socket_engine::set_server_config_info(std::deque<ServerBlock> server_config
 
 // --------------------------------------------------------------------------------------------------------------
 
-void socket_engine::check_all_client_timeouts(void) // TODO-CHECK
+void socket_engine::check_all_client_timeouts(void)
 {
     time_t now = time(0);
     std::map<int, Client>::iterator it = raw_client_data.begin();
@@ -120,8 +119,6 @@ void socket_engine::check_all_client_timeouts(void) // TODO-CHECK
     }
 }
 
-// --------------------------------------------------------------------------------------------------------------
-
 void    socket_engine::terminate_client(int fd, std::string stat)
 {
     epoll_ctl(this->epoll_fd, EPOLL_CTL_DEL, fd, NULL);
@@ -129,7 +126,7 @@ void    socket_engine::terminate_client(int fd, std::string stat)
     remove_fd_from_list(fd);
     close(fd);
 
-    std::cerr << GREEN_S << stat << GREEN_E << std::endl;
+    std::cerr << GREEN_S << "terminate_client stat ->" << stat << GREEN_E << std::endl;
 }
 
 void    socket_engine::modify_epoll_event(ssize_t fd, uint32_t events)
@@ -138,5 +135,5 @@ void    socket_engine::modify_epoll_event(ssize_t fd, uint32_t events)
     ev.events = events;
     ev.data.fd = fd;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev) == -1)
-        std::cerr << "[!] epoll_ctl: " << strerror(errno) << std::endl;
+        std::cerr << "[!] E epoll_ctl: " << strerror(errno) << std::endl;
 }

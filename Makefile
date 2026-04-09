@@ -5,6 +5,9 @@ CPP_FLAGS = -Wall -Wextra -Werror -fsanitize=address
 NAME = webserv
 SRC = ./main.cpp ./socket_init/init_socket_engine.cpp ./socket_init/init_client_side.cpp \
 		./socket_init/init_server_side.cpp ./multiplexer/multiplexer.cpp \
+		./multiplexer/server_event.cpp ./multiplexer/client_event.cpp \
+		./multiplexer/handle_epollin.cpp ./multiplexer/handle_epollout.cpp \
+		./multiplexer/handle_pipe_read.cpp ./multiplexer/handle_pipe_write.cpp \
 		./config_parsing/src/extracting_values.cpp ./config_parsing/src/content_final_checks.cpp ./config_parsing/src/helper_functions.cpp \
         ./config_parsing/src/location_block.cpp ./config_parsing/src/server_block.cpp ./config_parsing/src/syntax_validation.cpp ./config_parsing/src/location_block_handlers.cpp \
         ./config_parsing/src/server_block_handlers.cpp ./config_parsing/src/server_block_lookup.cpp ./response/response_builder.cpp ./response/response.cpp \

@@ -43,10 +43,17 @@ class socket_engine {
         std::map<int, Client> raw_client_data; // >>> raw request data stored in
         std::deque<ServerBlock> server_config_info; // >>> config file saved here
 
+		std::map<int, int> pipe_to_client;
+		std::map<int, int> pipe_write_to_client;
+
         void    server_event(ssize_t fd);
         void    client_event(ssize_t fd, uint32_t events);
+		
+        void    handle_epollin(ssize_t fd);
+        void    handle_epollout(ssize_t fd);
+        void    handle_pipe_read(int pipe_fd);
+        void    handle_pipe_write(int pipe_fd);
         void    modify_epoll_event(ssize_t fd, uint32_t events);
-        // void    handle_client_write(fd);
 
 
     public:
