@@ -39,6 +39,7 @@ struct reqParse
     bool           bodyBegin;
     std::string    bodyReadMod;
     int            contentLength;
+    size_t         bodyRead;
 };
 
 void UpperCaseHeaderName(std::string &name);

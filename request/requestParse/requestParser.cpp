@@ -45,8 +45,6 @@ int parseRequest(Client &client, std::string &recivedData)
     }
     if (client.parse.step == BODY && client.parse.body)
     {
-        if (client.parse.remaining.size() > (size_t)client.location_conf->client_max_body_size)
-            return PAYLOAD_TOO_LARGE;
         return parseBody(client);
     }
     return OK;

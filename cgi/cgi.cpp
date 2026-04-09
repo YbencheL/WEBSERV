@@ -336,8 +336,8 @@ void Cgi::reading(int pipe_fd, unsigned int events, Client &client)
         response.append(buff, n);
     else if (n == 0)
     {
-        state = CGI_WAITING;
-        close(pipeIn[1]); // need to get the fd for this event
+        //epoll_ctl(epollfd , EPOLL_CTL_DEL, pipeIn[1], NULL);
+        // close(pipeIn[1]);  
         close(pipe_fd);
     }
     else if (n == -1)
@@ -345,10 +345,11 @@ void Cgi::reading(int pipe_fd, unsigned int events, Client &client)
         close(pipe_fd);
         state = ERROR;
     }
+    
 }
 
 // void Cgi::checkResponseAndTime()
-// {
+// { 
 //     if (response.size() > CGI_MAX_OUTPUT)
 //     {
 //         kill(pid, SIGTERM);
