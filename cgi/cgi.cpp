@@ -286,15 +286,19 @@ void Cgi::parentProcess(Client &client)
     gettimeofday(&start, NULL);
 }
 
-void Cgi::writing(Client &client)
+void Cgi::writing(int pipe_fd, unsigned int events, Client &client)
 {
+    (void)events;
+
+    if (state != CGI_READY)
+        return;
     std::string &body = client.req.getBody();
 
     size_t remaining = body.size() - sent;
 
     if (remaining == 0)
     {
-        close(pipeIn[1]);
+        close(pipe_fd);
         return;
     }
 
@@ -302,25 +306,45 @@ void Cgi::writing(Client &client)
     if (chunk > WRITE_READ_LIMIT)
         chunk = WRITE_READ_LIMIT;
 
-    ssize_t written = write(pipeIn[1], body.c_str() + sent, chunk);
+    ssize_t written = write(pipe_fd, body.c_str() + sent, chunk);
 
     if (written > 0)
     {
         sent += written;
     }
+
+    if (written == -1)
+    {
+        state = ERROR;
+        close(pipe_fd);
+    }
 }
 
-void Cgi::reading()
+void Cgi::reading(int pipe_fd, unsigned int events, Client &client)
 {
+    (void)events;
+    (void)client;
+
+    if (state != CGI_READY)
+        return;
+
     char buff[WRITE_READ_LIMIT];
 
-    int n = read(pipeOut[0], buff, WRITE_READ_LIMIT);
+    int n = read(pipe_fd, buff, WRITE_READ_LIMIT);
 
     if (n > 0)
         response.append(buff, n);
     else if (n == 0)
-        close(pipeOut[0]);
-    // need to know what state to be set or what should i do after this
+    {
+        state = CGI_WAITING;
+        close(pipeIn[1]); // need to get the fd for this event
+        close(pipe_fd);
+    }
+    else if (n == -1)
+    {
+        close(pipe_fd);
+        state = ERROR;
+    }
 }
 
 // void Cgi::checkResponseAndTime()
@@ -362,7 +386,7 @@ void Cgi::handleCGI(Client &client)
         this->execution(client);
 }
 
-int Cgi::getPipeFd() const
+int Cgi::getPipeOutFd() const
 {
     return pipeOut[0];
 }

@@ -66,12 +66,12 @@ class Cgi
     void execution(Client &client);
     void childProcess();
     void parentProcess(Client &client);
-    void writing(Client &client);
+    void writing(int pipe_fd, unsigned int events, Client &client);
+    void reading(int pipe_fd, unsigned int events, Client &client);
     void checkResponseAndTime();
-    void reading();
     void handleCGI(Client &client);
 
-    int getPipeFd() const;
+    int getPipeOutFd() const;
     int getPipeInFd() const;
 };
 
