@@ -57,9 +57,9 @@ int main(int ac, char **av)
                 << " (http://" << host << ":" << port << "/)"
                 << GREEN_E << std::endl;
             // --------------------------------------------- //
-            s_engine.init_server_side(port, host);  // TO-CHECK LATER
+            s_engine.init_server_side(port, host);
         }
-        s_engine.process_connections(); // done [-]
+        s_engine.process_connections();
     }
     catch(const std::exception& e)
     {
