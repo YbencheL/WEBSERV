@@ -39,13 +39,23 @@ void    socket_engine::handle_epollin(ssize_t fd)
 
             ev.data.fd = pipe_out;
             ev.events  = EPOLLIN;
-            epoll_ctl(epoll_fd, EPOLL_CTL_ADD, pipe_out, &ev);
+            if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, pipe_out, &ev) == -1)
+            {
+                std::cerr << "[!] epoll_ctl EPOLL_CTL_ADD (pipe_out) failed: " << strerror(errno) << std::endl;
+                terminate_client(fd, "");
+                return ;
+            }
 
-			{	// this block just in case the requested cgi has body
-				ev.data.fd = pipe_in;
+		{	// this block just in case the requested cgi has body
+			ev.data.fd = pipe_in;
             	ev.events  = EPOLLOUT;
-            	epoll_ctl(epoll_fd, EPOLL_CTL_ADD, pipe_in, &ev);
-			}
+            	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, pipe_in, &ev) == -1)
+            	{
+            		std::cerr << "[!] epoll_ctl EPOLL_CTL_ADD (pipe_in) failed: " << strerror(errno) << std::endl;
+            		terminate_client(fd, "");
+            		return ;
+            	}
+		}
 
             return ;
         }

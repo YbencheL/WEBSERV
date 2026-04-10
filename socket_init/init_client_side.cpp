@@ -20,8 +20,8 @@ void socket_engine::init_client_side(int fd)
     ev.events = EPOLLIN | EPOLLRDHUP;
 
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &ev) < 0) {
-        close (fd);
-        std::cerr << "[!] epoll_ctl failed: " << strerror(errno) << std::endl;
+        std::cerr << "[!] epoll_ctl EPOLL_CTL_ADD (client) failed: " << strerror(errno) << std::endl;
+        close(fd);
         return ;
     }
     set_fds_list(fd);

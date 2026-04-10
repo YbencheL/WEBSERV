@@ -17,13 +17,13 @@ std::string extracting_file_name(const std::map<std::string, std::string> &heade
     return (file_name);
 }
 
-
-
 std::string validate_upload_path(Client &current_client)
 {
     std::string file_name = extracting_file_name(current_client.req.getHeaders());
     std::string file_path;
-    file_path = join_root_path(current_client.location_conf->root, current_client.req.getPath());
+    std::string req_path = resolve_location_relative_path(current_client.req.getPath(),
+            current_client.location_conf->path);
+    file_path = join_root_path(current_client.location_conf->root, req_path);
     if (!is_dir_exist(file_path)) {
         current_client.res.set_stat_code(NOT_FOUND);
         return ("");
@@ -44,8 +44,6 @@ std::string validate_upload_path(Client &current_client)
     return (file_path);
 }
 
-
-
 void    response_builder::handle_post()
 {
     std::string file_name = validate_upload_path(*this->current_client);
@@ -54,20 +52,26 @@ void    response_builder::handle_post()
         return ;
     }
 
-
     // rm-me
     std::cout << "[>] extracting_file_name -> " << file_name << std::endl;
     std::cout << "[>] file FD -> " << this->current_client->res.get_static_file_fd() << std::endl;
-    // exit(88);
 
     // >>>>>>>>>>>>>>>>>>>>>>>>> Body Processing >>>>>>>>>>>>>>>>>>>>>>>>>
     
     // is have alrady the body ready to make a response based on it
     const std::string &body_buff = this->current_client->req.getBody();
     
+    if (body_buff.empty()) {
+        this->current_client->res.set_stat_code(OK);
+        this->response_holder.append(current_client->res.get_start_line());
+        this->response_holder.append("Server: Webserv\r\n");
+        this->response_holder.append("Date: " + get_time() + "\r\n");
+        this->response_holder.append("Content-Length: 0\r\n\r\n");
+        return;
+    }
 
-
-    int short write_stat = write(this->current_client->res.get_static_file_fd(), body_buff.c_str(), body_buff.size());
+    // int short write_stat = write(this->current_client->res.get_static_file_fd(), body_buff.c_str(), body_buff.size());
+    ssize_t write_stat = write(this->current_client->res.get_static_file_fd(), body_buff.c_str(), body_buff.size());
     if (write_stat < 0) {
         close (this->current_client->res.get_static_file_fd());
         unlink(file_name.c_str());
@@ -75,11 +79,16 @@ void    response_builder::handle_post()
         return ;
     }
     close (this->current_client->res.get_static_file_fd());
-    this->current_client->res.set_stat_code(CREATED);
+    std::cout << "body -> " << this->current_client->req.getBody().empty() << std::endl;
+    if (this->current_client->req.getBody().empty())
+        this->current_client->res.set_stat_code(OK);
+    else
+        this->current_client->res.set_stat_code(CREATED);
 
-    response_holder.append(current_client->res.get_start_line());
-    response_holder.append("Server: Webserv\r\n");
-    response_holder.append("Date: " + get_time() + "\r\n");
+    this->response_holder.append(current_client->res.get_start_line());
+    this->response_holder.append("Server: Webserv\r\n");
+    this->response_holder.append("Date: " + get_time() + "\r\n");
+    this->response_holder.append("Content-Length: 0\r\n\r\n");  // most have to use it
 
     std::cout << "++++ [>] POST STATUS CODE " << current_client->res.get_stat_code() << std::endl;
 

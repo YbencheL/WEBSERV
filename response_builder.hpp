@@ -40,7 +40,10 @@ class response_builder
         std::string     get_stat_code_path(unsigned int stat_code);
         void            generate_error_page();
         void            extract_host_info(std::string raw_req);
-        
+
+        // handling the rediction with the return
+        void            return_handling();
+
         void            set_header(void);
         void            set_body(void);
         void            handle_get();

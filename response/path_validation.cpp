@@ -47,19 +47,55 @@ std::string join_root_path(const std::string root, std::string path)
     return (final_url);
 }
 
+std::string resolve_location_relative_path(const std::string &request_path, const std::string &location_path)
+{
+    std::string relative = request_path;
+
+    if (relative.size() >= location_path.size() && relative.substr(0, location_path.size()) == location_path)
+        relative = relative.substr(location_path.size());
+    if (relative.empty())
+        relative = "/";
+    return (relative);
+}
+
+void    response_builder::return_handling()
+{
+    std::map<int, std::string>::const_iterator it = 
+        current_client->location_conf->redirection.begin();
+    
+    // 3** enforcement later 
+    this->current_client->res.set_stat_code(it->first);
+    response_holder.clear();
+    response_holder.append(current_client->res.get_start_line());
+    response_holder.append("Server: Webserv\r\n");
+    response_holder.append("Date: " + get_time() + "\r\n");
+    if (!it->second.empty())    // location
+        response_holder.append("Location: " + it->second + "\r\n");
+    response_holder.append("Content-Length: 0\r\n\r\n");
+}
+
 void    response_builder::path_validation()
 {
     std::string index;
     struct stat statbuf;
 
-    // ----------------------------------------
-    // if (current_client->server_conf == NULL)
-    //     exit(100);
-    // if (current_client->location_conf == NULL)
-    //     exit(200);
-    // ----------------------------------------
+    if (current_client->server_conf == NULL || current_client->location_conf == NULL) {
+        this->current_client->res.set_stat_code(SERVER_ERROR);
+        return ;
+    }
+	
+    std::string req_path = resolve_location_relative_path(this->current_client->req.getPath(),
+            this->current_client->location_conf->path);
+    this->path = join_root_path(current_client->location_conf->root, req_path);
 
-    this->path = join_root_path(current_client->location_conf->root, this->current_client->req.getPath());
+	// RETURN THE REDIRECTION PATH IF EXIST
+	if (!this->current_client->location_conf->redirection.empty())
+    {
+        return_handling();
+        return ;
+    }
+
+    // this->path = join_root_path(current_client->location_conf->root, this->current_client->req.getPath());
     if (stat(path.c_str(), &statbuf) < 0) {
         this->current_client->res.set_stat_code(NOT_FOUND);
         return ;
@@ -79,7 +115,7 @@ void    response_builder::path_validation()
         else if (index.empty() && current_client->location_conf->autoindex)
             autoindex_page(this->path, this->current_client->req.getPath());
         else {
-            this->current_client->res.set_stat_code(FORBIDDEN_ACCESS);
+            this->current_client->res.set_stat_code(NOT_FOUND);
         }
     }
 }

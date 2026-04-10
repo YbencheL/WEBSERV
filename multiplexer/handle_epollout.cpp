@@ -5,9 +5,6 @@ void    socket_engine::handle_epollout(ssize_t fd)
 {
     if (raw_client_data[fd].is_serving_file)	// response -> stream file FD 
     {
-        // rm-me
-        std::cout << GREEN_S << "+++++++++++++++++++++++++++++++++ YOUR SERVING STATIC FILE +++++++++++++++++++++++++++++++++" << GREEN_E << std::endl;
-
         if (raw_client_data[fd].res.stream_response_to_client(fd))
             raw_client_data[fd].close_connection = true;
     }

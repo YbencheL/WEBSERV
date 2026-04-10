@@ -5,7 +5,11 @@ void socket_engine::process_connections(void)   // main func about events
 {
     while (true)
     {
-        int epoll_stat = epoll_wait(epoll_fd, events, MAX_EVENTS, TIMEOUT);
+        int epoll_stat = epoll_wait(epoll_fd, events, EPOLL_MAX_EVENTS, EPOLL_TIMEOUT);
+        if (epoll_stat == -1) {
+            std::cerr << "[!] epoll_wait failed: " << strerror(errno) << std::endl;
+            continue ;
+        }
         for (int i = 0; i < epoll_stat; i++)
         {
             int fd = events[i].data.fd;

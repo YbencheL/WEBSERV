@@ -61,7 +61,7 @@ void socket_engine::init_server_side(std::string port, std::string host)
     }
     
     // >>> listening mode for any incomming Handshak
-    if (listen(serv_socketFD, QUEUE_LIMIT) < 0)
+    if (listen(serv_socketFD, SOCK_SERVER_QUEUE_LIMIT) < 0)
     {
         freeaddrinfo(result);
         close(serv_socketFD);
