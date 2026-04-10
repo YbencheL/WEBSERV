@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <stdlib.h>
+#include <sys/epoll.h>
 #include <sys/time.h>
 #include <wait.h>
 
@@ -44,6 +45,10 @@ class Cgi
     struct timeval start;
     struct timeval current;
     size_t         sent;
+    bool           writeEnd;
+    bool           safeExit;
+    bool           closedAll;
+    bool           sigTermSent;
 
     Cgi();
     Cgi(const Cgi &other);
@@ -66,13 +71,13 @@ class Cgi
     void execution(Client &client);
     void childProcess();
     void parentProcess(Client &client);
-    void writing(int pipe_fd, unsigned int events, Client &client);
-    void reading(int pipe_fd, unsigned int events, Client &client);
-    void checkResponseAndTime();
+    void writing(int epoll_fd, unsigned int events, Client &client);
+    void reading(int epoll_fd, unsigned int events, Client &client);
+    void closeEverything(int epoll_fd, Client &client);
+    void checkResponseAndTime(int epoll_fd, Client &client);
     void handleCGI(Client &client);
-
-    int getPipeOutFd() const;
-    int getPipeInFd() const;
+    int  getPipeOutFd() const;
+    int  getPipeInFd() const;
 };
 
 #endif

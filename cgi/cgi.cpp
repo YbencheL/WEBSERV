@@ -7,9 +7,13 @@ size_t Cgi::CGI_MAX_OUTPUT = 1000000000;
 
 Cgi::Cgi()
 {
-    sent = 0;
-    envp = NULL;
-    argv = NULL;
+    sent        = 0;
+    safeExit    = true;
+    writeEnd    = false;
+    closedAll   = false;
+    sigTermSent = false;
+    envp        = NULL;
+    argv        = NULL;
 }
 
 Cgi::Cgi(const Cgi &other)
@@ -54,6 +58,9 @@ Cgi &Cgi::operator=(const Cgi &other)
         current.tv_sec  = other.current.tv_sec;
         current.tv_usec = other.current.tv_usec;
         sent            = other.sent;
+        writeEnd        = other.writeEnd;
+        safeExit        = other.safeExit;
+        closedAll       = other.closedAll;
     }
     return *this;
 }
@@ -280,15 +287,30 @@ void Cgi::childProcess()
 
 void Cgi::parentProcess(Client &client)
 {
-    (void)client;
     close(pipeIn[0]);
     close(pipeOut[1]);
     gettimeofday(&start, NULL);
 }
 
-void Cgi::writing(int pipe_fd, unsigned int events, Client &client)
+void Cgi::closeEverything(int epoll_fd, Client &client)
 {
-    (void)events;
+    if (!closedAll)
+    {
+        if (client.parse.body && !writeEnd)
+        {
+            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipeIn[1], NULL);
+            close(pipeIn[1]);
+        }
+        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipeOut[0], NULL);
+        close(pipeOut[0]);
+        closedAll = true;
+    }
+}
+
+void Cgi::writing(int epoll_fd, unsigned int events, Client &client)
+{
+    if (!(events & EPOLLOUT))
+        return;
 
     if (state != CGI_READY)
         return;
@@ -298,7 +320,9 @@ void Cgi::writing(int pipe_fd, unsigned int events, Client &client)
 
     if (remaining == 0)
     {
-        close(pipe_fd);
+        writeEnd = true;
+        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipeIn[1], NULL);
+        close(pipeIn[1]);
         return;
     }
 
@@ -306,74 +330,89 @@ void Cgi::writing(int pipe_fd, unsigned int events, Client &client)
     if (chunk > WRITE_READ_LIMIT)
         chunk = WRITE_READ_LIMIT;
 
-    ssize_t written = write(pipe_fd, body.c_str() + sent, chunk);
+    ssize_t written = write(pipeIn[1], body.c_str() + sent, chunk);
 
     if (written > 0)
     {
         sent += written;
+        if (sent == body.size())
+        {
+            writeEnd = true;
+            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipeIn[1], NULL);
+            close(pipeIn[1]);
+        }
     }
 
     if (written == -1)
     {
+        closeEverything(epoll_fd, client);
         state = ERROR;
-        close(pipe_fd);
     }
 }
 
-void Cgi::reading(int pipe_fd, unsigned int events, Client &client)
+void Cgi::reading(int epoll_fd, unsigned int events, Client &client)
 {
-    (void)events;
-    (void)client;
+    checkResponseAndTime(epoll_fd, client);
 
-    if (state != CGI_READY)
+    if (!(events & EPOLLIN) && !(events & EPOLLHUP))
         return;
 
     char buff[WRITE_READ_LIMIT];
 
-    int n = read(pipe_fd, buff, WRITE_READ_LIMIT);
+    int n = read(pipeOut[0], buff, WRITE_READ_LIMIT);
 
     if (n > 0)
         response.append(buff, n);
     else if (n == 0)
     {
-        //epoll_ctl(epollfd , EPOLL_CTL_DEL, pipeIn[1], NULL);
-        // close(pipeIn[1]);  
-        close(pipe_fd);
+        closeEverything(epoll_fd, client);
+        state = CGI_WAITING;
     }
     else if (n == -1)
     {
-        close(pipe_fd);
+        closeEverything(epoll_fd, client);
         state = ERROR;
     }
-    
 }
 
-// void Cgi::checkResponseAndTime()
-// { 
-//     if (response.size() > CGI_MAX_OUTPUT)
-//     {
-//         kill(pid, SIGTERM);
-//         // todo add counter for it the killing proccess
-//         state = ERROR;
-//         return;
-//     }
-//     pid_t wait = waitpid(pid, &status, WNOHANG);
-//     if (wait == pid && state == CGI_WAITING)
-//     {
-//         close(pipeOut[0]);
-//         state = CGI_DONE;
-//     }
-//     else
-//     {
-//         gettimeofday(&current, NULL);
-//         if (current.tv_sec - start.tv_sec > CGI_TIMEOUT)
-//         {
-//             kill(pid, SIGTERM);
-//             // todo add counter for it the killing proccess
-//             state = ERROR;
-//         }
-//     }
-// }
+void Cgi::checkResponseAndTime(int epoll_fd, Client &client)
+{
+    pid_t wait = waitpid(pid, &status, WNOHANG);
+    if (wait == pid && sigTermSent)
+    {
+        state = ERROR;
+        return ;
+    }
+    gettimeofday(&current, NULL);
+    if (wait == pid && state == CGI_WAITING && safeExit)
+        state = CGI_DONE;
+    else
+    {
+        if (current.tv_sec - start.tv_sec > CGI_TIMEOUT)
+        {
+            if (!sigTermSent)
+            {
+                closeEverything(epoll_fd, client);
+                safeExit = false;
+                kill(pid, SIGTERM);
+                sigTermSent = true;
+                wait        = waitpid(pid, &status, WNOHANG);
+                if (wait == pid)
+                    state = ERROR;
+            }
+            else
+            {
+                gettimeofday(&current, NULL);
+                if ((current.tv_sec - start.tv_sec) > (CGI_TIMEOUT + 3))
+                {
+                    kill(pid, SIGKILL);
+                    waitpid(pid, &status, 0);
+                    state = ERROR;
+                }
+            }
+        }
+    }
+}
 
 void Cgi::handleCGI(Client &client)
 {
