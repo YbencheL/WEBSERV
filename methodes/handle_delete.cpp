@@ -28,7 +28,8 @@ void    response_builder::handle_delete()
     {
         response_holder.append(current_client->res.get_start_line());
         response_holder.append("Server: Webserv\r\n");
-        response_holder.append("Date: " + get_time() + "\r\n\r\n");
+        response_holder.append("Date: " + get_time() + "\r\n");
+        response_holder.append("Content-Length: 0\r\n\r\n");
     }
     else
         generate_error_page();

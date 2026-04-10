@@ -13,7 +13,8 @@ void    socket_engine::handle_pipe_write(int pipe_fd)
 	// based on the content-length, but in case of chunk it's your choice
     // if (client.cgiHandler.sent >= body.size())
     {
-        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipe_fd, NULL);
+        if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipe_fd, NULL) == -1)
+            std::cerr << "[!] epoll_ctl EPOLL_CTL_DEL (pipe_write) failed: " << strerror(errno) << std::endl;
         close(pipe_fd);
         pipe_write_to_client.erase(pipe_fd);
         remove_fd_from_list(pipe_fd);

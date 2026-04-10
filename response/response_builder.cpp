@@ -74,7 +74,10 @@ void response_builder::build_response()
     else
     {
         path_validation();  // TOKNOW: auto-index gen
-        if (this->current_client->res.get_stat_code() != OK)
+        int stat = this->current_client->res.get_stat_code();
+        if (stat >= 300 && stat < 400)
+            ;
+        else if (stat != OK)
             generate_error_page();  // DONE [-] working on it
         else
         {

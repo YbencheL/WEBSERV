@@ -25,18 +25,30 @@
 # include "config_parsing/includes/ConfigPars.hpp"
 # include "client.hpp"
 
-# define TIMEOUT 1000 // type???
+// epoll_wait timeout in milliseconds (1000 ms = 1 second)
+# define EPOLL_TIMEOUT 1000
+
+// max number of ready events returned in one epoll_wait call
+# define EPOLL_MAX_EVENTS 64
+
+// listen backlog: max pending TCP connections before accept()
+# define SOCK_SERVER_QUEUE_LIMIT 128
+
+// fallback idle timeout per client in seconds
+// (can be overridden by server block set_timeout)
 # define TIMEOUT_LIMIT 5
-# define QUEUE_LIMIT 128
+
+// recv/read chunk size in bytes
 # define BUFFER_SIZE 8192
-// # define BUFFER_SIZE 10
+
+// default protocol for socket/getaddrinfo
+// (0 lets OS choose protocol matching SOCK_STREAM)
 # define PROTOCOL_TYLE 0
-# define MAX_EVENTS 64
 
 class socket_engine {
     private:
         int epoll_fd;   // ID for the table
-        struct epoll_event events[MAX_EVENTS];
+        struct epoll_event events[EPOLL_MAX_EVENTS];
         std::vector<int> server_side_fds;   // >>> backup for the server socket fds
         std::vector<int> fds_list;  // >>> backup for all the fds used to free them in case of SIGINT
         
@@ -73,7 +85,5 @@ class socket_engine {
         const std::deque<ServerBlock> &get_server_config_info() const;
         int one_tow;
 };
-
-time_t time(time_t* timer);
 
 # endif
