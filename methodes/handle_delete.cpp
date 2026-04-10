@@ -1,7 +1,7 @@
 # include "../response_builder.hpp"
 # include "../utils/utils.hpp"
 
-unsigned short int  ft_delete(const std::string &root, const std::string &path)
+unsigned short int Delete(const std::string &root, const std::string &path)
 {
     struct stat st;
 
@@ -19,9 +19,10 @@ unsigned short int  ft_delete(const std::string &root, const std::string &path)
 
 void    response_builder::handle_delete()
 {
-    std::string path = this->current_client->req.getPath();
+    std::string path = resolve_location_relative_path(this->current_client->req.getPath(),
+            this->current_client->location_conf->path);
 
-    unsigned short int stat_code = ft_delete(current_client->location_conf->root, path);
+    unsigned short int stat_code = Delete(current_client->location_conf->root, path);
     this->current_client->res.set_stat_code(stat_code);
     if (stat_code == NO_CONTENT)
     {
