@@ -3,3 +3,5 @@ Makefile
 sub.conf
 webserv
 cookies_sessions
+config.conf
+README.md
