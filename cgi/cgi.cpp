@@ -381,7 +381,7 @@ void Cgi::checkResponseAndTime(int epoll_fd, Client &client)
     if ((wait == pid || wait == -1) && sigTermSent)
     {
         state = ERROR;
-        return ;
+        return;
     }
     gettimeofday(&current, NULL);
     if ((wait == pid || wait == -1) && state == CGI_WAITING && safeExit)
@@ -434,4 +434,9 @@ int Cgi::getPipeOutFd() const
 int Cgi::getPipeInFd() const
 {
     return pipeIn[1];
+}
+
+std::string &Cgi::getCgiResponse()
+{
+    return response;
 }
