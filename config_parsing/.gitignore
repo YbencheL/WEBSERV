@@ -4,4 +4,4 @@ sub.conf
 webserv
 cookies_sessions
 README.md
-config.conf
+../config.conf
