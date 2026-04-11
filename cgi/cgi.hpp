@@ -58,10 +58,11 @@ class Cgi
     void setInterpreter(const std::string &interpreter);
     void setExtension(const std::string &extension);
 
-    std::string getInterpreter() const;
-    std::string getExtension() const;
-    char      **getArgv() const;
-    char      **getEnv() const;
+    std::string  getInterpreter() const;
+    std::string  getExtension() const;
+    std::string &getCgiResponse();
+    char       **getArgv() const;
+    char       **getEnv() const;
 
     void checkForCgi(Client &client);
     void buildEnv(Client &client);
