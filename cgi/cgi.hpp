@@ -68,9 +68,9 @@ class Cgi
     void buildArg();
     void setupCgi(Client &client);
     void createPipes();
-    void execution(Client &client);
+    void execution();
     void childProcess();
-    void parentProcess(Client &client);
+    void parentProcess();
     void writing(int epoll_fd, unsigned int events, Client &client);
     void reading(int epoll_fd, unsigned int events, Client &client);
     void closeEverything(int epoll_fd, Client &client);

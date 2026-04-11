@@ -235,7 +235,7 @@ void Cgi::createPipes()
     state = EXECUTING;
 }
 
-void Cgi::execution(Client &client)
+void Cgi::execution()
 {
     pid_t tmpid = fork();
     if (tmpid == -1)
@@ -249,7 +249,7 @@ void Cgi::execution(Client &client)
     else
     {
         pid = tmpid;
-        this->parentProcess(client);
+        this->parentProcess();
         state = CGI_READY; // this state mean the cgi is ready to pass fds for
                            // epoll event
     }
@@ -285,7 +285,7 @@ void Cgi::childProcess()
     exit(1);
 }
 
-void Cgi::parentProcess(Client &client)
+void Cgi::parentProcess()
 {
     close(pipeIn[0]);
     close(pipeOut[1]);
@@ -378,13 +378,13 @@ void Cgi::reading(int epoll_fd, unsigned int events, Client &client)
 void Cgi::checkResponseAndTime(int epoll_fd, Client &client)
 {
     pid_t wait = waitpid(pid, &status, WNOHANG);
-    if (wait == pid && sigTermSent)
+    if ((wait == pid || wait == -1) && sigTermSent)
     {
         state = ERROR;
         return ;
     }
     gettimeofday(&current, NULL);
-    if (wait == pid && state == CGI_WAITING && safeExit)
+    if ((wait == pid || wait == -1) && state == CGI_WAITING && safeExit)
         state = CGI_DONE;
     else
     {
@@ -423,7 +423,7 @@ void Cgi::handleCGI(Client &client)
     if (this->state == CREAT_PIPES)
         this->createPipes();
     if (this->state == EXECUTING)
-        this->execution(client);
+        this->execution();
 }
 
 int Cgi::getPipeOutFd() const
