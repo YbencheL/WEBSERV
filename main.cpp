@@ -45,18 +45,15 @@ int main(int ac, char **av)
     {
         signal(SIGINT, signal_handler);
         s_engine.set_server_config_info(ServerConfig);
-
-        std::string host;
-        std::string port;
+        
+        // ----------------- SERVER LOGS ----------------- //
         for (size_t i = 0; i < ServerConfig.size(); i++)
         {
-            // ----------------- JUST LOGS ----------------- //
-            host = ServerConfig[i].host;
-            port = to_string(ServerConfig[i].listen);
+            std::string host = ServerConfig[i].host;
+            std::string port = to_string(ServerConfig[i].listen);
             std::cout << GREEN_S << "Serving HTTP on " << host << " port " << port
                 << " (http://" << host << ":" << port << "/)"
                 << GREEN_E << std::endl;
-            // --------------------------------------------- //
             s_engine.init_server_side(port, host);
         }
         s_engine.process_connections();

@@ -54,6 +54,7 @@ class response_builder
     public:
         response_builder();
         void    init_response_builder(Client &current_client);
+        void    resolve_request_path();
         void    validate_headers();
         void    build_response();
 

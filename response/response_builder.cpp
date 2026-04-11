@@ -9,6 +9,14 @@ void    response_builder::init_response_builder(Client &current_client) {
     this->current_client = &current_client;
 }
 
+void    response_builder::resolve_request_path()
+{
+    if (this->current_client->res.get_stat_code() != OK)
+        return;
+    path_validation();
+    this->current_client->res.set_path(this->path);
+}
+
 std::string response_builder::index_file_iterator(const std::string &full_path)
 {
     std::string redirection_path;
@@ -73,7 +81,7 @@ void response_builder::build_response()
         generate_error_page();  // DONE [-] working on it
     else
     {
-        path_validation();  // TOKNOW: auto-index gen
+        resolve_request_path();  // TOKNOW: auto-index gen
         int stat = this->current_client->res.get_stat_code();
         if (stat >= 300 && stat < 400)
             ;

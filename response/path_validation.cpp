@@ -12,17 +12,6 @@ bool    is_dir_exist(const std::string &path)
     return (false);
 }
 
-// std::string    response_builder::get_stat_code_path(unsigned int stat_code)
-// {
-//     std::deque<int> key;
-
-//     key.push_back(stat_code);
-//     std::map<std::deque<int>, std::string>::const_iterator it = this->current_client->server_conf->error_page.find(key);
-//     if(it != this->current_client->server_conf->error_page.end())
-//         return (it->second);
-//     return ("");
-// }
-
 std::string    response_builder::get_stat_code_path(unsigned int stat_code)
 {
     std::map<int, std::string>::const_iterator it = this->current_client->server_conf->error_page.find(stat_code);

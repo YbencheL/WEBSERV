@@ -13,7 +13,6 @@ void socket_engine::process_connections(void)   // main func about events
         for (int i = 0; i < epoll_stat; i++)
         {
             int fd = events[i].data.fd;
-
             if (is_server(server_side_fds, fd))
                 server_event(fd);
             else if (pipe_to_client.count(fd))	// ready to read from CGI
