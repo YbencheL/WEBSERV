@@ -100,7 +100,7 @@ void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, 
     {
         if (errorsnum.size() == 1)
         {
-            if ((errornum >= 300 && errornum <= 399) && value.empty())
+            if ((num >= 300 && num <= 399) && value.empty())
                 error_line(": status code 3xx must have a path", tokenContainer[i].line);
             loc.redirection[num] = value;
         }
