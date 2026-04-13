@@ -9,6 +9,7 @@ Session& Session::operator=(const Session& obj)
         id = obj.id;
         data = obj.data;
         last_access = obj.last_access;
+        is_new = obj.is_new;
     }
     return *this;
 }
@@ -18,6 +19,12 @@ Session::Session(const Session& obj)
     id = obj.id;
     data = obj.data;
     last_access = obj.last_access;
+    is_new = obj.is_new;
+}
+
+std::map<std::string, std::string>& Session::GetData()
+{
+    return data;
 }
 
 std::string& Session::GetSessionVal(std::string key)

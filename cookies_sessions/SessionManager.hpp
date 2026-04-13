@@ -1,7 +1,7 @@
 #ifndef SESSIONMANAGER_HPP
 #define SESSIONMANAGER_HPP
 
-#define TIMEOUT 1800
+#define TIMEOUT_CS 1800
 
 #include "Session.hpp"
 #include "cookies_session_handler.hpp"
@@ -21,7 +21,7 @@ class SessionManager {
         SessionManager& operator=(const SessionManager& obj);
         ~SessionManager();
         bool sessionExists(const std::string& id);
-        void sessionDelete(std::string& id);
+        void sessionTimeCheck(std::string& id);
 };
 
 #endif

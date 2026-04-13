@@ -54,6 +54,7 @@ Session& SessionManager::createSession()
     Ses.last_access = std::time(0);
     Ses.id = sessionID;
     sessions[sessionID] = Ses;
+    Ses.is_new = true;
     return getSession(sessionID);
 }
 
@@ -65,11 +66,11 @@ bool SessionManager::sessionExists(const std::string& id)
         return false;
 }
 
-void SessionManager::sessionDelete(std::string& id)
+void SessionManager::sessionTimeCheck(std::string& id)
 {
     time_t current_time;
 
     current_time = std::time(0);
-    if (current_time - sessions[id].last_access > TIMEOUT)
+    if (current_time - sessions[id].last_access > TIMEOUT_CS)
         sessions.erase(id);
 }

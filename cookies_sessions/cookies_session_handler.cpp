@@ -22,7 +22,7 @@ std::vector<std::string> split(std::vector<std::string> keywords, char dilimeter
     return splited_cont;
 }
 
-void  parseCookies(std::string header)
+std::map<std::string, std::string>&  parseCookies(std::string header)
 {
     std::string value;
     Session cookie;
@@ -45,15 +45,8 @@ void  parseCookies(std::string header)
         cookie.SetSessionVal(splited_by_equal_sign[i], splited_by_equal_sign[i + 1]);
         i += 2;
     }
+    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
     for(std::map<std::string, std::string>::iterator it = cookie.data.begin(); it != cookie.data.end(); ++it)
         std::cout << it->first << " --> " << it->second << std::endl;
-}
-
-int main()
-{
-    // std::map<std::string, std::string> cookie;
-    std::string key;
-
-    parseCookies("Cookie: sessionId=abc123; theme=dark");
-
+    return cookie.GetData();
 }
