@@ -208,6 +208,13 @@ void Cgi::buildArg()
 
 void Cgi::setupCgi(Client &client)
 {
+    sent = 0;
+    response.clear();
+    safeExit    = true;
+    writeEnd    = false;
+    closedAll   = false;
+    sigTermSent = false;
+
     buildEnv(client);
     buildArg();
     state = CREAT_PIPES;
@@ -235,7 +242,7 @@ void Cgi::createPipes()
     state = EXECUTING;
 }
 
-void Cgi::execution()
+void Cgi::execution(Client &client)
 {
     pid_t tmpid = fork();
     if (tmpid == -1)
@@ -250,8 +257,12 @@ void Cgi::execution()
     {
         pid = tmpid;
         this->parentProcess();
-        state = CGI_READY; // this state mean the cgi is ready to pass fds for
-                           // epoll event
+        state = CGI_READY;
+        if (!client.parse.body)
+        {
+            writeEnd = true;
+            close(pipeIn[1]);
+        }
     }
 }
 
@@ -292,21 +303,6 @@ void Cgi::parentProcess()
     gettimeofday(&start, NULL);
 }
 
-void Cgi::closeEverything(int epoll_fd, Client &client)
-{
-    if (!closedAll)
-    {
-        if (client.parse.body && !writeEnd)
-        {
-            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipeIn[1], NULL);
-            close(pipeIn[1]);
-        }
-        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipeOut[0], NULL);
-        close(pipeOut[0]);
-        closedAll = true;
-    }
-}
-
 void Cgi::writing(int epoll_fd, unsigned int events, Client &client)
 {
     if (!(events & EPOLLOUT))
@@ -344,15 +340,12 @@ void Cgi::writing(int epoll_fd, unsigned int events, Client &client)
     }
 
     if (written == -1)
-    {
-        closeEverything(epoll_fd, client);
         state = ERROR;
-    }
 }
 
-void Cgi::reading(int epoll_fd, unsigned int events, Client &client)
+void Cgi::reading(int epoll_fd, unsigned int events)
 {
-    checkResponseAndTime(epoll_fd, client);
+    checkResponseAndTime();
 
     if (!(events & EPOLLIN) && !(events & EPOLLHUP))
         return;
@@ -363,19 +356,15 @@ void Cgi::reading(int epoll_fd, unsigned int events, Client &client)
 
     if (n > 0)
         response.append(buff, n);
-    else if (n == 0)
+    else if (n == 0 || (events & EPOLLHUP))
     {
-        closeEverything(epoll_fd, client);
         state = CGI_WAITING;
     }
     else if (n == -1)
-    {
-        closeEverything(epoll_fd, client);
         state = ERROR;
-    }
 }
 
-void Cgi::checkResponseAndTime(int epoll_fd, Client &client)
+void Cgi::checkResponseAndTime()
 {
     pid_t wait = waitpid(pid, &status, WNOHANG);
     if ((wait == pid || wait == -1) && sigTermSent)
@@ -392,7 +381,6 @@ void Cgi::checkResponseAndTime(int epoll_fd, Client &client)
         {
             if (!sigTermSent)
             {
-                closeEverything(epoll_fd, client);
                 safeExit = false;
                 kill(pid, SIGTERM);
                 sigTermSent = true;
@@ -423,7 +411,7 @@ void Cgi::handleCGI(Client &client)
     if (this->state == CREAT_PIPES)
         this->createPipes();
     if (this->state == EXECUTING)
-        this->execution();
+        this->execution(client);
 }
 
 int Cgi::getPipeOutFd() const
