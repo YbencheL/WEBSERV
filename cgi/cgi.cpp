@@ -7,9 +7,13 @@ size_t Cgi::CGI_MAX_OUTPUT = 1000000000;
 
 Cgi::Cgi()
 {
-    sent = 0;
-    envp = NULL;
-    argv = NULL;
+    sent        = 0;
+    safeExit    = true;
+    writeEnd    = false;
+    closedAll   = false;
+    sigTermSent = false;
+    envp        = NULL;
+    argv        = NULL;
 }
 
 Cgi::Cgi(const Cgi &other)
@@ -53,7 +57,10 @@ Cgi &Cgi::operator=(const Cgi &other)
         start.tv_usec   = other.start.tv_usec;
         current.tv_sec  = other.current.tv_sec;
         current.tv_usec = other.current.tv_usec;
-        sent = other.sent;
+        sent            = other.sent;
+        writeEnd        = other.writeEnd;
+        safeExit        = other.safeExit;
+        closedAll       = other.closedAll;
     }
     return *this;
 }
@@ -228,7 +235,7 @@ void Cgi::createPipes()
     state = EXECUTING;
 }
 
-void Cgi::execution(Client &client)
+void Cgi::execution()
 {
     pid_t tmpid = fork();
     if (tmpid == -1)
@@ -242,7 +249,7 @@ void Cgi::execution(Client &client)
     else
     {
         pid = tmpid;
-        this->parentProcess(client);
+        this->parentProcess();
         state = CGI_READY; // this state mean the cgi is ready to pass fds for
                            // epoll event
     }
@@ -278,27 +285,78 @@ void Cgi::childProcess()
     exit(1);
 }
 
-void Cgi::parentProcess(Client &client)
+void Cgi::parentProcess()
 {
-    (void)client;
     close(pipeIn[0]);
     close(pipeOut[1]);
     gettimeofday(&start, NULL);
 }
 
-void Cgi::writing(Client &client)
+void Cgi::closeEverything(int epoll_fd, Client &client)
 {
-    std::string &body    = client.req.getBody();
-    size_t       sending = body.size() - sent;
-
-    if (sending > WRITE_READ_LIMIT)
-        sending = WRITE_READ_LIMIT;
-
-    write(pipeIn[1], body.c_str() + sent, sending);
+    if (!closedAll)
+    {
+        if (client.parse.body && !writeEnd)
+        {
+            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipeIn[1], NULL);
+            close(pipeIn[1]);
+        }
+        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipeOut[0], NULL);
+        close(pipeOut[0]);
+        closedAll = true;
+    }
 }
 
-void Cgi::reading()
+void Cgi::writing(int epoll_fd, unsigned int events, Client &client)
 {
+    if (!(events & EPOLLOUT))
+        return;
+
+    if (state != CGI_READY)
+        return;
+    std::string &body = client.req.getBody();
+
+    size_t remaining = body.size() - sent;
+
+    if (remaining == 0)
+    {
+        writeEnd = true;
+        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipeIn[1], NULL);
+        close(pipeIn[1]);
+        return;
+    }
+
+    size_t chunk = remaining;
+    if (chunk > WRITE_READ_LIMIT)
+        chunk = WRITE_READ_LIMIT;
+
+    ssize_t written = write(pipeIn[1], body.c_str() + sent, chunk);
+
+    if (written > 0)
+    {
+        sent += written;
+        if (sent == body.size())
+        {
+            writeEnd = true;
+            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipeIn[1], NULL);
+            close(pipeIn[1]);
+        }
+    }
+
+    if (written == -1)
+    {
+        closeEverything(epoll_fd, client);
+        state = ERROR;
+    }
+}
+
+void Cgi::reading(int epoll_fd, unsigned int events, Client &client)
+{
+    checkResponseAndTime(epoll_fd, client);
+
+    if (!(events & EPOLLIN) && !(events & EPOLLHUP))
+        return;
+
     char buff[WRITE_READ_LIMIT];
 
     int n = read(pipeOut[0], buff, WRITE_READ_LIMIT);
@@ -306,37 +364,55 @@ void Cgi::reading()
     if (n > 0)
         response.append(buff, n);
     else if (n == 0)
-        close(
-            pipeOut[0]
-        ); // need to know what state to be set or what should i do after this
+    {
+        closeEverything(epoll_fd, client);
+        state = CGI_WAITING;
+    }
+    else if (n == -1)
+    {
+        closeEverything(epoll_fd, client);
+        state = ERROR;
+    }
 }
 
-// void Cgi::checkResponseAndTime()
-// {
-//     if (response.size() > CGI_MAX_OUTPUT)
-//     {
-//         kill(pid, SIGTERM);
-//         // todo add counter for it the killing proccess
-//         state = ERROR;
-//         return;
-//     }
-//     pid_t wait = waitpid(pid, &status, WNOHANG);
-//     if (wait == pid && state == CGI_WAITING)
-//     {
-//         close(pipeOut[0]);
-//         state = CGI_DONE;
-//     }
-//     else
-//     {
-//         gettimeofday(&current, NULL);
-//         if (current.tv_sec - start.tv_sec > CGI_TIMEOUT)
-//         {
-//             kill(pid, SIGTERM);
-//             // todo add counter for it the killing proccess
-//             state = ERROR;
-//         }
-//     }
-// }
+void Cgi::checkResponseAndTime(int epoll_fd, Client &client)
+{
+    pid_t wait = waitpid(pid, &status, WNOHANG);
+    if ((wait == pid || wait == -1) && sigTermSent)
+    {
+        state = ERROR;
+        return;
+    }
+    gettimeofday(&current, NULL);
+    if ((wait == pid || wait == -1) && state == CGI_WAITING && safeExit)
+        state = CGI_DONE;
+    else
+    {
+        if (current.tv_sec - start.tv_sec > CGI_TIMEOUT)
+        {
+            if (!sigTermSent)
+            {
+                closeEverything(epoll_fd, client);
+                safeExit = false;
+                kill(pid, SIGTERM);
+                sigTermSent = true;
+                wait        = waitpid(pid, &status, WNOHANG);
+                if (wait == pid)
+                    state = ERROR;
+            }
+            else
+            {
+                gettimeofday(&current, NULL);
+                if ((current.tv_sec - start.tv_sec) > (CGI_TIMEOUT + 3))
+                {
+                    kill(pid, SIGKILL);
+                    waitpid(pid, &status, 0);
+                    state = ERROR;
+                }
+            }
+        }
+    }
+}
 
 void Cgi::handleCGI(Client &client)
 {
@@ -347,10 +423,10 @@ void Cgi::handleCGI(Client &client)
     if (this->state == CREAT_PIPES)
         this->createPipes();
     if (this->state == EXECUTING)
-        this->execution(client);
+        this->execution();
 }
 
-int Cgi::getPipeFd() const
+int Cgi::getPipeOutFd() const
 {
     return pipeOut[0];
 }
@@ -358,4 +434,9 @@ int Cgi::getPipeFd() const
 int Cgi::getPipeInFd() const
 {
     return pipeIn[1];
+}
+
+std::string &Cgi::getCgiResponse()
+{
+    return response;
 }

@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <stdlib.h>
+#include <sys/epoll.h>
 #include <sys/time.h>
 #include <wait.h>
 
@@ -44,6 +45,10 @@ class Cgi
     struct timeval start;
     struct timeval current;
     size_t         sent;
+    bool           writeEnd;
+    bool           safeExit;
+    bool           closedAll;
+    bool           sigTermSent;
 
     Cgi();
     Cgi(const Cgi &other);
@@ -53,26 +58,27 @@ class Cgi
     void setInterpreter(const std::string &interpreter);
     void setExtension(const std::string &extension);
 
-    std::string getInterpreter() const;
-    std::string getExtension() const;
-    char      **getArgv() const;
-    char      **getEnv() const;
+    std::string  getInterpreter() const;
+    std::string  getExtension() const;
+    std::string &getCgiResponse();
+    char       **getArgv() const;
+    char       **getEnv() const;
 
     void checkForCgi(Client &client);
     void buildEnv(Client &client);
     void buildArg();
     void setupCgi(Client &client);
     void createPipes();
-    void execution(Client &client);
+    void execution();
     void childProcess();
-    void parentProcess(Client &client);
-    void writing(Client &client);
-    void checkResponseAndTime();
-    void reading();
+    void parentProcess();
+    void writing(int epoll_fd, unsigned int events, Client &client);
+    void reading(int epoll_fd, unsigned int events, Client &client);
+    void closeEverything(int epoll_fd, Client &client);
+    void checkResponseAndTime(int epoll_fd, Client &client);
     void handleCGI(Client &client);
-
-    int getPipeFd() const;
-    int getPipeInFd() const;
+    int  getPipeOutFd() const;
+    int  getPipeInFd() const;
 };
 
 #endif
