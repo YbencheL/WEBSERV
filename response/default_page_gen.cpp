@@ -88,7 +88,6 @@ void    response_builder::autoindex_gen(std::vector<std::string> &dir_list, cons
         "<body>\n"
         "\t<div class=\"index_container\">\n";
 
-    std::cout << GREEN_S << "REQUEST PATH -> " << request_uri << GREEN_E << std::endl;
     if (request_uri != "/")
         this->body_buff.append("\t\t<a class=\"index_path\" href=\"../\">../</a><br>\n");
 

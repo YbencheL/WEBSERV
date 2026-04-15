@@ -47,6 +47,18 @@ std::string resolve_location_relative_path(const std::string &request_path, cons
     return (relative);
 }
 
+std::string resolve_request_filesystem_path(const Client &client)
+{
+    if (client.location_conf == NULL)
+        return ("");
+
+    std::string req_path = resolve_location_relative_path(
+        client.req.getPath(),
+        client.location_conf->path
+    );
+    return (join_root_path(client.location_conf->root, req_path));
+}
+
 void    response_builder::return_handling()
 {
     std::map<int, std::string>::const_iterator it = 
@@ -73,10 +85,8 @@ void    response_builder::path_validation()
         return ;
     }
 	
-    std::string req_path = resolve_location_relative_path(this->current_client->req.getPath(),
-            this->current_client->location_conf->path);
-    this->path = join_root_path(current_client->location_conf->root, req_path);
-
+    this->path = resolve_request_filesystem_path(*this->current_client);
+    // std::cout << "[>] final path -> " << this->path << std::endl;
 	// RETURN THE REDIRECTION PATH IF EXIST
 	if (!this->current_client->location_conf->redirection.empty())
     {
@@ -94,11 +104,11 @@ void    response_builder::path_validation()
     }
     if (S_ISDIR(statbuf.st_mode))
     {   
-        std::cout << "[+] DIR REQUESTED HEEEEEEEEEEEEEREEEEEEEEEE" << std::endl;
-        std::cout << "this->path -> " << this->path << std::endl;
+        // std::cout << "[+] DIR REQUESTED HEEEEEEEEEEEEEREEEEEEEEEE" << std::endl;
+        // std::cout << "this->path -> " << this->path << std::endl;
 
         index = index_file_iterator(this->path);
-        std::cout << "INDEX -> " << index << std::endl;
+        // std::cout << "INDEX -> " << index << std::endl;
         if (!index.empty())     // here will server the static files .html
             this->path = index;
         else if (index.empty() && current_client->location_conf->autoindex)

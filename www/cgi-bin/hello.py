@@ -1,3 +1,10 @@
-while(1):
+# !/usr/bin/env python3
+
+print("Content-Type: text/plain")
+print()
+
+while (1):
     pass
-    # print("hello mother fukcer")
+
+# while (1):
+# print("hello world")

@@ -39,7 +39,8 @@
 # define TIMEOUT_LIMIT 5
 
 // recv/read chunk size in bytes
-# define BUFFER_SIZE 8192
+# define BUFFER_SIZE 1048576
+// # define BUFFER_SIZE 8192
 
 // default protocol for socket/getaddrinfo
 // (0 lets OS choose protocol matching SOCK_STREAM)
@@ -63,8 +64,8 @@ class socket_engine {
 		
         void    handle_epollin(ssize_t fd);
         void    handle_epollout(ssize_t fd);
-        void    handle_pipe_read(int pipe_fd);
-        void    handle_pipe_write(int pipe_fd);
+        void    handle_pipe_read(int pipe_fd, uint32_t events);
+        void    handle_pipe_write(int pipe_fd, uint32_t events);
         void    modify_epoll_event(ssize_t fd, uint32_t events);
     public:
         socket_engine();

@@ -7,12 +7,14 @@ socket_engine s_engine;
 
 void signal_handler(int sig_flag) {
     (void)sig_flag;
-    throw std::runtime_error("[!] SIGINT interrupt, END :(");
+    const char msg[] = "\033[3;43;30m\n[!] SIGINT received, shutting down gracefully...\033[0m";
+    throw std::runtime_error(msg);
 }
 
 int main(int ac, char **av)
 {
-    signal(SIGINT, signal_handler);
+    std::signal(SIGPIPE, SIG_IGN);
+    std::signal(SIGINT, signal_handler);
     std::deque<ServerBlock> ServerConfig;
 
     if (ac < 2)
@@ -51,9 +53,9 @@ int main(int ac, char **av)
         {
             std::string host = ServerConfig[i].host;
             std::string port = to_string(ServerConfig[i].listen);
-            std::cout << GREEN_S << "Serving HTTP on " << host << " port " << port
+            std::cout << GREEN << "Serving HTTP on " << host << " port " << port
                 << " (http://" << host << ":" << port << "/)"
-                << GREEN_E << std::endl;
+                << RSET << std::endl;
             s_engine.init_server_side(port, host);
         }
         s_engine.process_connections();

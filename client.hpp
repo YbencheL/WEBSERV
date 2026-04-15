@@ -7,11 +7,12 @@
 # include "response.hpp"
 #include "cgi/cgi.hpp"
 
-# define GREEN_S "\033[0;32m"
-# define GREEN_E "\033[0m"
-
-# define READ_S "\033[31m"
-# define READ_E "\033[0m"
+# define GREEN "\033[0;32m"
+# define RED "\033[31m"
+# define BLUE "\x1B[36m"
+# define YELLOW "\x1B[93m"
+# define PINK "\x1B[35m"
+# define RSET "\033[0m"
 
 // default extansion in case (No name, No content-type)
 # define DEFAULT_EXTENSION ".txt"

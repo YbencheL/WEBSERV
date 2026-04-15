@@ -51,10 +51,9 @@ void    response_builder::serving_static_file()
     this->current_client->res.set_static_file_fd(fd);
     this->current_client->is_serving_file = true;
 
-    std::cout << "[>] static file: " << this->path << " size: " << st.st_size << std::endl; // rm-me
     current_client->res.set_file_size(st.st_size);
 
-    // ______________________________________header______________________________________
+    // >>> header init
     this->header_buff.append(current_client->res.get_start_line());
     this->header_buff.append("Server: Webserv\r\n");
     this->header_buff.append("Date: " + get_time() + "\r\n");
@@ -63,7 +62,6 @@ void    response_builder::serving_static_file()
     else
         this->header_buff.append("Content-Type: " + extension_to_media_type(this->path) + "\r\n");
     this->header_buff.append("Content-Length: " + to_string(st.st_size) + "\r\n\r\n");
-    // __________________________________________________________________________________
 
     this->response_holder = header_buff;
 }
@@ -71,11 +69,6 @@ void    response_builder::serving_static_file()
 // TODO-LATER: Methode not allowed
 void response_builder::build_response()
 {
-    // rm-me
-    std::cout << READ_S << "--------- Methode: " << current_client->req.getMethod() << READ_E << std::endl;
-    std::cout << READ_S << "--------- Path: " << current_client->req.getPath() << READ_E << std::endl;
-    std::cout << "[>] STATUS CODE " << current_client->res.get_stat_code() << std::endl;
-
 
     if (this->current_client->res.get_stat_code() != OK)
         generate_error_page();  // DONE [-] working on it
@@ -100,7 +93,5 @@ void response_builder::build_response()
         }
 
     }
-
-    std::cout << READ_S << "--------- START RESPONSE\n" << response_holder << "\n------- END RESPONSE" << READ_E << std::endl;
     this->current_client->res.set_raw_response(response_holder);
 }

@@ -16,17 +16,9 @@ void response_builder::set_header(void)
 
 void response_builder::set_body(void)
 {
-    /* TODO-CGI
-        Before calling the: this->body = file_to_string(this->path);
-        have to check if the this->path extansion is a CGI extansion
-        if yes execute that file, it's resoute will be in the body
-    */
-
-    std::cout << "this->path -> " << this->path << std::endl;
     if (!is_body_ready)
         serving_static_file();
-    else
-    {
+    else {
         response_holder.append("Content-Length: " + to_string(this->body_buff.size()) + "\r\n\r\n");
         response_holder.append(this->body_buff);
     }
@@ -40,11 +32,10 @@ void response_builder::generate_error_page()
     if (this->current_client->server_conf)
         this->path = get_stat_code_path(status_code);
 
-    std::cout << "this->path -> " << this->path << std::endl;
+    // std::cout << "DELETE PATH -> " << this->path << std::endl;
     if (is_valid_error_path(this->path))
         serving_static_file();
-    else
-    {
+    else{
         set_header();
         default_error_page(status_code);
     }

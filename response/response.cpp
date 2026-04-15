@@ -23,7 +23,8 @@ void    response::set_path(std::string path) {
     this->path = path;
 }
 
-void    response::set_raw_response(std::string raw_res) {
+// void    response::set_raw_response(std::string raw_res) {
+void    response::set_raw_response(std::string &raw_res) {
     this->final_raw_response = raw_res;
 }
 
@@ -53,7 +54,8 @@ std::string response::get_path(void) const {
     return (this->path);
 }
 
-std::string response::get_raw_response(void) {
+// std::string response::get_raw_response(void) {
+std::string &response::get_raw_response(void) {
     return (this->final_raw_response);
 }
 
@@ -81,11 +83,11 @@ off_t response::get_bytes_sent(void) const {
     return (this->bytes_sent);
 }
 
-
-bool            response::stream_response_to_client(int fd)
+bool    response::stream_response_to_client(int fd)
 {
     if (this->bytes_sent < (off_t)final_raw_response.size())
     {
+        // MSG_NOSIGNAL -> to prevent SIGPIPE signal when the client has closed the connection
         ssize_t send_stat = send(fd, final_raw_response.c_str() + this->bytes_sent, this->final_raw_response.size() - this->bytes_sent, MSG_NOSIGNAL);
         if (send_stat == -1)
             return (false);
@@ -105,6 +107,7 @@ bool            response::stream_response_to_client(int fd)
         int readed = read(static_file_fd, file_buffer, BUFFER_SIZE);
         if (readed > 0)
         {
+            // MSG_NOSIGNAL -> to prevent SIGPIPE signal when the client has closed the connection
             ssize_t bytes_actually_sent = send(fd, file_buffer, readed, MSG_NOSIGNAL);
 
             if (bytes_actually_sent > 0)
@@ -112,7 +115,7 @@ bool            response::stream_response_to_client(int fd)
                 this->set_bytes_sent(this->bytes_sent + bytes_actually_sent);
                 // - header size
                 if (off_t(this->bytes_sent - final_raw_response.size()) >= this->file_size) {
-                    std::cout << "file_is_done" << std::endl;
+                    // std::cout << "file_is_done" << std::endl;
                     close(static_file_fd);
                     return (true);
                 }

@@ -59,13 +59,15 @@ void socket_engine::check_all_client_timeouts(void)
         size_t timeout_limit = TIMEOUT_LIMIT;
         int fd = it->first;
 
+        if(it->second.cgiHandler.state == CGI_READY || it->second.cgiHandler.state == CGI_WAITING)
+            it->second.cgiHandler.checkResponseAndTime(epoll_fd, it->second);
+
         if (it->second.close_connection)
         {
             ++it;
             terminate_client(fd, "");
             continue;
         }
-
         if (it->second.server_conf != NULL)
             timeout_limit = it->second.server_conf->set_timeout;
 
@@ -85,12 +87,36 @@ void socket_engine::terminate_client(int fd, std::string stat)
     if (epoll_ctl(this->epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1)
         std::cerr << "[!] epoll_ctl EPOLL_CTL_DEL failed: " << strerror(errno) << std::endl;
 
+    std::map<int, int>::iterator it_r = pipe_to_client.begin();
+    std::map<int, int>::iterator it_w = pipe_write_to_client.begin();
+    for ( ; it_r != pipe_to_client.end(); ) {
+        if (it_r->second == fd) {
+            if (epoll_ctl(this->epoll_fd, EPOLL_CTL_DEL, it_r->first, NULL) == -1)
+                std::cerr << "[!] epoll_ctl EPOLL_CTL_DEL failed: " << strerror(errno) << std::endl;
+            close (it_r->first);  // client
+            remove_fd_from_list(it_r->first);
+            pipe_to_client.erase(it_r++);
+        } else
+            ++it_r;
+    }
+    for ( ; it_w != pipe_write_to_client.end(); ) {
+        if (it_w->second == fd) {
+            if (epoll_ctl(this->epoll_fd, EPOLL_CTL_DEL, it_w->first, NULL) == -1)
+               std::cerr << "[!] epoll_ctl EPOLL_CTL_DEL failed: " << strerror(errno) << std::endl;
+            close (it_w->first);  // client
+            remove_fd_from_list(it_w->first);
+            pipe_write_to_client.erase(it_w++);
+        }
+        else
+            ++it_w;
+    }
+
     this->raw_client_data.erase(fd);
     remove_fd_from_list(fd);
     close(fd);
 
     if (!stat.empty())
-        std::cerr << GREEN_S << "terminate_client stat ->" << stat << GREEN_E << std::endl;
+        std::cerr << RED << "terminate_client stat ->" << stat << RSET << std::endl;
 }
 
 void socket_engine::modify_epoll_event(ssize_t fd, uint32_t events)
