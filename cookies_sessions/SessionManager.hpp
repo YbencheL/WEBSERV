@@ -1,7 +1,7 @@
 #ifndef SESSIONMANAGER_HPP
 #define SESSIONMANAGER_HPP
 
-#define TIMEOUT_CS 1800
+#define TIMEOUT_CS 1800 // 30 min
 
 #include "Session.hpp"
 #include "cookies_session_handler.hpp"
