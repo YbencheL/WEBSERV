@@ -1,6 +1,6 @@
 CPP = c++
 COMPILE_FLAG = -std=c++98
-CPP_FLAGS = -Wall -Wextra -Werror -fsanitize=address
+CPP_FLAGS = -Wall -Wextra #-Werror -g #-fsanitize=address
 
 NAME = webserv
 SRC = ./main.cpp ./socket_init/init_socket_engine.cpp ./socket_init/init_client_side.cpp \
@@ -16,7 +16,7 @@ SRC = ./main.cpp ./socket_init/init_socket_engine.cpp ./socket_init/init_client_
 		./request/requestParse/requestLineParser.cpp ./request/requestParse/headersParser.cpp ./request/requestParse/parseBody.cpp \
 		./cgi/cgi.cpp \
 		cookies_sessions/cookies_session_handler.cpp cookies_sessions/Session.cpp \
-		cookies_sessions/cookies_and_sessions_logic.cpp cookies_sessions/SessionManager.cpp \
+		cookies_sessions/cookies_and_sessions_logic.cpp cookies_sessions/SessionManager.cpp
 
 OBJ = $(SRC:.cpp=.o)
 

@@ -1,5 +1,6 @@
 # include "./socket_engine.hpp"
 # include "./config_parsing/includes/ConfigPars.hpp"
+# include "./cookies_sessions/SessionManager.hpp"
 # include "./utils/utils.hpp"
 # include <csignal>
 
@@ -57,6 +58,8 @@ int main(int ac, char **av)
                 << RSET << std::endl;
             s_engine.init_server_side(port, host);
         }
+        // call database object constructor here to initialize the session manager before processing any connections
+        // SessionManager sessionM;
         s_engine.process_connections();
     }
     catch(const std::exception& e)

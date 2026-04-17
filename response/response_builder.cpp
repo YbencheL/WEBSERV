@@ -62,6 +62,19 @@ void    response_builder::serving_static_file()
         this->header_buff.append("Content-Type: text/html\r\n");
     else
         this->header_buff.append("Content-Type: " + extension_to_media_type(this->path) + "\r\n");
+    
+    // about cookie and session management -> COOKIE
+    // -------------------------------------------------------------
+    if (current_client->res.get_is_cookie_set())
+    {
+        exit(1);
+        const std::vector<std::string>& set_cookie_headers = current_client->res.get_set_cookie_headers();
+        for (size_t i = 0; i < set_cookie_headers.size(); ++i) {
+            this->header_buff.append("Set-Cookie: " + set_cookie_headers[i] + "\r\n");
+        }
+    }
+    // -------------------------------------------------------------
+
     this->header_buff.append("Content-Length: " + to_string(st.st_size) + "\r\n\r\n");
 
     this->response_holder = header_buff;

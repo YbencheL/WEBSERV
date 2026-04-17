@@ -23,7 +23,9 @@
 
 # include "response.hpp"
 # include "config_parsing/includes/ConfigPars.hpp"
+# include "./cookies_sessions/SessionManager.hpp"
 # include "client.hpp"
+
 
 // epoll_wait timeout in milliseconds (1000 ms = 1 second)
 # define EPOLL_TIMEOUT 1000
@@ -52,21 +54,25 @@ class socket_engine {
         struct epoll_event events[EPOLL_MAX_EVENTS];
         std::vector<int> server_side_fds;   // >>> backup for the server socket fds
         std::vector<int> fds_list;  // >>> backup for all the fds used to free them in case of SIGINT
-        
+
         std::map<int, Client> raw_client_data; // >>> raw request data stored in
         std::deque<ServerBlock> server_config_info; // >>> config file saved here
 
 		std::map<int, int> pipe_to_client;
 		std::map<int, int> pipe_write_to_client;
 
+        // about cookies and sessions
+        SessionManager session_manager;
+
         void    server_event(ssize_t fd);
         void    client_event(ssize_t fd, uint32_t events);
-		
+
         void    handle_epollin(ssize_t fd);
         void    handle_epollout(ssize_t fd);
         void    handle_pipe_read(int pipe_fd, uint32_t events);
         void    handle_pipe_write(int pipe_fd, uint32_t events);
         void    modify_epoll_event(ssize_t fd, uint32_t events);
+
     public:
         socket_engine();
         void    init_client_side(int fd);

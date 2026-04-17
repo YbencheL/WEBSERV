@@ -2,6 +2,8 @@
 # include "../response.hpp"
 # include "../response_builder.hpp"
 # include "../request/includes/parseRequest.hpp"
+# include "../cookies_sessions/cookies_and_sessions_logic.hpp"
+# include "../cookies_sessions/SessionManager.hpp"
 
 void    socket_engine::handle_epollin(ssize_t fd)
 {
@@ -17,7 +19,19 @@ void    socket_engine::handle_epollin(ssize_t fd)
         if (req_stat == REQ_NOT_READY)
             return ;
 
-        // std::cout << GREEN << "[+] Request parsed successfully stat:" << req_stat << RSET << std::endl;
+        // cookie and session management
+        // -----------------------------------------------------------------------------------------------------------
+        // Session& cookie = cookies_and_sessions_logic(session_manager, this->raw_client_data[fd]);
+        // if(cookie.is_new) {   // new cookie created, add Set-Cookie header to the response
+        //     exit(11);
+        //     std::cout << GREEN << "[+] New session created with ID: " << cookie.id << RSET << std::endl;
+        //     this->raw_client_data[fd].res.add_set_cookie_header("sessionId=" + cookie.id + "; Path=/; HttpOnly");
+        // }
+        // else // here we alrady have a session
+        //     std::cout << GREEN << "[+] Existing session accessed with ID: " << cookie.id << RSET << std::endl;
+        // -----------------------------------------------------------------------------------------------------------
+
+
         // TODO: move this log to a new method for better readability
         // std::string request_log(client &client, int fd);
         // -------------------------------------------------------------
@@ -26,7 +40,6 @@ void    socket_engine::handle_epollin(ssize_t fd)
                 << " " << this->raw_client_data[fd].req.getHttpVersion()
                 << " on FD " << fd << RSET << std::endl;
         // -------------------------------------------------------------
-        
 
         this->raw_client_data[fd].res.set_stat_code(req_stat);
         if (this->raw_client_data[fd].res.get_stat_code() == OK)
