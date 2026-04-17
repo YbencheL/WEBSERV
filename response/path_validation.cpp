@@ -103,10 +103,7 @@ void    response_builder::path_validation()
         return ;
     }
     if (S_ISDIR(statbuf.st_mode))
-    {   
-        // std::cout << "[+] DIR REQUESTED HEEEEEEEEEEEEEREEEEEEEEEE" << std::endl;
-        // std::cout << "this->path -> " << this->path << std::endl;
-
+    {
         index = index_file_iterator(this->path);
         // std::cout << "INDEX -> " << index << std::endl;
         if (!index.empty())     // here will server the static files .html
@@ -114,7 +111,13 @@ void    response_builder::path_validation()
         else if (index.empty() && current_client->location_conf->autoindex)
             autoindex_page(this->path, this->current_client->req.getPath());
         else {
-            this->current_client->res.set_stat_code(NOT_FOUND);
+            if (!this->current_client->location_conf->autoindex
+                && this->current_client->req.getMethod() == "GET")
+                this->current_client->res.set_stat_code(NOT_FOUND);
         }
     }
 }
+
+// Test GET Expected 404 on http://localhost:8080/directory/Yeah
+// FATAL ERROR ON LAST TEST: bad status code
+// and for me i returned forbidden access that why

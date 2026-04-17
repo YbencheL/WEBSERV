@@ -16,19 +16,24 @@ void    socket_engine::handle_epollin(ssize_t fd)
         int req_stat = parseRequest(this->raw_client_data[fd], raw_data_buff);
         if (req_stat == REQ_NOT_READY)
             return ;
-        
+
+        // std::cout << GREEN << "[+] Request parsed successfully stat:" << req_stat << RSET << std::endl;
         // TODO: move this log to a new method for better readability
         // std::string request_log(client &client, int fd);
+        // -------------------------------------------------------------
         std::cout << YELLOW << "[Reqest LOG] " << this->raw_client_data[fd].req.getMethod()
                 << " " << this->raw_client_data[fd].req.getPath()
                 << " " << this->raw_client_data[fd].req.getHttpVersion()
                 << " on FD " << fd << RSET << std::endl;
+        // -------------------------------------------------------------
+        
 
         this->raw_client_data[fd].res.set_stat_code(req_stat);
         if (this->raw_client_data[fd].res.get_stat_code() == OK)
             this->raw_client_data[fd].cgiHandler.handleCGI(this->raw_client_data[fd]);
 
         // TODO: hold it in a new method for better readability
+        // -------------------------------------------------------------
         if (this->raw_client_data[fd].cgiHandler.state == CGI_READY)
         {
             int pipe_out = this->raw_client_data[fd].cgiHandler.getPipeOutFd();   // pipeOut[0] - read CGI stdout
@@ -63,6 +68,7 @@ void    socket_engine::handle_epollin(ssize_t fd)
             }
             return ;
         }
+        // -------------------------------------------------------------
 
         // Only skip if CGI is actively in progress (past the initial CHECKING state)
         cgiState cgi_stat = this->raw_client_data[fd].cgiHandler.state;

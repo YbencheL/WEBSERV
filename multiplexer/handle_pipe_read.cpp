@@ -26,7 +26,7 @@ void    socket_engine::handle_pipe_read(int pipe_fd, uint32_t events)
     // if i include this block
     if (client.cgiHandler.state == CGI_READY) {
         // std::cout << "readinggggggggggggggggggggg" << std::endl;
-        client.cgiHandler.reading(epoll_fd, events, client);
+        client.cgiHandler.reading(epoll_fd, events);
     }
     
     // i will remove this line
