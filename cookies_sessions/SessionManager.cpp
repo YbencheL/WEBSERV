@@ -55,7 +55,7 @@ Session& SessionManager::createSession()
     Ses.id = sessionID;
     Ses.is_new = true;
     sessions[sessionID] = Ses;
-    return getSession(sessionID);
+    return sessions[sessionID];
 }
 
 bool SessionManager::sessionExists(const std::string& id)
