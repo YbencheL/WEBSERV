@@ -51,6 +51,7 @@ void socket_engine::set_server_config_info(std::deque<ServerBlock> server_config
 
 void socket_engine::check_all_client_timeouts(void)
 {
+
     time_t now = time(0);
     std::map<int, Client>::iterator it = raw_client_data.begin();
 

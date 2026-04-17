@@ -130,3 +130,20 @@ bool    response::stream_response_to_client(int fd)
     }
     return (false);
 }
+
+// about cookie and session management
+void    response::add_set_cookie_header(const std::string& header_value)
+{
+    this->is_cooke_set = true;
+    this->set_cookie_headers.push_back(header_value);
+}
+
+bool    response::get_is_cookie_set() const
+{
+    return this->is_cooke_set;
+}
+
+const std::vector<std::string>& response::get_set_cookie_headers() const
+{
+    return this->set_cookie_headers;
+}

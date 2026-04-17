@@ -45,6 +45,10 @@ class response  // DONE[]
         std::string         content_type;
         ssize_t             content_length;
 
+        // for cookie and session management
+        bool                        is_cooke_set;
+        std::vector<std::string>    set_cookie_headers;
+
     public:
         response();
 
@@ -68,6 +72,11 @@ class response  // DONE[]
         int                 get_static_file_fd(void) const;
         off_t               get_file_size(void) const;
         off_t               get_bytes_sent(void) const;
+
+        // about cookie and session management
+        bool                get_is_cookie_set() const;
+        void                add_set_cookie_header(const std::string& header_value);
+        const std::vector<std::string>& get_set_cookie_headers() const;
 
         bool                stream_response_to_client(int fd);
 };
