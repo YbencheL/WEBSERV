@@ -12,7 +12,6 @@
 #define PORT_MAX_VAL 65535
 #define CLIENT_MAX_BODY_SIZE 1000000
 
-
 enum TokenType {
     KEYWORD,
     WORD,

@@ -7,19 +7,20 @@ int parseRequest(Client &client, std::string &recivedData)
     client.parse.remaining.append(recivedData);
     if (client.parse.step == REQLINE)
     {
-
-        if (client.parse.remaining.size() > MAX_REQ_SIZE)
-            return URI_TOO_LARGE;
         size_t newLinePos = client.parse.remaining.find("\r\n");
         if (newLinePos != std::string::npos)
         {
             std::string reqLine = client.parse.remaining.substr(0, newLinePos);
-            int         ERROR   = parseRequestLine(client, reqLine);
+            if (reqLine.size() > MAX_REQ_SIZE)
+                return URI_TOO_LARGE;
+            int ERROR = parseRequestLine(client, reqLine);
             if (ERROR)
                 return ERROR;
             client.parse.step = HEADERS;
             client.parse.remaining.erase(0, newLinePos);
         }
+        else if (client.parse.remaining.size() > MAX_REQ_SIZE)
+            return URI_TOO_LARGE;
         else
             return REQ_NOT_READY;
     }

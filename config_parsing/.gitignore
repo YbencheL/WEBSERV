@@ -2,3 +2,4 @@ main.cpp
 Makefile
 sub.conf
 webserv
+cookies_sessions

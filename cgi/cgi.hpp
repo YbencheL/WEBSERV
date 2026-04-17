@@ -73,7 +73,7 @@ class Cgi
     void childProcess();
     void parentProcess();
     void writing(int epoll_fd, unsigned int events, Client &client);
-    void reading(int epoll_fd, unsigned int events);
+    void reading(unsigned int events);
     void checkResponseAndTime();
     void handleCGI(Client &client);
     int  getPipeOutFd() const;
