@@ -20,7 +20,7 @@ Session& SessionManager::getSession( const std::string& sessionId)
 {
 
     if (sessions.find(sessionId) != sessions.end())
-        return getSession(sessionId);
+        return sessions[sessionId];
     else
         return createSession();
 }
@@ -34,7 +34,6 @@ std::string SessionManager::generateSessionId()
     std::string key;
     int i = 0;
     
-    srand(time(0));
     while(i < 16)
     {
         key.push_back(charset[rand() % 63]);

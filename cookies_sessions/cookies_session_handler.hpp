@@ -8,7 +8,7 @@
 #include <vector>
 
 // cookie parsing
-std::map<std::string, std::string>&  parseCookies(std::string header);
+std::map<std::string, std::string>  parseCookies(std::string header);
 std::vector<std::string> split(std::vector<std::string> keywords, char dilimeter);
 
 #endif
