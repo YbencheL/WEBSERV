@@ -115,6 +115,8 @@ int collectBodyByChunks(Client &client, std::string &remain)
                 "0123456789ABCDEF"
             );
             if (bytes == -1)
+                return PAYLOAD_TOO_LARGE;
+            else if (bytes == -2)
                 return BAD_REQUEST;
             remain.erase(0, end + 2);
             if (bytes == 0)
@@ -134,11 +136,11 @@ int collectBodyByChunks(Client &client, std::string &remain)
                     return BAD_REQUEST;
                 else
                 {
+                    client.req.appendBody(remain.substr(0, bytes));
                     client.parse.bodyRead += bytes;
-                    if (client.parse.bodyRead >
+                    if (client.req.getBody().size() >
                         (size_t)client.location_conf->client_max_body_size)
                         return PAYLOAD_TOO_LARGE;
-                    client.req.appendBody(remain.substr(0, bytes));
                     client.parse.chunkState = CALCULATING;
                     remain.erase(0, bytes + 2);
                 }

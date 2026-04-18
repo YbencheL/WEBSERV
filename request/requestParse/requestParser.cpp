@@ -26,8 +26,6 @@ int parseRequest(Client &client, std::string &recivedData)
     }
     if (client.parse.step == HEADERS)
     {
-        if (client.parse.remaining.size() > MAX_HEADER_SIZE)
-            return HEADER_TOO_LARGE;
         size_t headerEnd = client.parse.remaining.find("\r\n\r\n");
         if (headerEnd == 0)
             return BAD_REQUEST;
@@ -35,12 +33,18 @@ int parseRequest(Client &client, std::string &recivedData)
         {
             std::string headers =
                 client.parse.remaining.substr(2, headerEnd + 2);
+
+            if (headers.size() > MAX_HEADER_SIZE)
+                return HEADER_TOO_LARGE;
+
             int EXIT_CODE = parseHeaders(client, headers);
             if (EXIT_CODE != 1)
                 return EXIT_CODE;
             client.parse.step = BODY;
             client.parse.remaining.erase(0, headerEnd + 4);
         }
+        else if (client.parse.remaining.size() > MAX_HEADER_SIZE)
+            return HEADER_TOO_LARGE;
         else
             return REQ_NOT_READY;
     }
