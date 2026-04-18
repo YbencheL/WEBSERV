@@ -34,7 +34,6 @@ std::string SessionManager::generateSessionId()
     std::string key;
     int i = 0;
     
-    srand(time(0));
     while(i < 16)
     {
         key.push_back(charset[rand() % 63]);
