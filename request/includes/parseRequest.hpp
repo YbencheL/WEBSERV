@@ -1,7 +1,7 @@
 #ifndef PARSEREQUEST_HPP
 #define PARSEREQUEST_HPP
 
-#define MAX_REQ_SIZE           5000
+#define MAX_REQ_SIZE           8000
 #define MAX_SINGLE_HEADER_SIZE 8000
 #define MAX_HEADER_SIZE        32000
 #define MAX_CHUNK_SIZE         8000
@@ -39,6 +39,7 @@ struct reqParse
     bool           bodyBegin;
     std::string    bodyReadMod;
     int            contentLength;
+    size_t         bodyRead;
 };
 
 void UpperCaseHeaderName(std::string &name);

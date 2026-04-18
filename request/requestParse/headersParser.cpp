@@ -89,7 +89,7 @@ int parseToken(
     if (!checkNameField(name))
         return BAD_REQUEST;
     UpperCaseHeaderName(name);
-    if (!checkForDouble(name, headers))
+    if (name != "SET_COOKIE" && !checkForDouble(name, headers))
         return BAD_REQUEST;
     std::string value = token.substr(pos + 1);
     trimLeft(value, "\t ");
@@ -97,7 +97,18 @@ int parseToken(
         return BAD_REQUEST;
     if (name == "HOST")
         host = true;
-    headers[name] = value;
+    if (name == "SET_COOKIE")
+    {
+        if (headers[name].empty())
+            headers[name] = value;
+        else
+        {
+            headers[name].append("; ");
+            headers[name].append(value);
+        }
+    }
+    else
+        headers[name] = value;
     return 0;
 }
 
@@ -140,7 +151,7 @@ int parseHeaders(Client &client, std::string &data)
     if (ERROR)
         return ERROR;
     if (!validate_headers(client))
-        return (client.res.get_stat_code());
+        return client.res.get_stat_code();
     if (!checkMethodAllowed(client))
         return METHOD_NOT_ALLOWED;
     return 1;

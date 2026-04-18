@@ -118,8 +118,8 @@ void Cgi::checkForCgi(Client &client)
         state = CGI_NOT_REQUIRED;
         return;
     }
-    scriptPath = client.res.get_path();
-
+    scriptPath = resolve_request_filesystem_path(client);
+    client.res.set_path(scriptPath);
     size_t dot = scriptPath.rfind('.');
 
     if (dot == std::string::npos)
@@ -343,7 +343,7 @@ void Cgi::writing(int epoll_fd, unsigned int events, Client &client)
         state = ERROR;
 }
 
-void Cgi::reading(int epoll_fd, unsigned int events)
+void Cgi::reading(unsigned int events)
 {
     checkResponseAndTime();
 
