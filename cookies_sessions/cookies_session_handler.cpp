@@ -9,8 +9,6 @@ std::vector<std::string> split(std::vector<std::string> keywords, char dilimeter
 
     while(i < keywords.size())
     {
-        if (keywords[i] == "Cookie:")
-            i++;
         std::istringstream stream_string(keywords[i]);
         while(std::getline(stream_string, value, dilimeter))
         {
@@ -26,7 +24,6 @@ std::map<std::string, std::string>  parseCookies(std::string header)
 {
     std::string value;
     Session cookie;
-    // std::map<std::string, std::string> cookie;
     std::vector<std::string> splited_by_space;
     std::vector<std::string> splited_by_semicolon;
     std::vector<std::string> splited_by_equal_sign;
@@ -41,7 +38,6 @@ std::map<std::string, std::string>  parseCookies(std::string header)
 
     while(i + 1 < splited_by_equal_sign.size())
     {
-        // cookie.insert(std::make_pair(splited_by_equal_sign[i], splited_by_equal_sign[i + 1]));
         cookie.SetSessionVal(splited_by_equal_sign[i], splited_by_equal_sign[i + 1]);
         i += 2;
     }
