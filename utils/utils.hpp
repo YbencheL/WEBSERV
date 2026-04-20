@@ -5,7 +5,8 @@
 # include <sstream>
 # include <vector>
 
-#include "../client.hpp"
+# include "../client.hpp"
+# include "../socket_engine.hpp"
 
 template <typename T>
 std::string to_string(T value)
@@ -36,6 +37,9 @@ std::string                 resolve_location_relative_path(const std::string &re
 std::string                 resolve_request_filesystem_path(const Client &client);
 bool                        is_dir_exist(const std::string &path);
 bool                        is_server(std::vector<int> &server_side_fds, unsigned short int fd);
+void                        show_response_logs(const Client &client, int fd);
+void                        show_request_logs(const Client &client, int fd);
+void                        setup_server_config_info(std::deque<ServerBlock> &ServerConfig);
 
 # endif
 

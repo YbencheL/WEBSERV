@@ -1,5 +1,6 @@
 # include "../socket_engine.hpp"
 # include "../response.hpp"
+# include "../utils/utils.hpp"
 # include "../response_builder.hpp"
 # include "../request/includes/parseRequest.hpp"
 # include "../cookies_sessions/cookies_and_sessions_logic.hpp"
@@ -7,86 +8,42 @@
 
 void    socket_engine::handle_epollin(ssize_t fd)
 {
-    char raw_data[BUFFER_SIZE];
+    Client  &client = this->raw_client_data[fd];
+    char    raw_data[BUFFER_SIZE];
     std::memset(raw_data, 0, sizeof(raw_data));
 
     int recv_stat = recv(fd, raw_data, BUFFER_SIZE, 0);
     if (recv_stat > 0)
     {
-        this->raw_client_data[fd].last_activity = time(0);
+        client.last_activity = time(0);
         std::string raw_data_buff(raw_data, recv_stat);
 
         // rm-me
-        std::cout << RED << raw_data_buff;
+        {
+            // ------------------------------------------------------------------
+            // rm-me -> debug to see the raw request data received from the client
+            // std::cout << RED << raw_data_buff;
+            // ------------------------------------------------------------------
+        }
 
-        int req_stat = parseRequest(this->raw_client_data[fd], raw_data_buff);
+        int req_stat = parseRequest(client, raw_data_buff);
         if (req_stat == REQ_NOT_READY)
             return ;
-        // exit(111);
+
+        show_request_logs(client, fd);   // Logs
+
         // cookie and session management
-        // -----------------------------------------------------------------------------------------------------------
-        // session_manager.print_sessions(); // Debug: print current sessions before processing the request
-        // Session& cookie = cookies_and_sessions_logic(session_manager, this->raw_client_data[fd]);
-        // if(cookie.is_new) {   // new cookie created, add Set-Cookie header to the response
-        //     // exit(11);
-        //     std::cout << YELLOW << "[+] New session created with ID: " << cookie.id << RSET << std::endl;
+        client.res.handle_session(session_manager, client);
 
-        //     this->raw_client_data[fd].res.add_set_cookie_header("sessionId=" + cookie.id + "; Path=/; HttpOnly");
-        // }
-        // else // here we alrady have a session
-        //     std::cout << GREEN << "[+] Existing session accessed with ID: " << cookie.id << RSET << std::endl;
-        // // -----------------------------------------------------------------------------------------------------------
-
-        // TODO: move this log to a new method for better readability
-        // std::string request_log(client &client, int fd);
-        // -------------------------------------------------------------
-        std::cout << YELLOW << "[Reqest LOG] " << this->raw_client_data[fd].req.getMethod()
-                << " " << this->raw_client_data[fd].req.getPath()
-                << " " << this->raw_client_data[fd].req.getHttpVersion()
-                << " on FD " << fd << RSET << std::endl;
-        // -------------------------------------------------------------
-
-        this->raw_client_data[fd].res.set_stat_code(req_stat);
-        if (this->raw_client_data[fd].res.get_stat_code() == OK)
-            this->raw_client_data[fd].cgiHandler.handleCGI(this->raw_client_data[fd]);
-
-        // TODO: hold it in a new method for better readability
-        // -------------------------------------------------------------
-        if (this->raw_client_data[fd].cgiHandler.state == CGI_READY)
+        client.res.set_stat_code(req_stat);
+        if (client.res.get_stat_code() == OK)
         {
-            int pipe_out = this->raw_client_data[fd].cgiHandler.getPipeOutFd();   // pipeOut[0] - read CGI stdout
-            int pipe_in = this->raw_client_data[fd].cgiHandler.getPipeInFd();      // pipeIn[1] - write request body to CGI stdin
-
-            pipe_to_client[pipe_out] = fd;
-            set_fds_list(pipe_out);
-
-            struct epoll_event ev;
-            std::memset(&ev, 0, sizeof(ev));
-            ev.data.fd = pipe_out;
-            ev.events  = EPOLLIN;
-            if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, pipe_out, &ev) == -1) {
-                std::cerr << "[!] epoll_ctl EPOLL_CTL_ADD (pipe_out) failed: " << strerror(errno) << std::endl;
-                terminate_client(fd, "");
+            client.cgiHandler.handleCGI(this->raw_client_data[fd]);
+            if (client.cgiHandler.state == CGI_READY) {
+                setup_cgi_pipes(fd);
                 return ;
             }
-
-            // TO FIX LATER WITH A BOOL FLAG -> req.getBody().empty()
-            if (!this->raw_client_data[fd].req.getBody().empty())
-            {
-                pipe_write_to_client[pipe_in] = fd;
-                set_fds_list(pipe_in);
-                std::memset(&ev, 0, sizeof(ev));
-                ev.data.fd = pipe_in;
-                ev.events  = EPOLLOUT;
-                if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, pipe_in, &ev) == -1) {
-                    std::cerr << "[!] epoll_ctl EPOLL_CTL_ADD (pipe_in) failed: " << strerror(errno) << std::endl;
-                    terminate_client(fd, "");
-                    return ;
-                }
-            }
-            return ;
         }
-        // -------------------------------------------------------------
 
         // Only skip if CGI is actively in progress (past the initial CHECKING state)
         cgiState cgi_stat = this->raw_client_data[fd].cgiHandler.state;
@@ -94,7 +51,7 @@ void    socket_engine::handle_epollin(ssize_t fd)
             return ;    // CGI is handling this request
 
         response_builder response_builder;
-        response_builder.init_response_builder(raw_client_data[fd]);
+        response_builder.init_response_builder(client);
         response_builder.build_response();
         modify_epoll_event(fd, EPOLLOUT);
     }
