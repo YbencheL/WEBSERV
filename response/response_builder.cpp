@@ -62,18 +62,18 @@ void    response_builder::serving_static_file()
         this->header_buff.append("Content-Type: text/html\r\n");
     else
         this->header_buff.append("Content-Type: " + extension_to_media_type(this->path) + "\r\n");
-    
+
     // about cookie and session management -> COOKIE
     // // -------------------------------------------------------------
-    // if (current_client->res.get_is_cookie_set()) // ture if we have a new session and we set a new cookie in the response header
-    // {
-    //     std::cout << YELLOW << "[+] Setting cookies in response headers:" << RSET << std::endl;
-    //     const std::vector<std::string>& set_cookie_headers = current_client->res.get_set_cookie_headers();
-    //     for (size_t i = 0; i < set_cookie_headers.size(); ++i) {
-    //         this->header_buff.append("Set-Cookie: " + set_cookie_headers[i] + "\r\n");
-    //     }
-    //     current_client->res.set_is_cookie_false();   // reset the cookie set flag after adding the Set-Cookie headers to the response
-    // }
+    if (current_client->res.get_is_cookie_set()) // ture if we have a new session and we set a new cookie in the response header
+    {
+        std::cout << YELLOW << "[+] Setting cookies in response headers:" << RSET << std::endl;
+        const std::vector<std::string> &set_cookie_headers = current_client->res.get_cookie_holder();
+
+        for (size_t i = 0; i < set_cookie_headers.size(); ++i) {
+            this->header_buff.append("Set-Cookie: " + set_cookie_headers[i] + "\r\n");
+        }
+    }
     // -------------------------------------------------------------
 
     this->header_buff.append("Content-Length: " + to_string(st.st_size) + "\r\n\r\n");
@@ -81,13 +81,13 @@ void    response_builder::serving_static_file()
     this->response_holder = header_buff;
 }
 
-// TODO-LATER: Methode not allowed
+// TODO: add the cookie
 void response_builder::build_response()
 {
     // std::cout << "build_response interrrr" << std::endl;
     // std::cout << "first: " << this->current_client->res.get_stat_code() << std::endl;
     if (this->current_client->res.get_stat_code() != OK)
-        generate_error_page();  // DONE [-] working on it
+        generate_error_page();
     else
     {
         resolve_request_path();  // TOKNOW: auto-index gen

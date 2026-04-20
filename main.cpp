@@ -49,17 +49,7 @@ int main(int ac, char **av)
         s_engine.set_server_config_info(ServerConfig);
         
         // ----------------- SERVER LOGS ----------------- //
-        for (size_t i = 0; i < ServerConfig.size(); i++)
-        {
-            std::string host = ServerConfig[i].host;
-            std::string port = to_string(ServerConfig[i].listen);
-            std::cout << GREEN << "Serving HTTP on " << host << " port " << port
-                << " (http://" << host << ":" << port << "/)"
-                << RSET << std::endl;
-            s_engine.init_server_side(port, host);
-        }
-        // call database object constructor here to initialize the session manager before processing any connections
-        // SessionManager sessionM;
+        setup_server_config_info(ServerConfig);  // S_Logs
         s_engine.process_connections();
     }
     catch(const std::exception& e)

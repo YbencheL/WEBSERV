@@ -51,7 +51,7 @@
 class socket_engine {
     private:
         int epoll_fd;   // ID for the table
-        struct epoll_event events[EPOLL_MAX_EVENTS];
+        struct epoll_event events_holder[EPOLL_MAX_EVENTS];
         std::vector<int> server_side_fds;   // >>> backup for the server socket fds
         std::vector<int> fds_list;  // >>> backup for all the fds used to free them in case of SIGINT
 
@@ -69,6 +69,7 @@ class socket_engine {
 
         void    handle_epollin(ssize_t fd);
         void    handle_epollout(ssize_t fd);
+        void    setup_cgi_pipes(int client_fd);
         void    handle_pipe_read(int pipe_fd, uint32_t events);
         void    handle_pipe_write(int pipe_fd, uint32_t events);
         void    modify_epoll_event(ssize_t fd, uint32_t events);
@@ -81,7 +82,7 @@ class socket_engine {
         void    process_connections(void);  // here i have to mutiplixier loop
         void    remove_fd_from_list(int fd);
         void    free_fds_list(void);
-        void    check_all_client_timeouts(void);    // working on it []
+        void    timeout_monitoring(void);
         void    terminate_client(int fd, std::string stat);
         void    set_fds_list(int fd);
         void    set_server_side_fds(int s_fd);

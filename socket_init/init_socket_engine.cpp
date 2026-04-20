@@ -49,7 +49,7 @@ void socket_engine::set_server_config_info(std::deque<ServerBlock> server_config
     this->server_config_info = server_config_info;
 }
 
-void socket_engine::check_all_client_timeouts(void)
+void socket_engine::timeout_monitoring(void)
 {
 
     time_t now = time(0);

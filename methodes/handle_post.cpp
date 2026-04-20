@@ -53,10 +53,6 @@ void    response_builder::handle_post()
         return ;
     }
 
-    // rm-me
-    // std::cout << "[>] extracting_file_name -> " << file_name << std::endl;
-    // std::cout << "[>] file FD -> " << this->current_client->res.get_static_file_fd() << std::endl;
-
     // >>>>>>>>>>>>>>>>>>>>>>>>> Body Processing >>>>>>>>>>>>>>>>>>>>>>>>>
     
     // is have alrady the body ready to make a response based on it

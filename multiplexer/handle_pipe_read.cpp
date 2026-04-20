@@ -9,14 +9,8 @@ void    socket_engine::handle_pipe_read(int pipe_fd, uint32_t events)
     Client &client = raw_client_data[client_fd];
     client.last_activity = time(0);
 
-    if (client.cgiHandler.state == CGI_READY) {
-        client.cgiHandler.reading(epoll_fd, events);
-        std::cout << "readinggggggggggggggggggggg" << std::endl;
-    }
-    
-    // i will remove this line
-    // client.cgiHandler.reading(epoll_fd, events, client);
-    // std::cout << "readinggggggggggggggggggggg" << std::endl;
+    if (client.cgiHandler.state == CGI_READY)
+        client.cgiHandler.reading(events);
 
     if (client.cgiHandler.state == CGI_DONE || client.cgiHandler.state == ERROR)
     {
@@ -37,7 +31,6 @@ void    socket_engine::handle_pipe_read(int pipe_fd, uint32_t events)
         }
         else
         {
-            // std::string cgi_output = client.cgiHandler.getCgiResponse();
             std::string &cgi_output = client.cgiHandler.getCgiResponse();
 
             std::string cgi_headers;
