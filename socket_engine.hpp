@@ -79,7 +79,7 @@ class socket_engine {
         void    init_client_side(int fd);
         void    init_server_side(std::string port, std::string host);
 
-        void    process_connections(void);  // here i have to mutiplixier loop
+        void    process_connections(void);
         void    remove_fd_from_list(int fd);
         void    free_fds_list(void);
         void    timeout_monitoring(void);

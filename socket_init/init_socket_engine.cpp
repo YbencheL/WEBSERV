@@ -91,23 +91,24 @@ void socket_engine::terminate_client(int fd, std::string stat)
     if (epoll_ctl(this->epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1)
         std::cerr << "[!] epoll_ctl EPOLL_CTL_DEL failed: " << strerror(errno) << std::endl;
 
-    std::map<int, int>::iterator it_r = pipe_to_client.begin();
-    std::map<int, int>::iterator it_w = pipe_write_to_client.begin();
+    std::map<int, int>::iterator it_r = pipe_to_client.begin(); // >> client reading from CGI pipe output
     for ( ; it_r != pipe_to_client.end(); ) {
         if (it_r->second == fd) {
             if (epoll_ctl(this->epoll_fd, EPOLL_CTL_DEL, it_r->first, NULL) == -1)
                 std::cerr << "[!] epoll_ctl EPOLL_CTL_DEL failed: " << strerror(errno) << std::endl;
-            close (it_r->first);  // client
+            close (it_r->first);  // >> client
             remove_fd_from_list(it_r->first);
             pipe_to_client.erase(it_r++);
         } else
             ++it_r;
     }
+
+    std::map<int, int>::iterator it_w = pipe_write_to_client.begin();   // >> client writing to CGI pipe input
     for ( ; it_w != pipe_write_to_client.end(); ) {
         if (it_w->second == fd) {
             if (epoll_ctl(this->epoll_fd, EPOLL_CTL_DEL, it_w->first, NULL) == -1)
                std::cerr << "[!] epoll_ctl EPOLL_CTL_DEL failed: " << strerror(errno) << std::endl;
-            close (it_w->first);  // client
+            close (it_w->first);  // >> client
             remove_fd_from_list(it_w->first);
             pipe_write_to_client.erase(it_w++);
         }

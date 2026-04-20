@@ -46,7 +46,6 @@ std::string validate_upload_path(Client &current_client)
 
 void    response_builder::handle_post()
 {
-    // std::cout << "handle_post interrrrrrrrrrrrrrrrrrr" << std::endl;
     std::string file_name = validate_upload_path(*this->current_client);
     if (file_name.empty()) {
         generate_error_page();
@@ -58,16 +57,26 @@ void    response_builder::handle_post()
     // is have alrady the body ready to make a response based on it
     const std::string &body_buff = this->current_client->req.getBody();
     
-    if (body_buff.empty()) {
+    if (body_buff.empty()) {    // >> NO body in the request
+        // exit(123);
         this->current_client->res.set_stat_code(OK);
         this->response_holder.append(current_client->res.get_start_line());
         this->response_holder.append("Server: Webserv\r\n");
         this->response_holder.append("Date: " + get_time() + "\r\n");
         this->response_holder.append("Content-Length: 0\r\n\r\n");
+        if (current_client->res.get_is_cookie_set())    // >> cookie set in the response header
+        {
+            std::cout << RED << "[+ handle_post] Setting cookies in response headers:" << RSET << std::endl;
+            const std::vector<std::string> &set_cookie_headers = current_client->res.get_cookie_holder();
+
+            for (size_t i = 0; i < set_cookie_headers.size(); ++i) {
+                this->response_holder.append("Set-Cookie: " + set_cookie_headers[i] + "\r\n");
+            }
+        }
+        this->response_holder.append("Content-Length: 0\r\n\r\n");  // most have to use it
         return;
     }
 
-    // int short write_stat = write(this->current_client->res.get_static_file_fd(), body_buff.c_str(), body_buff.size());
     ssize_t write_stat = write(this->current_client->res.get_static_file_fd(), body_buff.c_str(), body_buff.size());
     if (write_stat < 0) {
         close (this->current_client->res.get_static_file_fd());
@@ -76,6 +85,7 @@ void    response_builder::handle_post()
         return ;
     }
     close (this->current_client->res.get_static_file_fd());
+
     std::cout << "body -> " << this->current_client->req.getBody().empty() << std::endl;
     if (this->current_client->req.getBody().empty())
         this->current_client->res.set_stat_code(OK);
@@ -85,6 +95,15 @@ void    response_builder::handle_post()
     this->response_holder.append(current_client->res.get_start_line());
     this->response_holder.append("Server: Webserv\r\n");
     this->response_holder.append("Date: " + get_time() + "\r\n");
+    if (current_client->res.get_is_cookie_set())    // >> cookie set in the response header
+    {
+        std::cout << RED << "[+ handle_post] Setting cookies in response headers:" << RSET << std::endl;
+        const std::vector<std::string> &set_cookie_headers = current_client->res.get_cookie_holder();
+
+        for (size_t i = 0; i < set_cookie_headers.size(); ++i) {
+            this->response_holder.append("Set-Cookie: " + set_cookie_headers[i] + "\r\n");
+        }
+    }
     this->response_holder.append("Content-Length: 0\r\n\r\n");  // most have to use it
 
     std::cout << "++++ [>] POST STATUS CODE " << current_client->res.get_stat_code() << std::endl;

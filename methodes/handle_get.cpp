@@ -2,15 +2,6 @@
 #include "../socket_engine.hpp"
 #include "../utils/utils.hpp"
 
-// COOKIE NOTE
-// if (this->is_cooke_set) {
-//     for (size_t i = 0; i < cookie_holder.size(); ++i) {
-//         raw_response += "Set-Cookie: " + cookie_holder[i] + "\r\n";
-//     }
-// }
-
-// TODO CREATE A funciont that append the cookies to the header
-
 void response_builder::set_header(void)
 {
     response_holder.append(current_client->res.get_start_line());
@@ -21,12 +12,16 @@ void response_builder::set_header(void)
         response_holder.append("Content-Type: text/html\r\n");
     else
         response_holder.append("Content-Type: " + extension_to_media_type(this->path) + "\r\n");
-    
-    if (this->current_client->res.get_is_cookie_set())
+
+    if (current_client->res.get_is_cookie_set())    // >> cookie set in the response header
     {
-        // TODO: create a func to done that
-        // std::cout << "yes it's a fucking cookies here to done #1" << std::endl;
-        // exit(1);
+        std::cout << YELLOW << "[+ set_header] Setting cookies in response headers:" << RSET << std::endl;
+        const std::vector<std::string> &set_cookie_headers = current_client->res.get_cookie_holder();
+
+        for (size_t i = 0; i < set_cookie_headers.size(); ++i) {
+            response_holder.append("Set-Cookie: " + set_cookie_headers[i] + "\r\n");
+        }
+        current_client->res.set_is_cookie_false();
     }
 }
 
@@ -61,4 +56,5 @@ void response_builder::handle_get()
 {
     set_header();
     set_body();
+    std::cout << "Response holder -> " << this->response_holder << std::endl;
 }

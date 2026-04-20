@@ -295,7 +295,7 @@ std::string extracting_from_header(const std::map<std::string, std::string> &hea
 
 std::string rand_str_gen()
 {
-    std::srand(std::time(0));
+    // std::srand(std::time(0));
     const std::string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     std::string random_name;
     

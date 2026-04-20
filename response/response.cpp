@@ -148,11 +148,15 @@ void    response::handle_session(SessionManager &session_manager, Client &client
     std::string new_session_holder;
     Session& cookie = cookies_and_sessions_logic(session_manager, client);
     if(cookie.is_new) {
-        std::cout << YELLOW << "[Cookie Logs] New session created with ID: " << cookie.id << RSET << std::endl;
+        std::cout << RED << "[Cookie Logs] New session created with ID: " << cookie.id << RSET << std::endl;
         new_session_holder = "sessionId=" + cookie.id + "; Path=/; HttpOnly";
         this->cookie_holder.push_back(new_session_holder);
         this->is_cooke_set = true;
     }
     else
-        std::cout << GREEN << "[+] Existing session accessed with ID: " << cookie.id << RSET << std::endl;
+        std::cout << RED << "[+] Existing session accessed with ID: " << cookie.id << RSET << std::endl;
+}
+
+void   response::set_is_cookie_false() {
+    this->is_cooke_set = false;
 }

@@ -3,6 +3,7 @@
 # include "./cookies_sessions/SessionManager.hpp"
 # include "./utils/utils.hpp"
 # include <csignal>
+#include <sys/time.h>
 
 socket_engine s_engine;
 
@@ -18,7 +19,10 @@ int main(int ac, char **av)
     std::signal(SIGINT, signal_handler);
     std::deque<ServerBlock> ServerConfig;
     std::string fileName;
+    timeval t1;
 
+    gettimeofday(&t1, NULL);
+    std::srand(t1.tv_sec * 1000 + t1.tv_usec / 1000); // Seed the random number generator with current time in milliseconds
     if (ac < 2)
         fileName = "./config.conf";
     else

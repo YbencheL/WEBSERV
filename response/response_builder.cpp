@@ -13,7 +13,6 @@ void    response_builder::resolve_request_path()
 {
     if (this->current_client->res.get_stat_code() != OK)
         return;
-    // std::cout << "inter to path_validation" << std::endl;
     path_validation();
     this->current_client->res.set_path(this->path);
 }
@@ -28,7 +27,6 @@ std::string response_builder::index_file_iterator(const std::string &full_path)
     std::set<std::string>::const_iterator it = current_client->location_conf->index.begin();
     for ( ; it != current_client->location_conf->index.end(); it++)
     {
-        // std::cout << "[>] indext *it -> " << *it << std::endl;
         redirection_path = based_path + *it;
         if (access(redirection_path.c_str(), F_OK | R_OK) == 0)
             return (redirection_path);
@@ -36,7 +34,6 @@ std::string response_builder::index_file_iterator(const std::string &full_path)
     return ("");
 }
 
-// void    response_builder::serving_static_file(std::string path)
 void    response_builder::serving_static_file()
 {
     struct stat st;
@@ -63,37 +60,29 @@ void    response_builder::serving_static_file()
     else
         this->header_buff.append("Content-Type: " + extension_to_media_type(this->path) + "\r\n");
 
-    // about cookie and session management -> COOKIE
-    // // -------------------------------------------------------------
-    if (current_client->res.get_is_cookie_set()) // ture if we have a new session and we set a new cookie in the response header
+    if (current_client->res.get_is_cookie_set())    // >> cookie set in the response header
     {
-        std::cout << YELLOW << "[+] Setting cookies in response headers:" << RSET << std::endl;
+        std::cout << YELLOW << "[+ serving_static_file] Setting cookies in response headers:" << RSET << std::endl;
         const std::vector<std::string> &set_cookie_headers = current_client->res.get_cookie_holder();
 
         for (size_t i = 0; i < set_cookie_headers.size(); ++i) {
             this->header_buff.append("Set-Cookie: " + set_cookie_headers[i] + "\r\n");
         }
     }
-    // -------------------------------------------------------------
-
     this->header_buff.append("Content-Length: " + to_string(st.st_size) + "\r\n\r\n");
 
     this->response_holder = header_buff;
 }
 
-// TODO: add the cookie
 void response_builder::build_response()
 {
-    // std::cout << "build_response interrrr" << std::endl;
-    // std::cout << "first: " << this->current_client->res.get_stat_code() << std::endl;
     if (this->current_client->res.get_stat_code() != OK)
         generate_error_page();
     else
     {
-        resolve_request_path();  // TOKNOW: auto-index gen
-        // std::cout << "second: " << this->current_client->res.get_stat_code() << std::endl;
+        resolve_request_path();  // >> auto-index gen
         int stat = this->current_client->res.get_stat_code();
-        if (stat >= 300 && stat < 400)
+        if (stat >= 300 && stat < 400)  // TODO: check if it's redirection or not
             ;
         else if (stat != OK)
             generate_error_page();  // DONE [-] working on it
