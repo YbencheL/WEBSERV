@@ -19,16 +19,6 @@ int splitDataToTokens(std::string &data, std::map<int, std::string> &tokens)
     return i;
 }
 
-bool checkValueField(std::string &value)
-{
-    for (size_t i = 0; i < value.size(); i++)
-    {
-        if (!isprint(value[i]) && value[i] != 9)
-            return false;
-    }
-    return true;
-}
-
 bool checkForDouble(
     std::string &key, std::map<std::string, std::string> &header
 )
@@ -129,6 +119,16 @@ bool checkNameField(std::string &name)
     return true;
 }
 
+bool checkValueField(std::string &value)
+{
+    for (size_t i = 0; i < value.size(); i++)
+    {
+        if (!isprint(value[i]) && value[i] != 9)
+            return false;
+    }
+    return true;
+}
+
 int Cgi::parseOutToken(std::string &token)
 {
     if (token.size() > MAX_SINGLE_HEADER_SIZE)
@@ -144,12 +144,23 @@ int Cgi::parseOutToken(std::string &token)
 
     UpperCaseHeaderName(name);
     if (name != "SET_COOKIE" && !checkForDouble(name, cgiHeaders))
-        return BAD_REQUEST;
+        return INTERNAL_SERVER_ERROR;
 
     std::string value = token.substr(col + 1);
     trimLeft(value, "\t ");
     if (!checkValueField(value))
-        return BAD_REQUEST;
+        return INTERNAL_SERVER_ERROR;
+
+    if (name == "COOKIE")
+    {
+        if (cgiHeaders[name].empty())
+            cgiHeaders[name] = value;
+        else
+        {
+            cgiHeaders[name].append("; ");
+            cgiHeaders[name].append(value);
+        }
+    }
 }
 
 int Cgi::parseOutHeaders(std::string &headers)
