@@ -1,8 +1,10 @@
 #ifndef CGI_HPP
 #define CGI_HPP
 
-#define CGI_TIMEOUT      5
-#define WRITE_READ_LIMIT 65000
+#define CGI_TIMEOUT           5
+#define WRITE_READ_LIMIT      65000
+#define OUTPUT_NOT_READY      0
+#define INTERNAL_SERVER_ERROR 500
 
 #include <iostream>
 #include <stdlib.h>
@@ -50,6 +52,8 @@ class Cgi
     bool           closedAll;
     bool           sigTermSent;
 
+    std::map<std::string, std::string> cgiHeaders;
+
     Cgi();
     Cgi(const Cgi &other);
     Cgi &operator=(const Cgi &other);
@@ -78,6 +82,10 @@ class Cgi
     void handleCGI(Client &client);
     int  getPipeOutFd() const;
     int  getPipeInFd() const;
+
+    int parseOutToken(std::string &token);
+    int parseOutHeaders(std::string &headers);
+    int parseOutput(std::string &output);
 };
 
 #endif
