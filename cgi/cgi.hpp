@@ -14,6 +14,7 @@
 #include <sys/epoll.h>
 #include <sys/time.h>
 #include <wait.h>
+#include <map>
 
 enum cgiState
 {
