@@ -132,32 +132,32 @@ int Cgi::parseOutput(std::string &output)
 {
     size_t newL = output.find("\n\n");
     size_t crLf = output.find("\r\n\r\n");
-    if (newL != std::string::npos || crLf != std::string::npos)
-    {
-        size_t breaker;
-        size_t breakerSize;
-
-        if (newL < crLf)
-        {
-            breaker     = newL;
-            breakerSize = 2;
-        }
-        else
-        {
-            breaker     = crLf;
-            breakerSize = 4;
-        }
-        if (breaker > MAX_HEADER_SIZE)
-            return INTERNAL_SERVER_ERROR;
-        std::string headers = output.substr(0, breaker + (breakerSize / 2));
-        if (parseOutHeaders(headers))
-            return INTERNAL_SERVER_ERROR;
-        addInfo();
-        output.erase(0, breaker + breakerSize);
-        return OUTPUT_READY;
-    }
-    else if (output.size() > MAX_HEADER_SIZE)
+    if (newL == std::string::npos && crLf == std::string::npos)
         return INTERNAL_SERVER_ERROR;
+
+    size_t breaker;
+    size_t breakerSize;
+
+    if (newL < crLf)
+    {
+        breaker     = newL;
+        breakerSize = 2;
+    }
     else
-        return OUTPUT_NOT_READY;
+    {
+        breaker     = crLf;
+        breakerSize = 4;
+    }
+
+    if (breaker > MAX_HEADER_SIZE)
+        return INTERNAL_SERVER_ERROR;
+
+    std::string headers = output.substr(0, breaker + (breakerSize / 2));
+    if (parseOutHeaders(headers))
+        return INTERNAL_SERVER_ERROR;
+
+    addInfo();
+    output.erase(0, breaker + breakerSize);
+    
+    return OUTPUT_READY;
 }
