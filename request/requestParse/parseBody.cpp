@@ -88,6 +88,7 @@ int collectBodyByLength(Client &client)
         else{
             client.req.appendBody(client.parse.remaining);
             client.parse.bodyRead += client.parse.remaining.size();
+            client.parse.remaining.clear();
         }
     }
     if (client.parse.bodyRead == (size_t)client.parse.contentLength)
