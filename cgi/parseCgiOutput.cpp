@@ -2,84 +2,10 @@
 #include "../utils/utils.hpp"
 #include "cgi.hpp"
 
-int splitDataToTokens(std::string &data, std::map<int, std::string> &tokens)
-{
-    size_t begin = 0;
-    size_t end   = 0;
-    int    i     = 0;
-    for (; true; i++)
-    {
-        end = data.find("\r\n", begin);
-        if (end == std::string::npos ||
-            (begin - 2) == data.find("\r\n\r\n", begin - 2))
-            break;
-        tokens[i] = data.substr(begin, end - begin);
-        begin     = end + 2;
-    }
-    return i;
-}
-
-bool checkForDouble(
-    std::string &key, std::map<std::string, std::string> &header
-)
+bool isUnique(std::string &key, std::map<std::string, std::string> &header)
 {
     return header.find(key) == header.end();
 }
-
-int parseToken(
-    std::string token, std::map<std::string, std::string> &headers, bool &host
-)
-{
-    if (token.size() > MAX_SINGLE_HEADER_SIZE)
-        return HEADER_TOO_LARGE;
-    size_t pos = token.find(":");
-    if (pos == std::string::npos)
-        return BAD_REQUEST;
-    std::string name = token.substr(0, pos);
-    if (!checkNameField(name))
-        return BAD_REQUEST;
-    UpperCaseHeaderName(name);
-    if (name != "SET_COOKIE" && !checkForDouble(name, headers))
-        return BAD_REQUEST;
-    std::string value = token.substr(pos + 1);
-    trimLeft(value, "\t ");
-    if (!checkValueField(value))
-        return BAD_REQUEST;
-    if (name == "HOST")
-        host = true;
-    if (name == "COOKIE")
-    {
-        if (headers[name].empty())
-            headers[name] = value;
-        else
-        {
-            headers[name].append("; ");
-            headers[name].append(value);
-        }
-    }
-    else
-        headers[name] = value;
-    return 0;
-}
-
-int checkSetHeaders(int hn, Client &client, std::map<int, std::string> &tokens)
-{
-    bool                               host = false;
-    int                                ERROR;
-    std::map<std::string, std::string> headers;
-    for (int i = 0; i < hn; i++)
-    {
-        ERROR = parseToken(tokens[i], headers, host);
-        if (ERROR)
-            return ERROR;
-    }
-    if (!host)
-        return BAD_REQUEST;
-    client.req.setHeader(headers);
-    return 0;
-}
-
-//////////////////////////////////////////////
 
 void trimLeft(std::string &str, std::string unwanted)
 {
@@ -143,7 +69,7 @@ int Cgi::parseOutToken(std::string &token)
         return INTERNAL_SERVER_ERROR;
 
     UpperCaseHeaderName(name);
-    if (name != "SET_COOKIE" && !checkForDouble(name, cgiHeaders))
+    if (name != "SET_COOKIE" && !isUnique(name, cgiHeaders))
         return INTERNAL_SERVER_ERROR;
 
     std::string value = token.substr(col + 1);
@@ -151,16 +77,19 @@ int Cgi::parseOutToken(std::string &token)
     if (!checkValueField(value))
         return INTERNAL_SERVER_ERROR;
 
-    if (name == "COOKIE")
+    if (name == "SET_COOKIE" && !cgiHeaders[name].empty())
     {
-        if (cgiHeaders[name].empty())
-            cgiHeaders[name] = value;
-        else
-        {
-            cgiHeaders[name].append("; ");
-            cgiHeaders[name].append(value);
-        }
+        cgiHeaders[name].append("; ");
+        cgiHeaders[name].append(value);
     }
+    else
+        cgiHeaders[name] = value;
+
+    if (name == "CONTENT_TYPE")
+        contentType = true;
+    if (name == "STATUS")
+        OutStatus = true;
+    return 0;
 }
 
 int Cgi::parseOutHeaders(std::string &headers)
@@ -175,16 +104,28 @@ int Cgi::parseOutHeaders(std::string &headers)
         if (newL < crLf)
         {
             breaker     = newL;
-            breakerSize = 2;
+            breakerSize = 1;
         }
         else
         {
             breaker     = crLf;
-            breakerSize = 1;
+            breakerSize = 2;
         }
-        std::string token = headers.substr(breaker);
-        parseOutToken(token);
+        std::string token = headers.substr(0, breaker);
+        if (parseOutToken(token))
+            return INTERNAL_SERVER_ERROR;
+        headers.erase(0, breaker + breakerSize);
+        if (headers.empty())
+            return 0;
     }
+}
+
+void Cgi::addInfo()
+{
+    if (!contentType)
+        cgiHeaders["CONTENT_TYPE"] = "text/plain";
+    if (!OutStatus)
+        cgiHeaders["STATUS"] = "200 OK";
 }
 
 int Cgi::parseOutput(std::string &output)
@@ -199,20 +140,24 @@ int Cgi::parseOutput(std::string &output)
         if (newL < crLf)
         {
             breaker     = newL;
-            breakerSize = 4;
+            breakerSize = 2;
         }
         else
         {
             breaker     = crLf;
-            breakerSize = 2;
+            breakerSize = 4;
         }
         if (breaker > MAX_HEADER_SIZE)
             return INTERNAL_SERVER_ERROR;
         std::string headers = output.substr(0, breaker + (breakerSize / 2));
-        parseOutHeaders(headers);
+        if (parseOutHeaders(headers))
+            return INTERNAL_SERVER_ERROR;
+        addInfo();
+        output.erase(0, breaker + breakerSize);
+        return OUTPUT_READY;
     }
     else if (output.size() > MAX_HEADER_SIZE)
-        return INTERNAL_SERVER_ERROR; // return error
+        return INTERNAL_SERVER_ERROR;
     else
         return OUTPUT_NOT_READY;
 }

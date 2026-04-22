@@ -14,6 +14,9 @@ Cgi::Cgi()
     sigTermSent = false;
     envp        = NULL;
     argv        = NULL;
+
+    contentType = false;
+    OutStatus   = false;
 }
 
 Cgi::Cgi(const Cgi &other)
@@ -61,6 +64,8 @@ Cgi &Cgi::operator=(const Cgi &other)
         writeEnd        = other.writeEnd;
         safeExit        = other.safeExit;
         closedAll       = other.closedAll;
+        contentType     = other.contentType;
+        OutStatus       = other.OutStatus;
     }
     return *this;
 }
@@ -270,7 +275,6 @@ void Cgi::childProcess()
 {
     std::string scriptDir = scriptPath.substr(0, scriptPath.rfind('/'));
 
-
     if (!scriptDir.empty())
         chdir(scriptDir.c_str());
 
@@ -287,8 +291,6 @@ void Cgi::childProcess()
         exit(1);
     }
 
-
-
     close(pipeIn[1]);
     close(pipeIn[0]);
     close(pipeOut[0]);
@@ -296,7 +298,7 @@ void Cgi::childProcess()
 
     int erfd = open("log.txt", O_WRONLY | O_CREAT | O_APPEND, 0644);
     dup2(erfd, STDERR_FILENO);
-    close (erfd);
+    close(erfd);
 
     execve(argv[0], argv, envp);
     perror("execve failed :");
@@ -343,7 +345,7 @@ void Cgi::writing(int epoll_fd, unsigned int events, Client &client)
             writeEnd = true;
             epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipeIn[1], NULL);
             close(pipeIn[1]);
-            return ;
+            return;
         }
     }
 
