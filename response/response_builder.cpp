@@ -89,13 +89,13 @@ void response_builder::build_response()
         else
         {
             if (this->current_client->req.getMethod() == GET_METHODE)
-                handle_get();   // DONE [+]
+                handle_get();
 
             else if (this->current_client->req.getMethod() == POST_METHODE)
-                handle_post();  // DONE [-] working on it
+                handle_post();
 
             else if (this->current_client->req.getMethod() == DELETE_METHODE)
-                handle_delete();    // DONE [+]
+                handle_delete();
         }
 
     }

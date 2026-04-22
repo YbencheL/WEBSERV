@@ -21,7 +21,6 @@ void response_builder::set_header(void)
         for (size_t i = 0; i < set_cookie_headers.size(); ++i) {
             response_holder.append("Set-Cookie: " + set_cookie_headers[i] + "\r\n");
         }
-        current_client->res.set_is_cookie_false();
     }
 }
 

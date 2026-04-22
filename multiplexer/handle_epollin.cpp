@@ -22,6 +22,11 @@ void    socket_engine::handle_epollin(ssize_t fd)
         if (req_stat == REQ_NOT_READY)
             return ;
 
+        // // rm-me
+        // // ------------------ TESTING PURPOSES ----------------- //
+        // std::cout << ">>> Request\n" << raw_data_buff << std::endl;
+        // // ----------------------------------------------------- //
+
         show_request_logs(client, fd);   // >> Just-Logs
         client.res.handle_session(session_manager, client);  // >> handle cookie and session management in the response class
         client.res.set_stat_code(req_stat); // >> set the status code based on the parsing result
