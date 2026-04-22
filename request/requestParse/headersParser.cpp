@@ -89,7 +89,7 @@ int parseToken(
     if (!checkNameField(name))
         return BAD_REQUEST;
     UpperCaseHeaderName(name);
-    if (name != "SET_COOKIE" && !checkForDouble(name, headers))
+    if (name != "COOKIE" && !checkForDouble(name, headers))
         return BAD_REQUEST;
     std::string value = token.substr(pos + 1);
     trimLeft(value, "\t ");
@@ -97,7 +97,7 @@ int parseToken(
         return BAD_REQUEST;
     if (name == "HOST")
         host = true;
-    if (name == "SET_COOKIE")
+    if (name == "COOKIE")
     {
         if (headers[name].empty())
             headers[name] = value;
