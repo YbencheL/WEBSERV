@@ -33,10 +33,11 @@ std::string SessionManager::generateSessionId()
         "0123456789";
     std::string key;
     int i = 0;
+    ssize_t sizeOfArr = charset.size() - 1;
     
     while(i < 16)
     {
-        key.push_back(charset[rand() % 63]);
+        key.push_back(charset[rand() % sizeOfArr]);
         i++;
     }
     return key;
