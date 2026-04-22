@@ -72,7 +72,7 @@ void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, 
     int num = 0;
 
     i++;
-    while(tokenContainer[i].value != ";")
+    while(i < (ssize_t)tokenContainer.size() && tokenContainer[i].value != ";")
     {
         errornum = 0;
         std::stringstream ss(tokenContainer[i].value);
@@ -129,12 +129,12 @@ void handle_cgi(std::deque<Token>& tokenContainer, LocationBlock& loc, int count
     std::string value;
 
     i++;
-    while(tokenContainer[i].value != ";")
+    while(i < (ssize_t)tokenContainer.size() && tokenContainer[i].value != ";")
     {
         if (tokenContainer[i].value.find_first_of('.') == std::string::npos)
             error_line(": the extension is not valid must start with '.'", tokenContainer[i].line);
         key = tokenContainer[i].value;
-        if (tokenContainer[i + 1].value != ";")
+        if (i < (ssize_t)tokenContainer.size() && tokenContainer[i + 1].value != ";")
         {
             i++;
             value = tokenContainer[i].value;
