@@ -9,6 +9,14 @@ void    response_builder::init_response_builder(Client &current_client) {
     this->current_client = &current_client;
 }
 
+void    response_builder::resolve_request_path()
+{
+    if (this->current_client->res.get_stat_code() != OK)
+        return;
+    path_validation();
+    this->current_client->res.set_path(this->path);
+}
+
 std::string response_builder::index_file_iterator(const std::string &full_path)
 {
     std::string redirection_path;
@@ -19,7 +27,6 @@ std::string response_builder::index_file_iterator(const std::string &full_path)
     std::set<std::string>::const_iterator it = current_client->location_conf->index.begin();
     for ( ; it != current_client->location_conf->index.end(); it++)
     {
-        // std::cout << "[>] indext *it -> " << *it << std::endl;
         redirection_path = based_path + *it;
         if (access(redirection_path.c_str(), F_OK | R_OK) == 0)
             return (redirection_path);
@@ -27,7 +34,6 @@ std::string response_builder::index_file_iterator(const std::string &full_path)
     return ("");
 }
 
-// void    response_builder::serving_static_file(std::string path)
 void    response_builder::serving_static_file()
 {
     struct stat st;
@@ -43,10 +49,9 @@ void    response_builder::serving_static_file()
     this->current_client->res.set_static_file_fd(fd);
     this->current_client->is_serving_file = true;
 
-    std::cout << "[>] static file: " << this->path << " size: " << st.st_size << std::endl; // rm-me
     current_client->res.set_file_size(st.st_size);
 
-    // ______________________________________header______________________________________
+    // >>> header init
     this->header_buff.append(current_client->res.get_start_line());
     this->header_buff.append("Server: Webserv\r\n");
     this->header_buff.append("Date: " + get_time() + "\r\n");
@@ -54,45 +59,45 @@ void    response_builder::serving_static_file()
         this->header_buff.append("Content-Type: text/html\r\n");
     else
         this->header_buff.append("Content-Type: " + extension_to_media_type(this->path) + "\r\n");
+
+    if (current_client->res.get_is_cookie_set())    // >> cookie set in the response header
+    {
+        std::cout << YELLOW << "[+ serving_static_file] Setting cookies in response headers:" << RSET << std::endl;
+        const std::vector<std::string> &set_cookie_headers = current_client->res.get_cookie_holder();
+
+        for (size_t i = 0; i < set_cookie_headers.size(); ++i) {
+            this->header_buff.append("Set-Cookie: " + set_cookie_headers[i] + "\r\n");
+        }
+    }
     this->header_buff.append("Content-Length: " + to_string(st.st_size) + "\r\n\r\n");
-    // __________________________________________________________________________________
 
     this->response_holder = header_buff;
 }
 
-// TODO-LATER: Methode not allowed
 void response_builder::build_response()
 {
-    // rm-me
-    std::cout << READ_S << "--------- Methode: " << current_client->req.getMethod() << READ_E << std::endl;
-    std::cout << READ_S << "--------- Path: " << current_client->req.getPath() << READ_E << std::endl;
-    std::cout << "[>] STATUS CODE " << current_client->res.get_stat_code() << std::endl;
-
-
     if (this->current_client->res.get_stat_code() != OK)
-        generate_error_page();  // DONE [-] working on it
+        generate_error_page();
     else
     {
-        path_validation();  // TOKNOW: auto-index gen
+        resolve_request_path();  // >> auto-index gen
         int stat = this->current_client->res.get_stat_code();
-        if (stat >= 300 && stat < 400)
+        if (stat >= 300 && stat < 400)  // TODO: check if it's redirection or not
             ;
         else if (stat != OK)
             generate_error_page();  // DONE [-] working on it
         else
         {
             if (this->current_client->req.getMethod() == GET_METHODE)
-                handle_get();   // DONE [+]
+                handle_get();
 
             else if (this->current_client->req.getMethod() == POST_METHODE)
-                handle_post();  // DONE [-] working on it
+                handle_post();
 
             else if (this->current_client->req.getMethod() == DELETE_METHODE)
-                handle_delete();    // DONE [+]
+                handle_delete();
         }
 
     }
-
-    std::cout << READ_S << "--------- START RESPONSE\n" << response_holder << "\n------- END RESPONSE" << READ_E << std::endl;
     this->current_client->res.set_raw_response(response_holder);
 }

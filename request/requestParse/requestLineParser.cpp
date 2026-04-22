@@ -2,6 +2,20 @@
 #include "../includes/parseRequest.hpp"
 #include "../includes/request.hpp"
 
+static const int METHOD_COUNT = 9;
+
+static const std::string METHODS[METHOD_COUNT] = {
+    "GET",
+    "POST",
+    "PUT",
+    "DELETE",
+    "PATCH",
+    "HEAD",
+    "OPTIONS",
+    "TRACE",
+    "CONNECT"
+};
+
 void normalisePath(
     std::string &path, std::string target, std::string rep, size_t size
 )
@@ -53,15 +67,15 @@ bool splitDataToTokens(std::string data, std::map<int, std::string> &tokens)
     return true;
 }
 
-bool checkSetMethod(std::string &token, Client &client, std::string *methods)
+bool checkSetMethod(std::string &token, Client &client)
 {
     int i = 0;
-    for (; i < 3; i++)
+    for (; i < METHOD_COUNT; i++)
     {
-        if (token == methods[i])
+        if (token == METHODS[i])
             break;
     }
-    if (i == 3)
+    if (i == METHOD_COUNT)
         return false;
     client.req.setMethod(token);
     if (token == "POST")
@@ -114,7 +128,7 @@ int parseRequestLine(Client &client, std::string &data)
     std::map<int, std::string> tokens;
     if (!splitDataToTokens(data, tokens))
         return BAD_REQUEST;
-    if (!checkSetMethod(tokens[0], client, client.parse.methods))
+    if (!checkSetMethod(tokens[0], client))
         return BAD_REQUEST;
     if (!checkSetPathQuery(client, tokens[1]))
         return BAD_REQUEST;

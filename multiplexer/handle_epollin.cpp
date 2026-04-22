@@ -1,83 +1,51 @@
 # include "../socket_engine.hpp"
 # include "../response.hpp"
+# include "../utils/utils.hpp"
 # include "../response_builder.hpp"
 # include "../request/includes/parseRequest.hpp"
+# include "../cookies_sessions/cookies_and_sessions_logic.hpp"
+# include "../cookies_sessions/SessionManager.hpp"
 
 void    socket_engine::handle_epollin(ssize_t fd)
 {
-    char raw_data[BUFFER_SIZE];
+    Client  &client = this->raw_client_data[fd];
+    char    raw_data[BUFFER_SIZE];
     std::memset(raw_data, 0, sizeof(raw_data));
 
     int recv_stat = recv(fd, raw_data, BUFFER_SIZE, 0);
     if (recv_stat > 0)
     {
-        this->raw_client_data[fd].last_activity = time(0);
+        client.last_activity = time(0);
         std::string raw_data_buff(raw_data, recv_stat);
 
-        // rm-me
-        std::cout << READ_S << "--------- START REQUEST\n" << raw_data_buff << "\n------- END RAQUEST" << READ_E << std::endl;
-
-        int req_stat = parseRequest(this->raw_client_data[fd], raw_data_buff);
+        int req_stat = parseRequest(client, raw_data_buff);
         if (req_stat == REQ_NOT_READY)
             return ;
 
-        // ------------------------------- CGI -----------------------------------
-        // CGI_NOT_REQUIRED, CGI_DONE, ERROR
-        this->raw_client_data[fd].cgiHandler.handleCGI(this->raw_client_data[fd]);
-		if (this->raw_client_data[fd].cgiHandler.state == CGI_READY)
+        // // rm-me
+        // // ------------------ TESTING PURPOSES ----------------- //
+        // std::cout << ">>> Request\n" << raw_data_buff << std::endl;
+        // // ----------------------------------------------------- //
+
+        show_request_logs(client, fd);   // >> Just-Logs
+        client.res.handle_session(session_manager, client);  // >> handle cookie and session management in the response class
+        client.res.set_stat_code(req_stat); // >> set the status code based on the parsing result
+        if (client.res.get_stat_code() == OK)
         {
-            int pipe_out = this->raw_client_data[fd].cgiHandler.getPipeFd();   // pipeOut[0] - read CGI stdout
-            int pipe_in  = this->raw_client_data[fd].cgiHandler.getPipeInFd(); // pipeIn[1]  - write body to CGI stdin
-
-            pipe_to_client[pipe_out] = fd;
-            pipe_write_to_client[pipe_in] = fd;
-            set_fds_list(pipe_out);
-            set_fds_list(pipe_in);
-
-            struct epoll_event ev;
-            std::memset(&ev, 0, sizeof(ev));
-
-            ev.data.fd = pipe_out;
-            ev.events  = EPOLLIN;
-            if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, pipe_out, &ev) == -1)
-            {
-                std::cerr << "[!] epoll_ctl EPOLL_CTL_ADD (pipe_out) failed: " << strerror(errno) << std::endl;
-                terminate_client(fd, "");
+            client.cgiHandler.handleCGI(this->raw_client_data[fd]);
+            cgiState cgi_stat = client.cgiHandler.state;
+            if (cgi_stat == CGI_READY) {
+                setup_cgi_pipes(fd);
                 return ;
             }
-
-		{	// this block just in case the requested cgi has body
-			ev.data.fd = pipe_in;
-            	ev.events  = EPOLLOUT;
-            	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, pipe_in, &ev) == -1)
-            	{
-            		std::cerr << "[!] epoll_ctl EPOLL_CTL_ADD (pipe_in) failed: " << strerror(errno) << std::endl;
-            		terminate_client(fd, "");
-            		return ;
-            	}
-		}
-
-            return ;
         }
-        if (this->raw_client_data[fd].cgiHandler.state != CGI_NOT_REQUIRED)
-            return ;
-        // register pipeOut[0] in epoll (EPOLLIN)	->	pipe_to_client[pipeOut] = fd
-        // register pipeIn[1]  in epoll (EPOLLOUT)	->	pipe_write_to_client[pipeIn] = fd
-        // return  (don't build response yet)
 
-        // epoll fires on pipeIn[1]  (EPOLLOUT) -> handle_pipe_write() → cgi.writing()  → write body to child stdin
-        // epoll fires on pipeOut[0] (EPOLLIN)  -> handle_pipe_read()  → cgi.reading()  → read child stdout → cgi.response
-        // when pipeOut[0] returns 0            -> CGI_DONE
-        // → build response from cgi.response   -> modify_epoll_event(client_fd, EPOLLOUT)
-        // -----------------------------------------------------------------------
-
-        this->raw_client_data[fd].res.set_stat_code(req_stat);
-
+        // >>> build the response based on the request and the status code
+        std::cout << YELLOW << "[+ handle_epollin] Building response for client fd " << fd << " with status code " << client.res.get_stat_code() << RSET << std::endl;
         response_builder response_builder;
-        response_builder.init_response_builder(raw_client_data[fd]);
+        response_builder.init_response_builder(client);
         response_builder.build_response();
-
-        modify_epoll_event(fd, EPOLLOUT | EPOLLIN);
+        modify_epoll_event(fd, EPOLLOUT);
     }
     else if (recv_stat == 0)
         terminate_client(fd, "[!] Client lost connection (EOF)");

@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebServ</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; line-height: 1.6; }
+        .box { border: 1px solid #ccc; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        button { cursor: pointer; padding: 10px; }
+        .delete-btn { background: #ff4444; color: white; border: none; }
+        img {height:fit-content; width: auto;}
+    </style>
+</head>
+<body>
+    <h1>Webserv</h1>
+
+    <!-- GET -->
+    <div class="box">
+        <h3>1. GET Test (Static Files)</h3>
+        <p>If you see the image below, good it works just fine</p>
+        <img src="./mem.png" alt="Image Not Found" style="max-width: 200px;">
+    </div>
+
+    <!-- POST -->
+
+    <!-- DELETE -->
+    <div class="box">
+        <h3>3. DELETE Test</h3>
+        <p>Clicking this will send a <code>DELETE</code> request for <code>delete_me.txt</code>.</p>
+        <button class="delete-btn" onclick="sendDelete()">Delete test_file.txt</button>
+        <p id="deleteStatus"></p>
+    </div>
+
+    <!-- POST -->
+    <div class="box">
+        <h3>2. POST Test (Clean Raw Upload)</h3>
+        <input type="file" id="fileInput">
+        <button onclick="uploadRaw()">Upload</button>
+    </div>
+
+    <!-- POST script -->
+    <script>
+        async function uploadRaw() {
+            const input = document.getElementById('fileInput');
+            if (!input.files[0]) return alert("Select a file!");
+            
+            const file = input.files[0];
+            await fetch('/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Length': file.size,
+                    'filename': file.name,
+                    'Content-Type': file.type
+                },
+                body: file // This sends the RAW bytes
+            });
+            alert("Upload Attempted! Check your server logs.");
+        }
+    </script>
+
+    <!-- Scripte DELETE -->
+    <script>
+        async function sendDelete() {
+            const res = await fetch('delete_me.txt', { method: 'DELETE' });
+            if (res.status === 204)
+                window.location.reload();
+            else {
+                const errorHtml = await res.text();
+                document.body.innerHTML = errorHtml; 
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -80,13 +80,18 @@ int checkForMethod(Client &client)
 
 int collectBodyByLength(Client &client)
 {
-    if (client.parse.remaining.size() >= (size_t)client.parse.contentLength)
+    if (client.parse.bodyRead < (size_t)client.parse.contentLength)
     {
-        client.req.setBody(
-            client.parse.remaining.substr(0, client.parse.contentLength)
-        );
-        return OK;
+        if (client.parse.remaining.size() + client.parse.bodyRead >
+            (size_t)client.location_conf->client_max_body_size)
+            return PAYLOAD_TOO_LARGE;
+        else{
+            client.req.appendBody(client.parse.remaining);
+            client.parse.bodyRead += client.parse.remaining.size();
+        }
     }
+    if (client.parse.bodyRead == (size_t)client.parse.contentLength)
+        return OK;
     else
         return REQ_NOT_READY;
 }
@@ -110,6 +115,8 @@ int collectBodyByChunks(Client &client, std::string &remain)
                 "0123456789ABCDEF"
             );
             if (bytes == -1)
+                return PAYLOAD_TOO_LARGE;
+            else if (bytes == -2)
                 return BAD_REQUEST;
             remain.erase(0, end + 2);
             if (bytes == 0)
@@ -130,6 +137,7 @@ int collectBodyByChunks(Client &client, std::string &remain)
                 else
                 {
                     client.req.appendBody(remain.substr(0, bytes));
+                    client.parse.bodyRead += bytes;
                     if (client.req.getBody().size() >
                         (size_t)client.location_conf->client_max_body_size)
                         return PAYLOAD_TOO_LARGE;

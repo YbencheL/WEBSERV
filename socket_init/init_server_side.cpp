@@ -1,6 +1,5 @@
 # include "../socket_engine.hpp"
 
-// (DONE[*])
 void socket_engine::init_server_side(std::string port, std::string host)
 {
 
@@ -30,8 +29,6 @@ void socket_engine::init_server_side(std::string port, std::string host)
         freeaddrinfo(result);
         std::exit(1);
     }
-    // std::cout << GREEN_S << "#2 FD -> " << serv_socketFD << GREEN_E << std::endl;
-
 
     new_server_ev.data.fd = serv_socketFD;  // >>> socket fd
     new_server_ev.events = EPOLLIN;         // >>> ready to read event

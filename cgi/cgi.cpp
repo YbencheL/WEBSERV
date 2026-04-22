@@ -14,6 +14,9 @@ Cgi::Cgi()
     sigTermSent = false;
     envp        = NULL;
     argv        = NULL;
+
+    contentType = false;
+    OutStatus   = false;
 }
 
 Cgi::Cgi(const Cgi &other)
@@ -61,6 +64,8 @@ Cgi &Cgi::operator=(const Cgi &other)
         writeEnd        = other.writeEnd;
         safeExit        = other.safeExit;
         closedAll       = other.closedAll;
+        contentType     = other.contentType;
+        OutStatus       = other.OutStatus;
     }
     return *this;
 }
@@ -118,8 +123,8 @@ void Cgi::checkForCgi(Client &client)
         state = CGI_NOT_REQUIRED;
         return;
     }
-    scriptPath = client.res.get_path();
-
+    scriptPath = resolve_request_filesystem_path(client);
+    client.res.set_path(scriptPath);
     size_t dot = scriptPath.rfind('.');
 
     if (dot == std::string::npos)
@@ -208,6 +213,13 @@ void Cgi::buildArg()
 
 void Cgi::setupCgi(Client &client)
 {
+    sent = 0;
+    response.clear();
+    safeExit    = true;
+    writeEnd    = false;
+    closedAll   = false;
+    sigTermSent = false;
+
     buildEnv(client);
     buildArg();
     state = CREAT_PIPES;
@@ -249,9 +261,13 @@ void Cgi::execution(Client &client)
     else
     {
         pid = tmpid;
-        this->parentProcess(client);
-        state = CGI_READY; // this state mean the cgi is ready to pass fds for
-                           // epoll event
+        this->parentProcess();
+        state = CGI_READY;
+        if (!client.parse.body)
+        {
+            writeEnd = true;
+            close(pipeIn[1]);
+        }
     }
 }
 
@@ -280,31 +296,20 @@ void Cgi::childProcess()
     close(pipeOut[0]);
     close(pipeOut[1]);
 
+    int erfd = open("log.txt", O_WRONLY | O_CREAT | O_APPEND, 0644);
+    dup2(erfd, STDERR_FILENO);
+    close(erfd);
+
     execve(argv[0], argv, envp);
     perror("execve failed :");
     exit(1);
 }
 
-void Cgi::parentProcess(Client &client)
+void Cgi::parentProcess()
 {
     close(pipeIn[0]);
     close(pipeOut[1]);
     gettimeofday(&start, NULL);
-}
-
-void Cgi::closeEverything(int epoll_fd, Client &client)
-{
-    if (!closedAll)
-    {
-        if (client.parse.body && !writeEnd)
-        {
-            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipeIn[1], NULL);
-            close(pipeIn[1]);
-        }
-        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipeOut[0], NULL);
-        close(pipeOut[0]);
-        closedAll = true;
-    }
 }
 
 void Cgi::writing(int epoll_fd, unsigned int events, Client &client)
@@ -340,19 +345,17 @@ void Cgi::writing(int epoll_fd, unsigned int events, Client &client)
             writeEnd = true;
             epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipeIn[1], NULL);
             close(pipeIn[1]);
+            return;
         }
     }
 
-    if (written == -1)
-    {
-        closeEverything(epoll_fd, client);
+    if (written == -1 || written == 0)
         state = ERROR;
-    }
 }
 
-void Cgi::reading(int epoll_fd, unsigned int events, Client &client)
+void Cgi::reading(unsigned int events)
 {
-    checkResponseAndTime(epoll_fd, client);
+    checkResponseAndTime();
 
     if (!(events & EPOLLIN) && !(events & EPOLLHUP))
         return;
@@ -363,28 +366,24 @@ void Cgi::reading(int epoll_fd, unsigned int events, Client &client)
 
     if (n > 0)
         response.append(buff, n);
-    else if (n == 0)
+    else if (n == 0 || (events & EPOLLHUP))
     {
-        closeEverything(epoll_fd, client);
         state = CGI_WAITING;
     }
     else if (n == -1)
-    {
-        closeEverything(epoll_fd, client);
         state = ERROR;
-    }
 }
 
-void Cgi::checkResponseAndTime(int epoll_fd, Client &client)
+void Cgi::checkResponseAndTime()
 {
     pid_t wait = waitpid(pid, &status, WNOHANG);
-    if (wait == pid && sigTermSent)
+    if ((wait == pid || wait == -1) && sigTermSent)
     {
         state = ERROR;
-        return ;
+        return;
     }
     gettimeofday(&current, NULL);
-    if (wait == pid && state == CGI_WAITING && safeExit)
+    if ((wait == pid || wait == -1) && state == CGI_WAITING && safeExit)
         state = CGI_DONE;
     else
     {
@@ -392,7 +391,6 @@ void Cgi::checkResponseAndTime(int epoll_fd, Client &client)
         {
             if (!sigTermSent)
             {
-                closeEverything(epoll_fd, client);
                 safeExit = false;
                 kill(pid, SIGTERM);
                 sigTermSent = true;
@@ -434,4 +432,9 @@ int Cgi::getPipeOutFd() const
 int Cgi::getPipeInFd() const
 {
     return pipeIn[1];
+}
+
+std::string &Cgi::getCgiResponse()
+{
+    return response;
 }

@@ -3,7 +3,7 @@
 int count_to_symbol(std::deque<Token>& tokenContainer, ssize_t& index, int count)
 {
     index++;
-    while(tokenContainer[index].value != ";")
+    while(index < (ssize_t)tokenContainer.size() && tokenContainer[index].value != ";")
     {
         count++;
         index++;
@@ -51,11 +51,11 @@ void checking_values(ServerBlock& Serv)
 
     if (!Serv.listen)
         error_line(": missing value (port)", -1);
-    else if (!Serv.set_timeout)
-        Serv.set_timeout = 100;
-    else if (Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL)
+    if (Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL)
         error_line(": port has incorrect value must be between 1024 and 65535", -1);
-    else if (Serv.client_max_body_size < 0 || !Serv.client_max_body_size)
+    if (!Serv.set_timeout)
+        Serv.set_timeout = 10;
+    if (Serv.client_max_body_size < 0 || !Serv.client_max_body_size)
         error_line(": client_max_body_size has incorrect value", -1);
     //checking empty values
     empty_values_check(Serv);

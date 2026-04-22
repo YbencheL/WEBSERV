@@ -19,6 +19,7 @@ unsigned short int Delete(const std::string &root, const std::string &path)
 
 void    response_builder::handle_delete()
 {
+    
     std::string path = resolve_location_relative_path(this->current_client->req.getPath(),
             this->current_client->location_conf->path);
 

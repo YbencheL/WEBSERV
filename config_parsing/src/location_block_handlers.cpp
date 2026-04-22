@@ -9,8 +9,8 @@ void handle_client_mbs(std::deque<Token>& tokenContainer, LocationBlock& loc, in
     {
         std::stringstream ss(tokenContainer[i].value);
         ss >> loc.client_max_body_size;
-        if(ss.fail() || !ss.eof())
-            error_line(": client_max_body_size must be a number", tokenContainer[i].line);
+        if(ss.fail() || !ss.eof() || loc.client_max_body_size < 0)
+            error_line(": client_max_body_size must be a valid number", tokenContainer[i].line);
         countARG = 0;
     }else
         error_line(": client_max_body_size must have one argument", tokenContainer[i].line);
@@ -65,14 +65,14 @@ void handle_location_block_root(std::deque<Token>& tokenContainer, LocationBlock
 void handle_redirections(std::deque<Token>& tokenContainer, LocationBlock& loc, int countARG, ssize_t& i,
     std::string& keyword)
 {
-    countARG = 0;
+    (void)countARG;
     std::string value;
     std::set<int> errorsnum;
     int errornum = 0;
     int num = 0;
 
     i++;
-    while(tokenContainer[i].value != ";")
+    while(i < (ssize_t)tokenContainer.size() && tokenContainer[i].value != ";")
     {
         errornum = 0;
         std::stringstream ss(tokenContainer[i].value);
@@ -124,17 +124,17 @@ void handle_cgi(std::deque<Token>& tokenContainer, LocationBlock& loc, int count
     std::string& keyword)
 {
     (void)keyword;
-    countARG = 0;
+    (void)countARG;
     std::string key;
     std::string value;
 
     i++;
-    while(tokenContainer[i].value != ";")
+    while(i < (ssize_t)tokenContainer.size() && tokenContainer[i].value != ";")
     {
         if (tokenContainer[i].value.find_first_of('.') == std::string::npos)
             error_line(": the extension is not valid must start with '.'", tokenContainer[i].line);
         key = tokenContainer[i].value;
-        if (tokenContainer[i + 1].value != ";")
+        if (i < (ssize_t)tokenContainer.size() && tokenContainer[i + 1].value != ";")
         {
             i++;
             value = tokenContainer[i].value;

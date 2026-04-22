@@ -262,7 +262,6 @@ bool    validate_headers(Client &current_client)
     return (true);
 }
 
-
 // --------------------------------------------------------------------------------------------
 
 void    dir_path_correction(const std::string &full_dir_path, std::string &d_path)
@@ -296,7 +295,7 @@ std::string extracting_from_header(const std::map<std::string, std::string> &hea
 
 std::string rand_str_gen()
 {
-    std::srand(std::time(0));
+    // std::srand(std::time(0));
     const std::string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     std::string random_name;
     
@@ -310,19 +309,7 @@ std::string rand_str_gen()
     return (random_name);
 }
 
-// CGI --------------------------------------------------------------------------------------------
-        
-bool    is_cgi_request(std::string path)
-{
-    size_t last_dot = path.find_last_of('.');
-    if (last_dot == std::string::npos)
-        return false;
-
-    std::string ext = path.substr(last_dot);
-    if (ext == ".py" || ext == ".php")
-        return true; 
-    return false;
-}
+// --------------------------------------------------------------------------------------------
 
 bool    is_server(std::vector<int> &server_side_fds, unsigned short int fd)
 {
@@ -331,3 +318,40 @@ bool    is_server(std::vector<int> &server_side_fds, unsigned short int fd)
         return (true);
     return (false);
 }
+
+// --------------------------------------------------------------------------------------------
+
+void    show_response_logs(const Client &client, int fd)
+{
+    std::cout << PINK << "[Response LOG] HTTP/1.0 "
+                << client.res.get_stat_code()
+                << " " << stat_code_to_string(client.res.get_stat_code())
+                << " on FD " << fd << RSET << std::endl;
+}
+
+// --------------------------------------------------------------------------------------------
+
+void    setup_server_config_info(std::deque<ServerBlock> &ServerConfig)
+{
+    for (size_t i = 0; i < ServerConfig.size(); i++)
+    {
+        std::string host = ServerConfig[i].host;
+        std::string port = to_string(ServerConfig[i].listen);
+        std::cout << GREEN << "Serving HTTP on " << host << " port " << port
+            << " (http://" << host << ":" << port << "/)"
+            << RSET << std::endl;
+        s_engine.init_server_side(port, host);
+    }
+}
+
+// --------------------------------------------------------------------------------------------
+
+void    show_request_logs(const Client &client, int fd)
+{
+    std::cout << YELLOW << "[Request LOG] " << client.req.getMethod()
+            << " " << client.req.getPath()
+            << " " << client.req.getHttpVersion()
+            << " on FD " << fd << RSET << std::endl;
+}
+
+// --------------------------------------------------------------------------------------------

@@ -7,7 +7,7 @@ void keywords_validation(std::deque<Token>& tokenContainer, ssize_t& ServerBlock
     else if (tokenContainer[i].value == "location")
         LocationBlockCount++;
         
-    if (((tokenContainer[i].value == "server" && tokenContainer[i + 1].value != "{") ||
+    if ((i + 2 < (ssize_t)tokenContainer.size()) && ((tokenContainer[i].value == "server" && tokenContainer[i + 1].value != "{") ||
             (tokenContainer[i].value == "location" && tokenContainer[i + 2].value != "{")))
         error_line(": server and location block must be followed with braces", tokenContainer[i].line);
     else if (tokenContainer[i].value == "location" && !insideServer)
@@ -22,9 +22,9 @@ void symbol_validation(std::deque<Token>& tokenContainer, ssize_t& ServerBlockCo
 {
     if (tokenContainer[i].value == "{")
     {
-        if (tokenContainer[i + 1].type != 0)
+        if (i + 1 < (ssize_t)tokenContainer.size() && tokenContainer[i + 1].type != 0)
         {
-            if (tokenContainer[i + 1].value != "}")
+            if ((i + 1 < (ssize_t)tokenContainer.size()) && tokenContainer[i + 1].value != "}")
                 error_line(": unkown keyword", tokenContainer[i + 1].line);
         }
         if ((i - 1) >= 0 && tokenContainer[i - 1].value == "server")
@@ -42,7 +42,7 @@ void symbol_validation(std::deque<Token>& tokenContainer, ssize_t& ServerBlockCo
         LocationBlockCount = 0;
     }else if (tokenContainer[i].value == ";")
     {
-        if (tokenContainer[i + 1].type == 1)
+        if (i + 1 < (ssize_t)tokenContainer.size() && tokenContainer[i + 1].type == 1)
             error_line(": unkown keyword", tokenContainer[i + 1].line);
     }
 }
