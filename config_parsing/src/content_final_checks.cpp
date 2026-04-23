@@ -12,21 +12,6 @@ int count_to_symbol(std::deque<Token>& tokenContainer, ssize_t& index, int count
     return count;
 }
 
-void duplicate_check(std::deque<std::string>& keywords, std::string name)
-{
-    int count = 0;
-
-    for (size_t i = 0; i < keywords.size(); i++)
-    {
-        if (keywords[i] == name)
-            count++;
-        else if (keywords[i] == "server")
-            count = 0;
-        if (count > 1)
-            error_line(": there must be no duplicates for keywords", -1);
-    }
-}
-
 template <typename T>
 void inherit_check(T& member, T& defaultValue, const std::string& fieldName)
 {
@@ -44,11 +29,8 @@ void empty_values_check(ServerBlock&  Serv)
         error_line(": missing value (error_page, host or index)", -1);
 }
 
-
-void checking_values(ServerBlock& Serv)
+void validating_server_config(ServerBlock& Serv)
 {
-    std::deque<std::string> seenLocationPaths;
-
     if (!Serv.listen)
         error_line(": missing value (port)", -1);
     if (Serv.listen < PORT_MIN_VAL || Serv.listen > PORT_MAX_VAL)
@@ -57,6 +39,13 @@ void checking_values(ServerBlock& Serv)
         Serv.set_timeout = 10;
     if (Serv.client_max_body_size < 0 || !Serv.client_max_body_size)
         error_line(": client_max_body_size has incorrect value", -1);
+}
+
+void checking_values(ServerBlock& Serv)
+{
+    std::deque<std::string> seenLocationPaths;
+
+    validating_server_config(Serv);
     //checking empty values
     empty_values_check(Serv);
     // these values will have a default if they dont exist

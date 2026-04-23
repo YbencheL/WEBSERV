@@ -40,3 +40,18 @@ bool    is_cgi_path_valid(std::string interpreter_path)
         return (false);
     return (true);
 }
+
+void duplicate_check(std::deque<std::string>& keywords, std::string name)
+{
+    int count = 0;
+
+    for (size_t i = 0; i < keywords.size(); i++)
+    {
+        if (keywords[i] == name)
+            count++;
+        else if (keywords[i] == "server")
+            count = 0;
+        if (count > 1)
+            error_line(": there must be no duplicates for keywords", -1);
+    }
+}

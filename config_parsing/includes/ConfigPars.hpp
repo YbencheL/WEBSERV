@@ -27,9 +27,10 @@ void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<Serv
 std::deque<ServerBlock> tokenzation(std::string fileContent);
 
 // debugging
-void debugging(std::deque<ServerBlock>& serverConfigs);
+// void debugging(std::deque<ServerBlock>& serverConfigs);
 
 //helper functions
+void duplicate_check(std::deque<std::string>& keywords, std::string name);
 bool    is_cgi_path_valid(std::string interpreter_path);
 in_addr_t address_resolution(std::string host);
 void error_line(std::string msg, int Line);
