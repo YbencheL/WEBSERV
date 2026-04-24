@@ -10,11 +10,11 @@
 #define INTERNAL_SERVER_ERROR 500
 
 #include <iostream>
+#include <map>
 #include <stdlib.h>
 #include <sys/epoll.h>
 #include <sys/time.h>
 #include <wait.h>
-#include <map>
 
 enum cgiState
 {
@@ -83,16 +83,16 @@ class Cgi
     void childProcess();
     void parentProcess();
     void writing(int epoll_fd, unsigned int events, Client &client);
-    void reading(unsigned int events);
-    void checkResponseAndTime();
+    void reading(unsigned int events, Client &clienty);
+    void checkResponseAndTime(Client &client);
     void handleCGI(Client &client);
     int  getPipeOutFd() const;
     int  getPipeInFd() const;
 
-    int parseOutToken(std::string &token);
-    int parseOutHeaders(std::string &headers);
+    int  parseOutToken(std::string &token);
+    int  parseOutHeaders(std::string &headers);
     void addInfo();
-    int parseOutput(std::string &output);
+    int  parseOutput(std::string &output);
 };
 
 #endif

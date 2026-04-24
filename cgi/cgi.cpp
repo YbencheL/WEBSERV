@@ -353,9 +353,9 @@ void Cgi::writing(int epoll_fd, unsigned int events, Client &client)
         state = ERROR;
 }
 
-void Cgi::reading(unsigned int events)
+void Cgi::reading(unsigned int events, Client &client)
 {
-    checkResponseAndTime();
+    checkResponseAndTime(client);
 
     if (!(events & EPOLLIN) && !(events & EPOLLHUP))
         return;
@@ -374,7 +374,7 @@ void Cgi::reading(unsigned int events)
         state = ERROR;
 }
 
-void Cgi::checkResponseAndTime()
+void Cgi::checkResponseAndTime(Client &client)
 {
     pid_t wait = waitpid(pid, &status, WNOHANG);
     if ((wait == pid || wait == -1) && sigTermSent)
@@ -384,10 +384,15 @@ void Cgi::checkResponseAndTime()
     }
     gettimeofday(&current, NULL);
     if ((wait == pid || wait == -1) && state == CGI_WAITING && safeExit)
-        state = CGI_DONE;
+    {
+        if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
+            state = CGI_DONE;
+        else
+            state = ERROR;
+    }
     else
     {
-        if (current.tv_sec - start.tv_sec > CGI_TIMEOUT)
+        if (current.tv_sec - start.tv_sec > client.server_conf->set_timeout)
         {
             if (!sigTermSent)
             {
@@ -401,7 +406,8 @@ void Cgi::checkResponseAndTime()
             else
             {
                 gettimeofday(&current, NULL);
-                if ((current.tv_sec - start.tv_sec) > (CGI_TIMEOUT + 3))
+                if ((current.tv_sec - start.tv_sec) >
+                    (client.server_conf->set_timeout + 3))
                 {
                     kill(pid, SIGKILL);
                     waitpid(pid, &status, 0);

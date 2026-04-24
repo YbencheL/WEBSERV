@@ -62,7 +62,7 @@ void socket_engine::timeout_monitoring(void)
 
         if(it->second.cgiHandler.state == CGI_READY || it->second.cgiHandler.state == CGI_WAITING)
         {
-            it->second.cgiHandler.checkResponseAndTime();
+            it->second.cgiHandler.checkResponseAndTime(it->second);
             it->second.last_activity = now;
         }
 

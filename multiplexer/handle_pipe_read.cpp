@@ -10,7 +10,7 @@ void    socket_engine::handle_pipe_read(int pipe_fd, uint32_t events)
     client.last_activity = time(0);
 
     if (client.cgiHandler.state == CGI_READY)
-        client.cgiHandler.reading(events);
+        client.cgiHandler.reading(events, client);
 
     if (client.cgiHandler.state == CGI_DONE || client.cgiHandler.state == ERROR)
     {
