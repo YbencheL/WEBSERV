@@ -36,15 +36,20 @@ std::string join_root_path(const std::string root, std::string path)
     return (final_url);
 }
 
-std::string resolve_location_relative_path(const std::string &request_path, const std::string &location_path)
+std::string path_remainder(const std::string &request_path, const std::string &location_path)
 {
-    std::string relative = request_path;
+    std::string path_after_location = request_path;
+    int req_size = request_path.size();
+    int loc_size = location_path.size();
 
-    if (relative.size() >= location_path.size() && relative.substr(0, location_path.size()) == location_path)
-        relative = relative.substr(location_path.size());
-    if (relative.empty())
-        relative = "/";
-    return (relative);
+    // TODO: check
+    if (req_size >= loc_size
+        && path_after_location.substr(0, location_path.size()) == location_path)
+            path_after_location = path_after_location.substr(location_path.size());
+
+    if (path_after_location.empty())
+        path_after_location = "/";
+    return (path_after_location);
 }
 
 std::string resolve_request_filesystem_path(const Client &client)
@@ -52,7 +57,7 @@ std::string resolve_request_filesystem_path(const Client &client)
     if (client.location_conf == NULL)
         return ("");
 
-    std::string req_path = resolve_location_relative_path(
+    std::string req_path = path_remainder(
         client.req.getPath(),
         client.location_conf->path
     );
@@ -72,6 +77,7 @@ void    response_builder::return_handling()
     response_holder.append("Date: " + get_time() + "\r\n");
     if (!it->second.empty())    // location
         response_holder.append("Location: " + it->second + "\r\n");
+    response_holder.append("Connection: close\r\n");
     response_holder.append("Content-Length: 0\r\n\r\n");
 }
 
@@ -86,38 +92,31 @@ void    response_builder::path_validation()
     }
 	
     this->path = resolve_request_filesystem_path(*this->current_client);
-    // std::cout << "[>] final path -> " << this->path << std::endl;
-	// RETURN THE REDIRECTION PATH IF EXIST
-	if (!this->current_client->location_conf->redirection.empty())
-    {
+
+	if (!this->current_client->location_conf->redirection.empty()) {
         return_handling();
         return ;
     }
 
-    // this->path = join_root_path(current_client->location_conf->root, this->current_client->req.getPath());
-    if (stat(path.c_str(), &statbuf) < 0) {
+    if (stat(this->path.c_str(), &statbuf) < 0) {
         this->current_client->res.set_stat_code(NOT_FOUND);
         return ;
-    } else if (access(path.c_str(), R_OK) < 0)  {
+    } else if (access(this->path.c_str(), R_OK) < 0)  {
         this->current_client->res.set_stat_code(FORBIDDEN_ACCESS);
         return ;
     }
     if (S_ISDIR(statbuf.st_mode))
     {
         index = index_file_iterator(this->path);
-        // std::cout << "INDEX -> " << index << std::endl;
-        if (!index.empty())     // here will server the static files .html
+        if (!index.empty()) // >> if index file exist in the directory
             this->path = index;
         else if (index.empty() && current_client->location_conf->autoindex)
             autoindex_page(this->path, this->current_client->req.getPath());
         else {
+            // >> autoindex(off) && no index file -> 404 not found
             if (!this->current_client->location_conf->autoindex
                 && this->current_client->req.getMethod() == "GET")
                 this->current_client->res.set_stat_code(NOT_FOUND);
         }
     }
 }
-
-// Test GET Expected 404 on http://localhost:8080/directory/Yeah
-// FATAL ERROR ON LAST TEST: bad status code
-// and for me i returned forbidden access that why

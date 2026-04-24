@@ -33,7 +33,7 @@ void                        normalisePath(std::string &path, std::string target,
 std::string                 extracting_from_header(const std::map<std::string, std::string> &header, std::string target);
 std::string                 rand_str_gen();
 std::string                 join_root_path(const std::string root, std::string path);
-std::string                 resolve_location_relative_path(const std::string &request_path, const std::string &location_path);
+std::string                 path_remainder(const std::string &request_path, const std::string &location_path);
 std::string                 resolve_request_filesystem_path(const Client &client);
 bool                        is_dir_exist(const std::string &path);
 bool                        is_server(std::vector<int> &server_side_fds, unsigned short int fd);

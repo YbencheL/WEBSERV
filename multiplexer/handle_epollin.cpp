@@ -40,8 +40,7 @@ void    socket_engine::handle_epollin(ssize_t fd)
             }
         }
 
-        // >>> build the response based on the request and the status code
-        std::cout << YELLOW << "[+ handle_epollin] Building response for client fd " << fd << " with status code " << client.res.get_stat_code() << RSET << std::endl;
+        // >> serv static file or generate response body
         response_builder response_builder;
         response_builder.init_response_builder(client);
         response_builder.build_response();

@@ -1,0 +1,21 @@
+Traceback (most recent call last):
+  File "/home/yanflous/Desktop/workspace/webserv/www/cgi-bin/hello.py", line 6, in <module>
+    while (1):
+KeyboardInterrupt
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+Traceback (most recent call last):
+  File "/home/yanflous/Desktop/workspace/webserv/www/cgi-bin/hello.py", line 6, in <module>
+    while (1):
+KeyboardInterrupt
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+Traceback (most recent call last):
+  File "/home/yanflous/Desktop/workspace/webserv/www/cgi-bin/hello.py", line 6, in <module>
+    while (1):
+KeyboardInterrupt
+This is an error
+Traceback (most recent call last):
+  File "/home/yanflous/Desktop/workspace/webserv/www/cgi-bin/infi_loop.py", line 3, in <module>
+    while (1):
+KeyboardInterrupt

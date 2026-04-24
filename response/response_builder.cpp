@@ -19,7 +19,7 @@ void    response_builder::resolve_request_path()
 
 std::string response_builder::index_file_iterator(const std::string &full_path)
 {
-    std::string redirection_path;
+    std::string routing_path;
     std::string based_path = full_path;
     if (!full_path.empty() && full_path.at(full_path.length() -1) != '/')
         based_path += '/';
@@ -27,11 +27,34 @@ std::string response_builder::index_file_iterator(const std::string &full_path)
     std::set<std::string>::const_iterator it = current_client->location_conf->index.begin();
     for ( ; it != current_client->location_conf->index.end(); it++)
     {
-        redirection_path = based_path + *it;
-        if (access(redirection_path.c_str(), F_OK | R_OK) == 0)
-            return (redirection_path);
+        routing_path = based_path + *it;
+        if (access(routing_path.c_str(), F_OK | R_OK) == 0)
+            return (routing_path);
     }
     return ("");
+}
+
+void    response_builder::set_static_file_res_header(off_t content_length)
+{
+    this->header_buff.append(current_client->res.get_start_line());
+    this->header_buff.append("Server: Webserv\r\n");
+    this->header_buff.append("Date: " + get_time() + "\r\n");
+    if (is_error_page)
+        this->header_buff.append("Content-Type: text/html\r\n");
+    else
+        this->header_buff.append("Content-Type: " + extension_to_media_type(this->path) + "\r\n");\
+
+    if (current_client->res.get_is_cookie_set())    // >> cookie set in the response header
+    {
+        std::cout << YELLOW << "[+ serving_static_file] Setting cookies in response headers:" << RSET << std::endl;
+        const std::vector<std::string> &set_cookie_headers = current_client->res.get_cookie_holder();
+
+        for (size_t i = 0; i < set_cookie_headers.size(); ++i) {
+            this->header_buff.append("Set-Cookie: " + set_cookie_headers[i] + "\r\n");
+        }
+    }
+    this->header_buff.append("Connection: close\r\n");
+    this->header_buff.append("Content-Length: " + to_string(content_length) + "\r\n\r\n");
 }
 
 void    response_builder::serving_static_file()
@@ -48,29 +71,9 @@ void    response_builder::serving_static_file()
     }
     this->current_client->res.set_static_file_fd(fd);
     this->current_client->is_serving_file = true;
+    this->current_client->res.set_file_size(st.st_size);
 
-    current_client->res.set_file_size(st.st_size);
-
-    // >>> header init
-    this->header_buff.append(current_client->res.get_start_line());
-    this->header_buff.append("Server: Webserv\r\n");
-    this->header_buff.append("Date: " + get_time() + "\r\n");
-    if (is_error_page)
-        this->header_buff.append("Content-Type: text/html\r\n");
-    else
-        this->header_buff.append("Content-Type: " + extension_to_media_type(this->path) + "\r\n");
-
-    if (current_client->res.get_is_cookie_set())    // >> cookie set in the response header
-    {
-        std::cout << YELLOW << "[+ serving_static_file] Setting cookies in response headers:" << RSET << std::endl;
-        const std::vector<std::string> &set_cookie_headers = current_client->res.get_cookie_holder();
-
-        for (size_t i = 0; i < set_cookie_headers.size(); ++i) {
-            this->header_buff.append("Set-Cookie: " + set_cookie_headers[i] + "\r\n");
-        }
-    }
-    this->header_buff.append("Content-Length: " + to_string(st.st_size) + "\r\n\r\n");
-
+    set_static_file_res_header(st.st_size);
     this->response_holder = header_buff;
 }
 
@@ -82,10 +85,11 @@ void response_builder::build_response()
     {
         resolve_request_path();  // >> auto-index gen
         int stat = this->current_client->res.get_stat_code();
-        if (stat >= 300 && stat < 400)  // TODO: check if it's redirection or not
+        if (stat >= 300 && stat < 400)
+
             ;
         else if (stat != OK)
-            generate_error_page();  // DONE [-] working on it
+            generate_error_page();
         else
         {
             if (this->current_client->req.getMethod() == GET_METHODE)

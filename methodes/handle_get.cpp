@@ -22,6 +22,7 @@ void response_builder::set_header(void)
             response_holder.append("Set-Cookie: " + set_cookie_headers[i] + "\r\n");
         }
     }
+    response_holder.append("Connection: close\r\n");
 }
 
 void response_builder::set_body(void)
@@ -51,6 +52,7 @@ void response_builder::generate_error_page()
     }
 }
 
+// TODO: check
 void response_builder::handle_get()
 {
     set_header();

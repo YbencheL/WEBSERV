@@ -14,7 +14,7 @@ void    socket_engine::handle_pipe_read(int pipe_fd, uint32_t events)
 
     if (client.cgiHandler.state == CGI_DONE || client.cgiHandler.state == ERROR)
     {
-        // std::cout << "CGI DONE OR ERROR" << std::endl;
+        // TODO: check
         int del_ret = epoll_ctl(epoll_fd, EPOLL_CTL_DEL, pipe_fd, NULL);
         if (del_ret == -1)
             std::cerr << "[!] epoll_ctl DEL failed: " << strerror(errno) << std::endl;
@@ -29,39 +29,40 @@ void    socket_engine::handle_pipe_read(int pipe_fd, uint32_t events)
             rb.init_response_builder(client);
             rb.build_response();
         }
-        else
-        {
+        else {   // TODO: check
             std::string &cgi_output = client.cgiHandler.getCgiResponse();
-
-            std::string cgi_headers;
-            std::string cgi_body;
-
-            std::string sep = "\r\n\r\n";
-            size_t split = cgi_output.find(sep);
-            if (split == std::string::npos)
+            int stat = client.cgiHandler.parseOutput(cgi_output);
+            if (stat == OUTPUT_READY)
             {
-                sep = "\n\n";
-                split = cgi_output.find(sep);
-            }
+                // todo: check
+                client.res.set_stat_code(OK);
 
-            if (split != std::string::npos)
+                // ---------------------------------------------------------------------------
+
+                // std::cout << "cgi lenght: " << cgi_output.length() << std::endl;
+                // std::cout << "cgi output:\n" << cgi_output << std::endl;
+                // exit(1);
+                // ---------------------------------------------------------------------------
+
+
+                // ---------------------------------------------------------------------------
+                std::string response = client.res.get_start_line();
+                response.append("Server: Webserv\r\n");
+                response.append("Date: " + get_time() + "\r\n");
+                response.append("Content-Length: " + to_string(cgi_output.length()) + "\r\n");
+                response.append("Connection: close\r\n");
+                response.append("\r\n");
+                response.append(cgi_output);
+                client.res.set_raw_response(response);
+                // ---------------------------------------------------------------------------
+            }
+            else if (stat == INTERNAL_SERVER_ERROR)
             {
-                cgi_headers = cgi_output.substr(0, split);
-                cgi_body    = cgi_output.substr(split + sep.length());
+                client.res.set_stat_code(INTERNAL_SERVER_ERROR);
+                response_builder rb;
+                rb.init_response_builder(client);
+                rb.build_response();
             }
-            else
-                cgi_body = cgi_output;
-
-            client.res.set_stat_code(OK);
-            std::string response = client.res.get_start_line();
-            response.append("Server: Webserv\r\n");
-            response.append("Date: " + get_time() + "\r\n");
-            if (!cgi_headers.empty())
-                response.append(cgi_headers + "\r\n");
-            response.append("Content-Length: " + to_string(cgi_body.length()) + "\r\n");
-            response.append("\r\n");
-            response.append(cgi_body);
-            client.res.set_raw_response(response);
         }
         modify_epoll_event(client_fd, EPOLLOUT);
     }
