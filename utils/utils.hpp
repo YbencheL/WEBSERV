@@ -40,6 +40,7 @@ bool                        is_server(std::vector<int> &server_side_fds, unsigne
 void                        show_response_logs(const Client &client, int fd);
 void                        show_request_logs(const Client &client, int fd);
 void                        setup_server_config_info(std::deque<ServerBlock> &ServerConfig);
+void                        decode_URI(std::string &encoded_uri);
 
 # endif
 
