@@ -296,7 +296,7 @@ void Cgi::childProcess()
     close(pipeOut[0]);
     close(pipeOut[1]);
 
-    int erfd = open("log.txt", O_WRONLY | O_CREAT | O_APPEND, 0644);
+    int erfd = open("/tmp/webServerLog.txt", O_WRONLY | O_CREAT | O_APPEND, 0644);
     dup2(erfd, STDERR_FILENO);
     close(erfd);
 
