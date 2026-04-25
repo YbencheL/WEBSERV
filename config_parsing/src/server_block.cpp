@@ -61,5 +61,6 @@ void extracting_server_blocks(std::deque<Token>& tokenContainer, std::deque<Serv
                 insideLoc = false;
         }
     }
-
+    if(ServerConfigs.empty())
+        error_line(": there is no server block", -1);
 }

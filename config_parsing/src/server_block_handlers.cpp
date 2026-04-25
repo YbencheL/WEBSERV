@@ -31,7 +31,7 @@ bool& insideLoc)
     {
         std::stringstream ss(tokenContainer[i].value);
         ss >> Serv.set_timeout;
-        if (ss.fail() || !ss.eof())
+        if (ss.fail() || !ss.eof() || Serv.set_timeout < 0)
             error_line(": set_timeout must only have a valid number", tokenContainer[i].line);
         // Serv.set_timeout = sec;
         // sec = 0;
@@ -102,7 +102,7 @@ bool& insideLoc)
     i++;
     if (!insideLoc)
     {
-        while(tokenContainer[i].value != ";")
+        while(i < (ssize_t)tokenContainer.size() && tokenContainer[i].value != ";")
         {
             Serv.index.insert(tokenContainer[i].value);
             i++;

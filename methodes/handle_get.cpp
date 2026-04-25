@@ -8,10 +8,21 @@ void response_builder::set_header(void)
     response_holder.append("Server: Webserv\r\n");
     response_holder.append("Date: " + get_time() + "\r\n");
 
-    if (is_body_ready || is_error_page)                        // TODO-CHECK: CGI later check
-        response_holder.append("Content-Type: text/html\r\n"); // just in case of autoindex //
+    if (is_body_ready || is_error_page)
+        response_holder.append("Content-Type: text/html\r\n");
     else
         response_holder.append("Content-Type: " + extension_to_media_type(this->path) + "\r\n");
+
+    if (current_client->res.get_is_cookie_set())    // >> cookie set in the response header
+    {
+        std::cout << YELLOW << "[+ set_header] Setting cookies in response headers:" << RSET << std::endl;
+        const std::vector<std::string> &set_cookie_headers = current_client->res.get_cookie_holder();
+
+        for (size_t i = 0; i < set_cookie_headers.size(); ++i) {
+            response_holder.append("Set-Cookie: " + set_cookie_headers[i] + "\r\n");
+        }
+    }
+    response_holder.append("Connection: close\r\n");
 }
 
 void response_builder::set_body(void)
@@ -41,8 +52,10 @@ void response_builder::generate_error_page()
     }
 }
 
+// TODO: check
 void response_builder::handle_get()
 {
     set_header();
     set_body();
+    std::cout << "Response holder -> " << this->response_holder << std::endl;
 }

@@ -5,6 +5,7 @@
 # include <string>
 # include <vector>
 # include "config_parsing/includes/ConfigPars.hpp"
+# include "./cookies_sessions/SessionManager.hpp"
 
 # define OK 200
 # define CREATED 201
@@ -26,16 +27,18 @@
 # define REQ_NOT_READY 0
 # define PROTOCOL_VERSION   "HTTP/1.0"
 
+struct Client;
+
 class response  // DONE[]
 {
     private:
         int                 port;
         std::string         host;
-        std::string         final_raw_response;   //  new
+        std::string         final_raw_response;
 
         int             static_file_fd;
-        off_t           file_size;
-        off_t           bytes_sent;
+        off_t           file_size;  // total size
+        off_t           bytes_sent; // saved bytes
 
         std::string         path;
         unsigned short int  stat_code;
@@ -44,6 +47,10 @@ class response  // DONE[]
         //  USED IN THE HEADER RESPONSE
         std::string         content_type;
         ssize_t             content_length;
+
+        // for cookie and session management
+        bool                        is_cooke_set;
+        std::vector<std::string>    cookie_holder;
 
     public:
         response();
@@ -55,7 +62,9 @@ class response  // DONE[]
         // void    set_raw_response(std::string raw_res);
         void    set_raw_response(std::string &raw_res);
         void    set_file_size(off_t file_size);
-        void    set_bytes_sent(off_t bytes_sent);
+        void    save_bytes_sent(off_t bytes_sent);
+        bool    stream_response_to_client(int fd);
+
 
         // GETTERS
         std::string         get_str_stat_code(unsigned short int code) const;
@@ -69,7 +78,14 @@ class response  // DONE[]
         off_t               get_file_size(void) const;
         off_t               get_bytes_sent(void) const;
 
-        bool                stream_response_to_client(int fd);
+        // about cookie and session management
+        void                handle_session(SessionManager &session_manager, Client &client);
+        const               std::vector<std::string> &get_cookie_holder() const;
+        bool                get_is_cookie_set() const;
+
+        const std::vector<std::string>& get_set_cookie_headers() const;
+        void                set_is_cookie_false();
+
 };
 
 # endif

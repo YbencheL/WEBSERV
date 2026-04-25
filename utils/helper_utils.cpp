@@ -13,7 +13,7 @@
 
 # define MIN_VALID_PORT 1024
 # define MAX_VALID_PORT 65535
-
+# define BASE 16
 
 // --------------------------------------------------------------------------------------------
 
@@ -262,7 +262,6 @@ bool    validate_headers(Client &current_client)
     return (true);
 }
 
-
 // --------------------------------------------------------------------------------------------
 
 void    dir_path_correction(const std::string &full_dir_path, std::string &d_path)
@@ -296,7 +295,7 @@ std::string extracting_from_header(const std::map<std::string, std::string> &hea
 
 std::string rand_str_gen()
 {
-    std::srand(std::time(0));
+    // std::srand(std::time(0));
     const std::string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     std::string random_name;
     
@@ -310,19 +309,7 @@ std::string rand_str_gen()
     return (random_name);
 }
 
-// CGI --------------------------------------------------------------------------------------------
-        
-bool    is_cgi_request(std::string path)
-{
-    size_t last_dot = path.find_last_of('.');
-    if (last_dot == std::string::npos)
-        return false;
-
-    std::string ext = path.substr(last_dot);
-    if (ext == ".py" || ext == ".php")
-        return true; 
-    return false;
-}
+// --------------------------------------------------------------------------------------------
 
 bool    is_server(std::vector<int> &server_side_fds, unsigned short int fd)
 {
@@ -331,3 +318,88 @@ bool    is_server(std::vector<int> &server_side_fds, unsigned short int fd)
         return (true);
     return (false);
 }
+
+// --------------------------------------------------------------------------------------------
+
+void    show_response_logs(const Client &client, int fd)
+{
+    std::cout << PINK << "[Response LOG] HTTP/1.0 "
+                << client.res.get_stat_code()
+                << " " << stat_code_to_string(client.res.get_stat_code())
+                << " on FD " << fd << RSET << std::endl;
+}
+
+// --------------------------------------------------------------------------------------------
+
+void    setup_server_config_info(std::deque<ServerBlock> &ServerConfig)
+{
+    for (size_t i = 0; i < ServerConfig.size(); i++)
+    {
+        std::string host = ServerConfig[i].host;
+        std::string port = to_string(ServerConfig[i].listen);
+        std::cout << GREEN << "Serving HTTP on " << host << " port " << port
+            << " (http://" << host << ":" << port << "/)"
+            << RSET << std::endl;
+        s_engine.init_server_side(port, host);
+    }
+}
+
+// --------------------------------------------------------------------------------------------
+
+void    show_request_logs(const Client &client, int fd)
+{
+    std::cout << YELLOW << "[Request LOG] " << client.req.getMethod()
+            << " " << client.req.getPath()
+            << " " << client.req.getHttpVersion()
+            << " on FD " << fd << RSET << std::endl;
+}
+
+// --------------------------------------------------------------------------------------------
+
+int hexToDecimal(char c)
+{
+    if (c >= '0' && c <= '9')
+        return (c - '0');
+
+    switch (c)
+    {
+        case 'a': case 'A': return (10);
+        case 'b': case 'B': return (11);
+        case 'c': case 'C': return (12);
+        case 'd': case 'D': return (13);
+        case 'e': case 'E': return (14);
+        case 'f': case 'F': return (15);
+        default:
+            return (-1); // SIGNAL: This is NOT a hex digit!
+    }
+}
+
+// --------------------------------------------------------------------------------------------
+
+void    decode_URI(std::string &encoded_uri)
+{
+    if (encoded_uri.empty())
+        return ;
+     
+    std::string decoded_uri;
+    for (size_t it = 0; it < encoded_uri.length(); ++it)
+    {
+        if (encoded_uri[it] == '%' && it + 2 < encoded_uri.length())
+        {
+            int f_num = hexToDecimal(encoded_uri[it + 1]);
+            int s_num = hexToDecimal(encoded_uri[it + 2]);
+            
+            if (f_num != -1 && s_num != -1)
+            {
+                decoded_uri += static_cast<char>((f_num * BASE) + s_num);
+                it += 2;
+                continue;
+            }
+        }
+        decoded_uri += encoded_uri[it];
+    }
+    encoded_uri.erase(0, encoded_uri.length());
+    encoded_uri = decoded_uri;
+}
+
+// --------------------------------------------------------------------------------------------

@@ -12,7 +12,6 @@ DONE - If epoll operations fail, only std::cerr is written; program doesn't exit
     - Test HEAD http://localhost:8080/
 FATAL ERROR ON LAST TEST: Head "http://localhost:8080/": read tcp 127.0.0.1:44144->127.0.0.1:8080: read: connection reset by peer
 
-TODO: FIX about pipe_to_cilent/pipe_write_to_clint leak
 
 
 

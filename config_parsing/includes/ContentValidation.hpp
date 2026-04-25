@@ -26,7 +26,6 @@ struct Token
 };
 
 // content check
-void duplicate_check(std::deque<std::string>& keywords, std::string name);
 void checking_for_virtual_hosts(std::deque<int>& seen);
 int count_to_symbol(std::deque<Token>& tokenContainer, ssize_t& index, int count);
 

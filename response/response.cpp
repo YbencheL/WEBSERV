@@ -1,8 +1,7 @@
 # include "../response.hpp"
 # include "../utils/utils.hpp"
 # include "../socket_engine.hpp"
-
-// # include <ctime>
+# include "../cookies_sessions/cookies_and_sessions_logic.hpp"
 
 response::response() {
     this->stat_code = 200;
@@ -13,6 +12,7 @@ response::response() {
     this->static_file_fd = 0;
     this->file_size = 0;
     this->bytes_sent = 0;
+    this->is_cooke_set = false;
 };
 
 void    response::set_stat_code(unsigned short int stat_code) {
@@ -23,7 +23,6 @@ void    response::set_path(std::string path) {
     this->path = path;
 }
 
-// void    response::set_raw_response(std::string raw_res) {
 void    response::set_raw_response(std::string &raw_res) {
     this->final_raw_response = raw_res;
 }
@@ -40,11 +39,9 @@ void    response::set_file_size(off_t file_size) {
     this->file_size = file_size;
 }
 
-void    response::set_bytes_sent(off_t bytes_sent) {
+void    response::save_bytes_sent(off_t bytes_sent) {
     this->bytes_sent = bytes_sent;
 }
-
-// -------------------------------------------------------------------
 
 ssize_t   response::get_content_length(void) const {
     return (this->content_length);
@@ -54,11 +51,9 @@ std::string response::get_path(void) const {
     return (this->path);
 }
 
-// std::string response::get_raw_response(void) {
 std::string &response::get_raw_response(void) {
     return (this->final_raw_response);
 }
-
 
 std::string response::get_start_line()const 
 {
@@ -85,19 +80,21 @@ off_t response::get_bytes_sent(void) const {
 
 bool    response::stream_response_to_client(int fd)
 {
-    if (this->bytes_sent < (off_t)final_raw_response.size())
+    // TODO: check -> serving static file header first
+    if (this->bytes_sent < (off_t)final_raw_response.size())    // serving 
     {
-        // MSG_NOSIGNAL -> to prevent SIGPIPE signal when the client has closed the connection
-        ssize_t send_stat = send(fd, final_raw_response.c_str() + this->bytes_sent, this->final_raw_response.size() - this->bytes_sent, MSG_NOSIGNAL);
-        if (send_stat == -1)
+        ssize_t bytes_actually_sent = send(fd, final_raw_response.c_str() + this->bytes_sent,
+            this->final_raw_response.size() - this->bytes_sent, MSG_NOSIGNAL);
+        if (bytes_actually_sent == -1)
             return (false);
 
-        this->set_bytes_sent(this->bytes_sent + send_stat);
+        this->save_bytes_sent(this->bytes_sent + bytes_actually_sent);
     }
-    else
+    else    // serving the body after the header send
     {
         off_t file_offset = this->bytes_sent - final_raw_response.size();
         
+        // TODO: check
         if (lseek(static_file_fd, file_offset, SEEK_SET) == (off_t)-1) {
             close(static_file_fd);
             return (true);
@@ -109,19 +106,18 @@ bool    response::stream_response_to_client(int fd)
         {
             // MSG_NOSIGNAL -> to prevent SIGPIPE signal when the client has closed the connection
             ssize_t bytes_actually_sent = send(fd, file_buffer, readed, MSG_NOSIGNAL);
-
-            if (bytes_actually_sent > 0)
+            if (bytes_actually_sent == -1)
+                return (false);
+            else if (bytes_actually_sent > 0)
             {
-                this->set_bytes_sent(this->bytes_sent + bytes_actually_sent);
-                // - header size
+                this->save_bytes_sent(this->bytes_sent + bytes_actually_sent);
+                
+                // - header size to get the size of file
                 if (off_t(this->bytes_sent - final_raw_response.size()) >= this->file_size) {
-                    // std::cout << "file_is_done" << std::endl;
                     close(static_file_fd);
                     return (true);
                 }
             }
-            else if (bytes_actually_sent == -1)
-                return (false);
         }
         else if (readed == 0) {
             close(static_file_fd);
@@ -129,4 +125,38 @@ bool    response::stream_response_to_client(int fd)
         }
     }
     return (false);
+}
+
+// about cookie and session management
+// void    response::add_set_cookie_header(const std::string& header_value)
+// {
+//     this->is_cooke_set = true;
+//     this->set_cookie_headers.push_back(header_value);
+// }
+
+bool    response::get_is_cookie_set() const
+{
+    return this->is_cooke_set;
+}
+
+const std::vector<std::string>& response::get_cookie_holder() const {
+    return this->cookie_holder;
+}
+
+void    response::handle_session(SessionManager &session_manager, Client &client)
+{
+    std::string new_session_holder;
+    Session& cookie = cookies_and_sessions_logic(session_manager, client);
+    if(cookie.is_new) {
+        std::cout << RED << "[Cookie Logs] New session created with ID: " << cookie.id << RSET << std::endl;
+        new_session_holder = "sessionId=" + cookie.id + "; Path=/; HttpOnly";
+        this->cookie_holder.push_back(new_session_holder);
+        this->is_cooke_set = true;
+    }
+    else
+        std::cout << RED << "[+] Existing session accessed with ID: " << cookie.id << RSET << std::endl;
+}
+
+void   response::set_is_cookie_false() {
+    this->is_cooke_set = false;
 }

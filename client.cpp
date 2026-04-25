@@ -2,7 +2,7 @@
 
 void inisializeClient(Client &client)
 {
-    client.parse.bodyRead = 0;
+    client.parse.bodyRead   = 0;
     client.parse.body       = false;
     client.reqReady         = false;
     client.parse.bodyBegin  = false;
