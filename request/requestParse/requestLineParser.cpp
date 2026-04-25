@@ -102,7 +102,7 @@ bool checkSetPathQuery(Client &cleint, std::string &data)
     }
     normalisePath(path, "/./", "/", 3);
     normalisePath(path, "//", "/", 2);
-    normalisePath(path, "%20", " ", 3);
+    decode_URI(path);
     cleint.req.setPath(path);
     return true;
 }
