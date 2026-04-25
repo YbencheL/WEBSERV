@@ -43,6 +43,9 @@ struct reqParse
 };
 
 void UpperCaseHeaderName(std::string &name);
+bool checkNameField(std::string &name);
+bool checkValueField(std::string &value);
+void trimLeft(std::string &str, std::string unwanted);
 int  parseBody(Client &client);
 int  parseHeaders(Client &client, std::string &data);
 int  parseRequestLine(Client &client, std::string &data);

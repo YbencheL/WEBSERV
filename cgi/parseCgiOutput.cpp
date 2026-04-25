@@ -7,54 +7,6 @@ bool isUnique(std::string &key, std::map<std::string, std::string> &header)
     return header.find(key) == header.end();
 }
 
-void trimLeft(std::string &str, std::string unwanted)
-{
-    size_t i = 0;
-    for (; i < str.size(); i++)
-    {
-        if (unwanted.find(str[i]) == std::string::npos)
-            break;
-    }
-    if (i == 0)
-        return;
-    str = str.substr(i);
-}
-
-void UpperCaseHeaderName(std::string &name)
-{
-    for (size_t i = 0; i < name.size(); i++)
-    {
-        if (name[i] <= 'z' && name[i] >= 'a')
-            name[i] = toupper(name[i]);
-        if (name[i] == '-')
-            name[i] = '_';
-    }
-}
-
-bool checkNameField(std::string &name)
-{
-    static const std::string tspecials = "()<>@,;:\\\"/[]?={} \t";
-
-    if (name.empty())
-        return false;
-    for (size_t i = 0; i < name.size(); i++)
-    {
-        if (!isprint(name[i]) || tspecials.find(name[i]) != std::string::npos)
-            return false;
-    }
-    return true;
-}
-
-bool checkValueField(std::string &value)
-{
-    for (size_t i = 0; i < value.size(); i++)
-    {
-        if (!isprint(value[i]) && value[i] != 9)
-            return false;
-    }
-    return true;
-}
-
 int Cgi::parseOutToken(std::string &token)
 {
     if (token.size() > MAX_SINGLE_HEADER_SIZE)
