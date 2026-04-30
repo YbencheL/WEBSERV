@@ -60,7 +60,9 @@ void is_syntax_valid(std::deque<Token> tokenContainer)
             symbol_validation(tokenContainer, ServerBlockCount, keepCountOfBrase, LocationBlockCount, i, insideServer);
         else if (tokenContainer[i].type == WORD)
         {
-            if ((i - 1) >= 0 && tokenContainer[i - 1].value != "location" && tokenContainer[i + 1].type != 1 && tokenContainer[i + 1].value != ";")
+            if ((i - 1) >= 0 && tokenContainer[i - 1].value != "location" &&
+                (i + 1 >= (ssize_t)tokenContainer.size() ||
+                (tokenContainer[i + 1].type != 1 && tokenContainer[i + 1].value != ";")))
                 error_line(": directives must end with ;", tokenContainer[i].line);
             else if (!insideServer)
                 error_line(": configuration must be done inside a server block", tokenContainer[i].line);
