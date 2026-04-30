@@ -17,7 +17,6 @@ std::string to_string(T value)
 }
 
 bool    					validate_headers(Client &current_client);
-// const std::string           to_string(int digit);
 const std::string           file_to_string(const std::string& path);
 const std::string           &stat_code_to_string(unsigned short int stat_code);
 const std::string           extension_to_media_type(std::string path);
@@ -41,13 +40,6 @@ void                        show_response_logs(const Client &client, int fd);
 void                        show_request_logs(const Client &client, int fd);
 void                        setup_server_config_info(std::deque<ServerBlock> &ServerConfig);
 void                        decode_URI(std::string &encoded_uri);
+void                        encode_url(std::string& path);
 
 # endif
-
-// SEGV
-// (echo -e "POST /upload HTTP/1.1\r\n\r\n") | nc 10.11.11.6 8080
-// (echo -e "POST /upload HTTP/1.1\r\nHost: localhost\r\nContent-Length: 10\r\n\r\n"; sleep 0; echo "1234567890") | nc 10.11.11.6 8080
-// (echo -e "POST /upload HTTP/1.1\r\nHost: 10.11.11.6\r\nContent-Length: 10\r\n\r\n"; sleep 0; echo "1234567890") | nc 10.11.11.6 8080
-// (echo -e "POST /upload HTTP/1.1\r\nHost: 10.11.11.6:8080\r\nContent-Length: 10\r\n\r\n"; sleep 0; echo "1234567890") | nc 10.11.11.6 8080
-
-// off_t file_size -> based on content-length

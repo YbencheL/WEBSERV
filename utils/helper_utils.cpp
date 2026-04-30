@@ -50,7 +50,6 @@ const std::string   &stat_code_to_string(unsigned short int stat_code)
         stat_code_str[SERVER_ERROR] = "Internal Server Error";
         stat_code_str[VERSION_NOT_SUPP] = "HTTP Version Not Supported";
         stat_code_str[HEADER_TOO_LARGE] = "Request Header Fields Too Large";
-        // TODO: ETC....
     }
     return (stat_code_str[stat_code]);
 }
@@ -67,7 +66,6 @@ const std::string extension_to_media_type(std::string path)
         extensions[".png"] = "image/png";
         extensions[".jpg"] = "image/jpeg";
         extensions[".js"]  = "application/javascript";
-        // ...
         extensions[".pdf"] = "application/pdf";
         extensions[".zip"] = "application/zip";
         extensions[".mp4"]   = "video/mp4";
@@ -87,7 +85,6 @@ const std::string extension_to_media_type(std::string path)
     std::map<std::string, std::string>::iterator it = extensions.find(ext);
     if (it != extensions.end())
         return (it->second);
-
     return (DEFAULT_MEDIA_TYPE);    // -> "text/plain"
 }
 
@@ -103,7 +100,6 @@ const std::string media_type_to_extension(std::string _media_type)
         media_type["image/png"] = ".png";
         media_type["image/jpeg"] = ".jpg";
         media_type["application/javascript"]  = ".js";
-        // ...
         media_type["application/pdf"] = ".pdf";
         media_type["application/zip"] = ".zip";
         media_type["video/mp4"] = ".mp4";
@@ -118,7 +114,7 @@ const std::string media_type_to_extension(std::string _media_type)
     if (it != media_type.end())
         return (it->second);
 
-    return (DEFAULT_EXTENSION);     // -> ".txt"
+    return (DEFAULT_EXTENSION); // -> ".txt"
 }
 
 // --------------------------------------------------------------------------------------------
@@ -205,6 +201,7 @@ unsigned short int  valid_port_number(std::string port_num)
 
 // --------------------------------------------------------------------------------------------
 
+// TODO: check
 extern socket_engine s_engine;
 bool    validate_headers(Client &current_client)
 {
@@ -214,6 +211,7 @@ bool    validate_headers(Client &current_client)
     current_client.server_conf = NULL;
     current_client.location_conf = NULL;
 
+    // >> No server blcok match
     if (it == header.end()) {
         current_client.res.set_stat_code(BAD_REQUEST);
         return (false);
@@ -223,14 +221,14 @@ bool    validate_headers(Client &current_client)
     if (index != std::string::npos)
     {
         std::string host = it->second.substr(0, index);
-        std::string port = it->second.substr((index + 1));
+        std::string port = it->second.substr((index + 1));  // skip ':'
 
-        current_client.host = address_resolution(host);
-        if (current_client.host == INADDR_NONE)  // invalid host
+        current_client.host = address_resolution(host); // >> host pars
+        if (current_client.host == INADDR_NONE)  // >> invalid host
             current_client.host = 0;
 
-        current_client.port = valid_port_number(port);
-        if (!current_client.port)    // invalid port
+        current_client.port = valid_port_number(port); // >> port parse
+        if (!current_client.port)    // >> invalid port
             current_client.port = 0;
 
         if (current_client.port != 0 && current_client.host != 0)
@@ -295,7 +293,6 @@ std::string extracting_from_header(const std::map<std::string, std::string> &hea
 
 std::string rand_str_gen()
 {
-    // std::srand(std::time(0));
     const std::string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     std::string random_name;
     
@@ -370,7 +367,7 @@ int hexToDecimal(char c)
         case 'e': case 'E': return (14);
         case 'f': case 'F': return (15);
         default:
-            return (-1); // SIGNAL: This is NOT a hex digit!
+            return (-1);
     }
 }
 
@@ -403,3 +400,23 @@ void    decode_URI(std::string &encoded_uri)
 }
 
 // --------------------------------------------------------------------------------------------
+
+void encode_url(std::string& path)
+{
+    std::string encoded_path;
+    for (size_t i = 0; i < path.length(); ++i)
+    {
+        if (path[i] == '%') {
+            encoded_path += "%25";
+        } else if (path[i] == ' ') {
+            encoded_path += "%20";
+        } else {
+            encoded_path += path[i];
+        }
+    }
+    path.erase(0, path.length());
+    path = encoded_path;
+}
+
+// --------------------------------------------------------------------------------------------
+

@@ -3,33 +3,27 @@
 # include "../utils/utils.hpp"
 # include "../response_builder.hpp"
 # include "../request/includes/parseRequest.hpp"
-# include "../cookies_sessions/cookies_and_sessions_logic.hpp"
-# include "../cookies_sessions/SessionManager.hpp"
+# include "../cookies_sessions/includes/cookies_and_sessions_logic.hpp"
+# include "../cookies_sessions/includes/SessionManager.hpp"
 
 void    socket_engine::handle_epollin(ssize_t fd)
 {
-    Client  &client = this->raw_client_data[fd];
     char    raw_data[BUFFER_SIZE];
     std::memset(raw_data, 0, sizeof(raw_data));
+    Client  &client = this->raw_client_data[fd];
 
     int recv_stat = recv(fd, raw_data, BUFFER_SIZE, 0);
     if (recv_stat > 0)
     {
         client.last_activity = time(0);
         std::string raw_data_buff(raw_data, recv_stat);
-
         int req_stat = parseRequest(client, raw_data_buff);
         if (req_stat == REQ_NOT_READY)
             return ;
 
-        // // rm-me
-        // // ------------------ TESTING PURPOSES ----------------- //
-        // std::cout << ">>> Request\n" << raw_data_buff << std::endl;
-        // // ----------------------------------------------------- //
-
-        show_request_logs(client, fd);   // >> Just-Logs
-        client.res.handle_session(session_manager, client);  // >> handle cookie and session management in the response class
-        client.res.set_stat_code(req_stat); // >> set the status code based on the parsing result
+        show_request_logs(client, fd);   // >> logs
+        client.res.handle_session(session_manager, client);
+        client.res.set_stat_code(req_stat);
         if (client.res.get_stat_code() == OK)
         {
             client.cgiHandler.handleCGI(this->raw_client_data[fd]);
@@ -40,7 +34,6 @@ void    socket_engine::handle_epollin(ssize_t fd)
             }
         }
 
-        // >> serv static file or generate response body
         response_builder response_builder;
         response_builder.init_response_builder(client);
         response_builder.build_response();

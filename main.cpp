@@ -1,6 +1,6 @@
 # include "./socket_engine.hpp"
 # include "./config_parsing/includes/ConfigPars.hpp"
-# include "./cookies_sessions/SessionManager.hpp"
+# include "./cookies_sessions/includes/SessionManager.hpp"
 # include "./utils/utils.hpp"
 # include <csignal>
 #include <sys/time.h>
@@ -22,7 +22,7 @@ int main(int ac, char **av)
     timeval t1;
 
     gettimeofday(&t1, NULL);
-    std::srand(t1.tv_sec * 1000 + t1.tv_usec / 1000); // Seed the random number generator with current time in milliseconds
+    std::srand(t1.tv_sec * 1000 + t1.tv_usec / 1000);
     if (ac < 2)
         fileName = "./config.conf";
     else
@@ -46,14 +46,12 @@ int main(int ac, char **av)
         return 1;
     }
 
-    // --------------------- @ma1loc: MY PART START HERE ------------------------ //
     try
     {
         signal(SIGINT, signal_handler);
         s_engine.set_server_config_info(ServerConfig);
         
-        // ----------------- SERVER LOGS ----------------- //
-        setup_server_config_info(ServerConfig);  // S_Logs
+        setup_server_config_info(ServerConfig);  // >> logs
         s_engine.process_connections();
     }
     catch(const std::exception& e)

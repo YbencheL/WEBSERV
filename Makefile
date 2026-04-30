@@ -1,6 +1,6 @@
 CPP = c++
 COMPILE_FLAG = -std=c++98
-CPP_FLAGS = -Wall -Wextra -Werror -g #-fsanitize=address
+CPP_FLAGS = -Wall -Wextra -Werror #-g #-fsanitize=address
 
 NAME = webserv
 SRC = ./main.cpp ./socket_init/init_socket_engine.cpp ./socket_init/init_client_side.cpp \

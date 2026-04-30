@@ -2,8 +2,8 @@
 
 void    socket_engine::setup_cgi_pipes(int client_fd)
 {
-    int pipe_out = this->raw_client_data[client_fd].cgiHandler.getPipeOutFd();   // pipeOut[0] - read CGI stdout
-    int pipe_in = this->raw_client_data[client_fd].cgiHandler.getPipeInFd();      // pipeIn[1] - write request body to CGI stdin
+    int pipe_out = this->raw_client_data[client_fd].cgiHandler.getPipeOutFd();  // >> pipeOut[0] - read CGI stdout
+    int pipe_in = this->raw_client_data[client_fd].cgiHandler.getPipeInFd();    // >> pipeIn[1] - write request body to CGI stdin
 
     pipe_to_client[pipe_out] = client_fd;
     set_fds_list(pipe_out);
@@ -20,9 +20,9 @@ void    socket_engine::setup_cgi_pipes(int client_fd)
 
     if (!this->raw_client_data[client_fd].req.getBody().empty())
     {
+        std::memset(&ev, 0, sizeof(ev));
         pipe_write_to_client[pipe_in] = client_fd;
         set_fds_list(pipe_in);
-        std::memset(&ev, 0, sizeof(ev));
 
         ev.data.fd = pipe_in;
         ev.events  = EPOLLOUT;

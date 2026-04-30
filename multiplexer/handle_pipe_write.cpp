@@ -7,7 +7,6 @@ void    socket_engine::handle_pipe_write(int pipe_fd, uint32_t events)
     client.last_activity = time(0);
 
     client.cgiHandler.writing(epoll_fd, events, client);
-
     if (client.cgiHandler.state == ERROR || client.cgiHandler.writeEnd)
     {
         pipe_write_to_client.erase(pipe_fd);

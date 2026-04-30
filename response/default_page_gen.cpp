@@ -1,7 +1,6 @@
 # include "../response_builder.hpp"
 # include "../utils/utils.hpp"
-
-# include "../socket_engine.hpp"    // use to use client struct
+# include "../socket_engine.hpp"
 
 std::string   get_error_page_style()
 {
@@ -39,10 +38,9 @@ const std::string   get_autoindex_page_style()
 
 void    response_builder::default_error_page(unsigned short int stat_code)
 {
-    // std::string str_code = to_string(stat_code);
     const std::string status_code = to_string(stat_code);
     const std::string str_of_stat_code = stat_code_to_string(stat_code);
-    const std::string title = "Webserv: " + status_code + str_of_stat_code;
+    const std::string title = "Webserv: " + status_code + " " + str_of_stat_code;
     const std::string style = get_error_page_style();
 
     this->body_buff = "<!DOCTYPE html>\n"
@@ -71,10 +69,11 @@ void    response_builder::default_error_page(unsigned short int stat_code)
     this->is_body_ready = true;
 }
 
-// dir_list         ->      name of the files/dires
-// full_path        ->      root + getPath()
-// request_uri      ->      getPath() -> request
-void    response_builder::autoindex_gen(std::vector<std::string> &dir_list, const std::string &full_path, const std::string &request_uri)
+// >> dir_list         ->      name of the files/dires
+// >> full_path        ->      root + getPath()
+// >> request_uri      ->      getPath() -> request
+void    response_builder::autoindex_gen(std::vector<std::string> &dir_list,
+    const std::string &full_path, const std::string &request_uri)
 {
     std::string style = get_autoindex_page_style();
     this->body_buff = "<!DOCTYPE html>\n"
@@ -88,7 +87,7 @@ void    response_builder::autoindex_gen(std::vector<std::string> &dir_list, cons
         "<body>\n"
         "\t<div class=\"index_container\">\n";
 
-    if (request_uri != "/")
+    if (request_uri != "/") // >> NOT root
         this->body_buff.append("\t\t<a class=\"index_path\" href=\"../\">../</a><br>\n");
 
     for (size_t i = 0; i < dir_list.size(); i++)
@@ -98,6 +97,7 @@ void    response_builder::autoindex_gen(std::vector<std::string> &dir_list, cons
         std::string path = request_uri;
         std::string &name = dir_list.at(i);
 
+        // >> skip them
         if (name == ".") continue;
         if (name == "..") continue;
 
@@ -107,6 +107,7 @@ void    response_builder::autoindex_gen(std::vector<std::string> &dir_list, cons
         path += name;
         full_dir_path = full_path + name;
         dir_path_correction(full_dir_path ,path);
+        encode_url(path);
 
         this->body_buff.append("\t\t<a href=\"" + path + "\">" + name + "</a><br>\n");
     }

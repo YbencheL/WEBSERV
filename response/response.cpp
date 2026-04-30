@@ -1,7 +1,7 @@
 # include "../response.hpp"
 # include "../utils/utils.hpp"
 # include "../socket_engine.hpp"
-# include "../cookies_sessions/cookies_and_sessions_logic.hpp"
+# include "../cookies_sessions/includes/cookies_and_sessions_logic.hpp"
 
 response::response() {
     this->stat_code = 200;
@@ -78,10 +78,11 @@ off_t response::get_bytes_sent(void) const {
     return (this->bytes_sent);
 }
 
+// TODO: check
 bool    response::stream_response_to_client(int fd)
 {
-    // TODO: check -> serving static file header first
-    if (this->bytes_sent < (off_t)final_raw_response.size())    // serving 
+    // >> serving static file header first
+    if (this->bytes_sent < (off_t)final_raw_response.size())
     {
         ssize_t bytes_actually_sent = send(fd, final_raw_response.c_str() + this->bytes_sent,
             this->final_raw_response.size() - this->bytes_sent, MSG_NOSIGNAL);
@@ -112,7 +113,7 @@ bool    response::stream_response_to_client(int fd)
             {
                 this->save_bytes_sent(this->bytes_sent + bytes_actually_sent);
                 
-                // - header size to get the size of file
+                // >> final_raw_response -> header place holder
                 if (off_t(this->bytes_sent - final_raw_response.size()) >= this->file_size) {
                     close(static_file_fd);
                     return (true);
@@ -126,13 +127,6 @@ bool    response::stream_response_to_client(int fd)
     }
     return (false);
 }
-
-// about cookie and session management
-// void    response::add_set_cookie_header(const std::string& header_value)
-// {
-//     this->is_cooke_set = true;
-//     this->set_cookie_headers.push_back(header_value);
-// }
 
 bool    response::get_is_cookie_set() const
 {

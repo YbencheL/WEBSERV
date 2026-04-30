@@ -24,13 +24,11 @@ class response_builder
         Client                  *current_client;
         std::string             response_holder;
         std::string             path;
-
         std::string             header_buff;
         std::string             body_buff;
-        
         bool                    is_body_ready;
         bool                    is_error_page;
-        
+
         bool            is_allowd_method(std::string method);
         void            path_validation(void);
         std::string     index_file_iterator(const std::string &full_path);
@@ -41,10 +39,7 @@ class response_builder
         void            generate_error_page();
         void            extract_host_info(std::string raw_req);
         void            set_static_file_res_header(off_t content_length);
-
-        // handling the rediction with the return
         void            return_handling();
-
         void            set_header(void);
         void            set_body(void);
         void            handle_get();
@@ -58,7 +53,6 @@ class response_builder
         void    resolve_request_path();
         void    validate_headers();
         void    build_response();
-
 };
 
 bool    validate_headers(Client &current_client);

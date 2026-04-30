@@ -46,7 +46,6 @@ void    response_builder::set_static_file_res_header(off_t content_length)
 
     if (current_client->res.get_is_cookie_set())    // >> cookie set in the response header
     {
-        std::cout << YELLOW << "[+ serving_static_file] Setting cookies in response headers:" << RSET << std::endl;
         const std::vector<std::string> &set_cookie_headers = current_client->res.get_cookie_holder();
 
         for (size_t i = 0; i < set_cookie_headers.size(); ++i) {
