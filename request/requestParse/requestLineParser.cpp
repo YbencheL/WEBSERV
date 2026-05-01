@@ -100,9 +100,9 @@ bool checkSetPathQuery(Client &cleint, std::string &data)
         path           = data.substr(0, queryStart);
         cleint.req.setQuery(data.substr(queryStart + 1));
     }
+    decode_URI(path);
     normalisePath(path, "/./", "/", 3);
     normalisePath(path, "//", "/", 2);
-    decode_URI(path);
     cleint.req.setPath(path);
     return true;
 }
